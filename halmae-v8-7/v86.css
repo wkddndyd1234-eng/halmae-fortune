@@ -1,1 +1,75 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&display=swap');:root{--gold:#d4b57a;--ink:#16120e}body{background:#0d0c0a}.book-wrap{max-width:940px;margin:0 auto}.toolbar{display:flex;align-items:center;justify-content:space-between;padding:22px 10px;gap:15px}.toolbar a{text-decoration:none}.status{text-align:center;color:#d9b77d;padding:8px}.cover,.intro-sheet,.toc,.chapter{position:relative;overflow:hidden;background:linear-gradient(135deg,#1d1915,#100e0c 70%);border:1px solid #55432b;padding:78px clamp(28px,8vw,100px);margin:18px 0;box-shadow:0 15px 50px #0007}.cover{min-height:720px;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;border:double 5px #765d37;background:radial-gradient(ellipse at 50% 45%,#35291d 0%,#17120e 56%,#0c0b09 100%)}.cover:before,.cover:after{content:'✦';position:absolute;font-size:27px;color:#cba968;top:22px;left:25px}.cover:after{top:auto;left:auto;bottom:22px;right:25px}.ornament{color:#bc975d;letter-spacing:.45em;margin-bottom:48px}.cover h1{font:700 clamp(48px,7vw,78px)/1.5 'Noto Serif KR',serif;letter-spacing:.08em;color:#e8ce94;margin:10px 0}.cover-rule{height:1px;background:linear-gradient(90deg,transparent,#c5a069,transparent);width:75%;margin:22px}.cover-sub{color:#d2b784;font:400 17px 'Noto Serif KR',serif}.cover-name{font:600 25px 'Noto Serif KR',serif;margin-top:48px}.cover-date{color:#ac9777}.cover-foot{font-size:10px;letter-spacing:.17em;color:#a68a61;margin-top:80px}.eyebrow{letter-spacing:.18em;font-size:12px;color:#cba56c}.intro-sheet h2,.toc h2,.chapter h2{font:600 34px/1.5 'Noto Serif KR',serif}.intro-sheet p,.chapter-text{font:400 16px/2.2 'Noto Serif KR',serif;color:#e6dac4;word-break:keep-all}.intro-sheet{background:#242018}.toc ol{padding-left:24px;columns:2;column-gap:40px}.toc li{break-inside:avoid;margin:12px 0}.toc a{text-decoration:none}.chapter{min-height:670px}.chapter-title{border-bottom:1px solid #6b5638;padding-bottom:25px;margin-bottom:24px}.chapter-lead{font:500 19px/1.9 'Noto Serif KR',serif;color:#f0d49d;margin-bottom:38px}.chapter-text{margin:24px 0}.chapter-points{border:1px solid #665033;background:#2a231a;padding:24px 24px 24px 42px;margin-top:38px;line-height:2.2;color:#e2d2b6}.chapter-quote{font:500 20px/2 'Noto Serif KR',serif;color:#e6c78e;text-align:center;margin:50px 0 0;padding:24px 10px;border-top:1px solid #695134}.chapter-number{text-align:right;color:#aa8a59;font-size:12px;letter-spacing:.2em;margin-top:35px}.book-footer{text-align:center;color:#aa9678;font-size:12px;padding:45px 20px}.toc li a:hover{text-decoration:underline}@media(max-width:650px){.cover,.intro-sheet,.toc,.chapter{padding:42px 25px;margin:12px 0}.cover{min-height:650px}.toc ol{columns:1}.toolbar{padding:16px}.chapter{min-height:0}.chapter-text{font-size:15px}}@page{size:A4;margin:0}@media print{body{background:white!important;color:#241d16!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.book-wrap{max-width:none}.no-print,.status{display:none!important}.cover,.intro-sheet,.toc,.chapter{margin:0;box-shadow:none;border:0;border-radius:0;page-break-before:always;break-before:page;min-height:297mm;padding:26mm 22mm;background:#fffdf7!important;color:#2d2419!important;overflow:visible}.cover{background:#18130f!important;color:#eed4a0!important;display:flex;min-height:297mm}.cover h1{color:#eed4a0!important}.intro-sheet p,.chapter-text{color:#31281d!important}.intro-sheet h2,.toc h2,.chapter h2{color:#6c4925!important}.chapter-lead,.chapter-quote{color:#81572c!important}.chapter-points{background:#f4ead9!important;color:#392e21!important}.eyebrow,.chapter-number{color:#9b713d!important}.book-footer{color:#444;page-break-before:always;padding-top:30mm}.chapter{break-inside:auto}.chapter-text,.chapter-points,.chapter-quote{break-inside:avoid}.toc a{color:#31281d!important}}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;500;600;700&display=swap');:root{--gold:#d4b57a;--ink:#16120e}body{background:#0d0c0a}.book-wrap{max-width:940px;margin:0 auto}.toolbar{display:flex;align-items:center;justify-content:space-between;padding:22px 10px;gap:15px}.toolbar a{text-decoration:none}.status{text-align:center;color:#d9b77d;padding:8px}.cover,.intro-sheet,.toc,.chapter{position:relative;overflow:hidden;background:linear-gradient(135deg,#1d1915,#100e0c 70%);border:1px solid #55432b;padding:78px clamp(28px,8vw,100px);margin:18px 0;box-shadow:0 15px 50px #0007}.cover{min-height:720px;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;border:double 5px #765d37;background:radial-gradient(ellipse at 50% 45%,#35291d 0%,#17120e 56%,#0c0b09 100%)}.cover:before,.cover:after{content:'✦';position:absolute;font-size:27px;color:#cba968;top:22px;left:25px}.cover:after{top:auto;left:auto;bottom:22px;right:25px}.ornament{color:#bc975d;letter-spacing:.45em;margin-bottom:48px}.cover h1{font:700 clamp(48px,7vw,78px)/1.5 'Noto Serif KR',serif;letter-spacing:.08em;color:#e8ce94;margin:10px 0}.cover-rule{height:1px;background:linear-gradient(90deg,transparent,#c5a069,transparent);width:75%;margin:22px}.cover-sub{color:#d2b784;font:400 17px 'Noto Serif KR',serif}.cover-name{font:600 25px 'Noto Serif KR',serif;margin-top:48px}.cover-date{color:#ac9777}.cover-foot{font-size:10px;letter-spacing:.17em;color:#a68a61;margin-top:80px}.eyebrow{letter-spacing:.18em;font-size:12px;color:#cba56c}.intro-sheet h2,.toc h2,.chapter h2{font:600 34px/1.5 'Noto Serif KR',serif}.intro-sheet p,.chapter-text{font:400 16px/2.2 'Noto Serif KR',serif;color:#e6dac4;word-break:keep-all}.intro-sheet{background:#242018}.toc ol{padding-left:24px;columns:2;column-gap:40px}.toc li{break-inside:avoid;margin:12px 0}.toc a{text-decoration:none}.chapter{min-height:670px}.chapter-title{border-bottom:1px solid #6b5638;padding-bottom:25px;margin-bottom:24px}.chapter-lead{font:500 19px/1.9 'Noto Serif KR',serif;color:#f0d49d;margin-bottom:38px}.chapter-text{margin:24px 0}.chapter-points{border:1px solid #665033;background:#2a231a;padding:24px 24px 24px 42px;margin-top:38px;line-height:2.2;color:#e2d2b6}.chapter-quote{font:500 20px/2 'Noto Serif KR',serif;color:#e6c78e;text-align:center;margin:50px 0 0;padding:24px 10px;border-top:1px solid #695134}.chapter-number{text-align:right;color:#aa8a59;font-size:12px;letter-spacing:.2em;margin-top:35px}.book-footer{text-align:center;color:#aa9678;font-size:12px;padding:45px 20px}.toc li a:hover{text-decoration:underline}@media(max-width:650px){.cover,.intro-sheet,.toc,.chapter{padding:42px 25px;margin:12px 0}.cover{min-height:650px}.toc ol{columns:1}.toolbar{padding:16px}.chapter{min-height:0}.chapter-text{font-size:15px}}@page{size:A4;margin:0}@media print{body{background:white!important;color:#241d16!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.book-wrap{max-width:none}.no-print,.status{display:none!important}.cover,.intro-sheet,.toc,.chapter{margin:0;box-shadow:none;border:0;border-radius:0;page-break-before:always;break-before:page;min-height:297mm;padding:26mm 22mm;background:#fffdf7!important;color:#2d2419!important;overflow:visible}.cover{background:#18130f!important;color:#eed4a0!important;display:flex;min-height:297mm}.cover h1{color:#eed4a0!important}.intro-sheet p,.chapter-text{color:#31281d!important}.intro-sheet h2,.toc h2,.chapter h2{color:#6c4925!important}.chapter-lead,.chapter-quote{color:#81572c!important}.chapter-points{background:#f4ead9!important;color:#392e21!important}.eyebrow,.chapter-number{color:#9b713d!important}.book-footer{color:#444;page-break-before:always;padding-top:30mm}.chapter{break-inside:auto}.chapter-text,.chapter-points,.chapter-quote{break-inside:avoid}.toc a{color:#31281d!important}}}
+
+/* V8.8 PDF 출력 수정 */
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  .toolbar,
+  .status,
+  .no-print {
+    display: none !important;
+  }
+
+  .book-wrap {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .cover,
+  .intro-sheet,
+  .toc,
+  .chapter {
+    width: 210mm !important;
+    height: 297mm !important;
+    min-height: 0 !important;
+    max-height: 297mm !important;
+    margin: 0 !important;
+    padding: 24mm 20mm !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    break-before: page;
+    page-break-before: always;
+    break-after: auto;
+    box-shadow: none !important;
+  }
+
+  .cover:first-child {
+    break-before: auto;
+    page-break-before: auto;
+  }
+
+  .chapter {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chapter-number {
+    margin-top: auto !important;
+    padding-top: 8mm;
+  }
+
+  .chapter-text,
+  .chapter-points,
+  .chapter-quote {
+    break-inside: avoid;
+  }
+
+  .book-footer {
+    break-before: auto !important;
+    page-break-before: auto !important;
+  }
+}
