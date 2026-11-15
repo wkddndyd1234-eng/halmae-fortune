@@ -73,26 +73,3 @@
     page-break-before: auto !important;
   }
 }
-/* PDF 빈 페이지 및 페이지 넘김 보정 */
-@media print {
-  .cover,
-  .intro-sheet,
-  .toc,
-  .chapter {
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-
-  .chapter-text,
-  .chapter-points,
-  .chapter-quote {
-    break-inside: auto !important;
-  }
-
-  .book-footer {
-    break-before: auto !important;
-    page-break-before: auto !important;
-  }
-}
