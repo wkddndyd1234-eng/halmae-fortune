@@ -53,13 +53,14 @@
   }
 
   .chapter {
-    display: flex;
-    flex-direction: column;
+    display: block !important;
   }
 
   .chapter-number {
-    margin-top: auto !important;
-    padding-top: 8mm;
+   margin-top: 12mm !important;
+  padding-top: 0 !important;
+  break-before: avoid;
+  page-break-before: avoid;
   }
 
   .chapter-text,
