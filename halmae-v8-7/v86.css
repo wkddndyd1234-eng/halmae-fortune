@@ -34,7 +34,7 @@
   .toc,
   .chapter {
     width: 210mm !important;
-    height: 297mm !important;
+    height: auto !important;
     min-height: 0 !important;
     max-height: 297mm !important;
     margin: 0 !important;
