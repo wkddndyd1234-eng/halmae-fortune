@@ -10,17 +10,20 @@ export function validateBirthDraft(input,today=todayInKorea()) {
       typeof input.birthTime !== 'string' || !['male','female'].includes(input.gender)) return null;
   const name = input.name.trim();
   const {birthDate,birthTime} = input;
+  const calendarType=input.calendarType??'solar';
+  const isLeapMonth=input.isLeapMonth===true||input.isLeapMonth==='true';
+  if(!['solar','lunar'].includes(calendarType)||(calendarType==='solar'&&isLeapMonth))return null;
   if (name.length>20 || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate) ||
       birthDate<'1900-01-01' || birthDate>today ||
       (birthTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(birthTime))) return null;
   const instant = new Date(birthDate+'T00:00:00Z');
   if (!Number.isFinite(instant.getTime()) || instant.toISOString().slice(0,10)!==birthDate) return null;
-  return {name,birthDate,birthTime,gender:input.gender};
+  return {name,birthDate,birthTime,gender:input.gender,calendarType,isLeapMonth};
 }
 
-export function fromFreeForm({name,gender,year,month,day,hour,minute}) {
+export function fromFreeForm({name,gender,calendarType='solar',isLeapMonth=false,year,month,day,hour,minute}) {
   return validateBirthDraft({
-    name,gender,birthDate:`${year}-${pad(month)}-${pad(day)}`,
+    name,gender,calendarType,isLeapMonth,birthDate:`${year}-${pad(month)}-${pad(day)}`,
     birthTime:hour===''?'':`${pad(hour)}:${pad(minute)}`,
   });
 }
