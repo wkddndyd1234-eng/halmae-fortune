@@ -1,4 +1,5 @@
 import {preciseTermMinutes} from './calendar-data.mjs';
+import {lunarToSolar} from './lunar-conversion.mjs';
 const stems=[...'甲乙丙丁戊己庚辛壬癸'];
 const branches=[...'子丑寅卯辰巳午未申酉戌亥'];
 const elements=['목','목','화','화','토','토','금','금','수','수'];
@@ -13,13 +14,18 @@ export function normalizeBirth(input){
  const [y,m,d]=date.split('-').map(Number);
  const calendarType=input.calendarType ?? 'solar';
  const isLeapMonth=input.isLeapMonth ?? false;
- if(calendarType!=='solar'||(isLeapMonth!==false&&isLeapMonth!=='false'))throw Error('양력 생년월일만 입력할 수 있습니다.');
+ if(!['solar','lunar'].includes(calendarType))throw Error('양력 또는 음력을 선택해 주세요.');
+ if(![true,false,'true','false'].includes(isLeapMonth))throw Error('윤달 선택을 확인해 주세요.');
+ if(calendarType==='solar'&&(isLeapMonth===true||isLeapMonth==='true'))throw Error('양력에는 윤달을 선택할 수 없어요.');
  if(y<1900||y>2050)throw Error('생년월일 지원 연도를 확인해 주세요.');
  if(!validGregorian(y,m,d))throw Error('존재하지 않는 양력 날짜입니다.');
  if(date>new Date(Date.now()+9*60*60*1000).toISOString().slice(0,10))throw Error('미래 생년월일은 입력할 수 없습니다.');
  const gender=input.gender??'';if(gender!==''&&!['male','female'].includes(gender))throw Error('성별을 확인해 주세요.');
  const time=String(input.birthTime||'');if(time&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))throw Error('출생 시각 형식이 올바르지 않습니다.');
- return {birthDate:date,calendarType,isLeapMonth:false,solarDate:date,birthTime:time,gender};
+ const leap=isLeapMonth===true||isLeapMonth==='true';
+ const solarDate=calendarType==='lunar'?lunarToSolar({birthDate:date,isLeapMonth:leap}).solarDate:date;
+ if(solarDate>new Date(Date.now()+9*60*60*1000).toISOString().slice(0,10))throw Error('미래 생년월일은 입력할 수 없습니다.');
+ return {birthDate:date,calendarType,isLeapMonth:calendarType==='lunar'&&leap,solarDate,birthTime:time,gender};
 }
 const term=(year,index)=>{const row=preciseTermMinutes[year-1899];if(!row||index<0||index>23)throw Error('절기 계산 범위를 벗어났습니다.');return row[index]*60000};
 export function calculateSaju(input){
