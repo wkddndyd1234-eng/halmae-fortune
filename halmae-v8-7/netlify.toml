@@ -1,5 +1,6 @@
 [build]
-  publish = "."
+  command = "node build.mjs"
+  publish = "dist"
   functions = "netlify/functions"
 [[headers]]
   for = "/*"
@@ -12,3 +13,10 @@
   for = "/report.html"
   [headers.values]
     Cache-Control = "no-store"
+    Referrer-Policy = "no-referrer"
+
+[[headers]]
+  for = "/payment-result.html"
+  [headers.values]
+    Cache-Control = "no-store"
+    Referrer-Policy = "no-referrer"

@@ -11,32 +11,29 @@
   <a href="/">← 할매의 운명방</a>
   <p class="eyebrow">할매의 깊은 장부</p>
   <h1>내 인생의 깊은 장부 · 전체 보고서</h1>
-  <p>사주 분석부터 2027년 운세까지 한 번에 · 웹 열람</p>
-  <p><strong>출시 예정 판매가 39,900원</strong></p>
-  <p class="notice">서비스 오픈 준비 중입니다. 실제 카드 결제와 고객용 유료 보고서 발급은 제공되지 않습니다. 현재 보고서는 사주 계산 정확도와 개인별 해석을 검증 중인 테스트 버전입니다.</p>
+  <p>네 기둥과 겉으로 드러난 오행을 근거별로 풀고, 일·관계·생활을 돌아보는 질문을 담은 26장 웹 보고서입니다.</p>
+  <p><strong>출시 예정가 39,900원</strong></p>
+  <p class="notice" id="availability" role="status">실제 카드 결제는 제공하지 않습니다. 테스트 결제가 준비되면 이 화면에서 안내합니다.</p>
   <form id="form">
-    <label>이름 또는 별칭<input name="name" maxlength="30" required placeholder="예: 해윤"></label>
+    <label>별칭 (선택)<input name="name" maxlength="30" autocomplete="off"></label>
     <label>생년월일 (양력)<input type="date" name="birthDate" required min="1900-01-01"></label>
-    <label>출생 시간 (모르면 비워두세요)<input type="time" name="birthTime"></label>
-    <label>성별 (대운 계산 규칙 확인용)
-      <select name="gender" required>
-        <option value="">선택해 주세요</option>
-        <option value="male">남성</option>
-        <option value="female">여성</option>
-      </select>
-    </label>
-    <p class="notice">전체 보고서에는 사주 원국·오행·성향·직업·재물·인연·대운·2027년 연간 및 월별 해석을 포함할 예정입니다. 정확도 검증이 완료되기 전까지 실제 판매하지 않습니다.</p>
-    <label class="check"><input type="checkbox" required> <span><a href="/privacy.html">개인정보처리방침</a>을 읽었고 테스트용 입력정보의 처리에 동의합니다.</span></label>
-    <button type="submit">테스트 주문 생성</button>
+    <label>한국 표준시 출생 시간 (모르면 비워두세요)<input type="time" name="birthTime"></label>
+    <p>보고서는 웹으로 열람합니다. 테스트 결제 후에는 발급 링크로 7일간 다시 열 수 있습니다.</p>
+    <label class="check"><input type="checkbox" name="consent" required> <span><a href="/privacy.html">개인정보처리방침</a>을 읽었고 가상 출생 정보의 테스트 처리에 동의합니다.</span></label>
+    <p class="small"><a href="/terms.html">이용약관</a> · <a href="/refund.html">취소·환불 안내</a> · <a href="/payment-result.html">최근 테스트 보고서</a></p>
+    <button type="submit" id="buy" hidden>39,900원 테스트 결제</button>
+    <details>
+      <summary>관리자 테스트</summary>
+      <button type="submit" id="admin">관리자 테스트 주문 생성</button>
+      <div id="next" hidden>
+        <label>관리자 테스트 코드<input type="password" id="code" autocomplete="off"></label>
+        <button id="issue" type="button">관리자 전용 테스트 발급</button>
+      </div>
+    </details>
   </form>
   <p id="msg" role="status"></p>
-  <div id="next" hidden>
-    <p>테스트 주문이 생성됐습니다. 실제 결제는 발생하지 않습니다.</p>
-    <label>관리자 테스트 코드<input type="password" id="code" autocomplete="off" placeholder="Netlify 환경변수에 설정한 코드"></label>
-    <button id="issue" type="button">관리자 전용 테스트 발급</button>
-  </div>
   <p class="small">고객센터: <a href="mailto:valueseeker123@naver.com">valueseeker123@naver.com</a></p>
 </main>
-<script src="/checkout.js"></script>
+<script type="module" src="/checkout.js"></script>
 </body>
 </html>

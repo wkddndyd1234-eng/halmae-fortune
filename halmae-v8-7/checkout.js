@@ -1,18 +1,88 @@
-const form=document.querySelector('#form'),msg=document.querySelector('#msg'),next=document.querySelector('#next');
-let orderId;
-form.addEventListener('submit',async e=>{
- e.preventDefault();msg.textContent='테스트 주문을 생성하고 있어요…';next.hidden=true;
- try{
-  const data=Object.fromEntries(new FormData(form));
-  const r=await fetch('/.netlify/functions/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-  const j=await r.json();if(!r.ok)throw Error(j.error||'주문 실패');
-  orderId=j.orderId;msg.textContent='테스트 주문 번호: '+orderId;next.hidden=false;
- }catch(err){msg.textContent=err.message}
+import {recordConversion,post,checkoutKey} from '/purchase.js';
+
+const form = document.querySelector('#form');
+const msg = document.querySelector('#msg');
+const buy = document.querySelector('#buy');
+const admin = document.querySelector('#admin');
+const next = document.querySelector('#next');
+const issue = document.querySelector('#issue');
+const endpoint = '/.netlify/functions/';
+let adminOrderId;
+let busy = false;
+
+recordConversion('checkout_view');
+fetch(endpoint+'payment',{cache:'no-store'})
+  .then(response => response.ok ? response.json() : {enabled:false})
+  .then(({enabled}) => {
+    if (enabled) {
+      buy.hidden = false;
+      document.querySelector('#availability').textContent = '테스트 카드로 주문과 보고서 열람을 체험할 수 있습니다. 실제 청구는 발생하지 않습니다.';
+    }
+  }).catch(() => {});
+
+function loadToss() {
+  return new Promise((resolve,reject) => {
+    if (window.TossPayments) return resolve(window.TossPayments);
+    const script = document.createElement('script');
+    script.src = 'https://js.tosspayments.com/v2/standard';
+    script.onload = () => window.TossPayments ? resolve(window.TossPayments) : reject(Error('결제창을 불러오지 못했습니다.'));
+    script.onerror = () => {
+      script.remove();
+      reject(Error('결제창을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'));
+    };
+    document.head.append(script);
+  });
+}
+
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (busy) return;
+  const customer = event.submitter === buy;
+  busy = true;
+  buy.disabled = admin.disabled = true;
+  next.hidden = true;
+  msg.textContent = '테스트 주문을 준비하고 있습니다…';
+  try {
+    const data = Object.fromEntries(new FormData(form));
+    const order = await post('order',{
+      name:data.name,birthDate:data.birthDate,birthTime:data.birthTime,
+      consent:form.elements.consent.checked,channel:customer?'toss-test':'admin-demo',
+    });
+    if (!customer) {
+      adminOrderId = order.orderId;
+      next.hidden = false;
+      msg.textContent = '관리자 테스트 주문을 준비했습니다.';
+      return;
+    }
+    recordConversion('test_order_created');
+    sessionStorage.setItem(checkoutKey,JSON.stringify({orderId:order.orderId,token:order.checkoutToken}));
+    const TossPayments = await loadToss();
+    const payment = TossPayments(order.clientKey).payment({customerKey:TossPayments.ANONYMOUS});
+    recordConversion('test_payment_open');
+    await payment.requestPayment({
+      method:'CARD',amount:{currency:'KRW',value:order.amount},orderId:order.orderId,
+      orderName:order.orderName,successUrl:order.successUrl,failUrl:order.failUrl,
+    });
+  } catch (error) {
+    const cancelled = ['USER_CANCEL','PAY_PROCESS_CANCELED'].includes(error.code);
+    if (customer) recordConversion(cancelled?'test_payment_cancel':'test_payment_failure');
+    msg.textContent = cancelled ? '테스트 결제를 취소했습니다.' : error.message;
+  } finally {
+    busy = false;
+    buy.disabled = admin.disabled = false;
+  }
 });
-document.querySelector('#issue').onclick=async()=>{
- msg.textContent='관리자 테스트 발급 요청 중…';
- try{
-  const r=await fetch('/.netlify/functions/demo-issue',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId,code:document.querySelector('#code').value})});
-  const j=await r.json();if(!r.ok)throw Error(j.error||'발급 실패');location.href='/report.html#'+encodeURIComponent(j.token);
- }catch(err){msg.textContent=err.message}
-};
+
+issue.addEventListener('click',async () => {
+  issue.disabled = true;
+  const code = document.querySelector('#code');
+  try {
+    const {token} = await post('demo-issue',{orderId:adminOrderId,code:code.value});
+    location.href = '/report.html#'+encodeURIComponent(token);
+  } catch (error) {
+    msg.textContent = error.message;
+  } finally {
+    code.value = '';
+    issue.disabled = false;
+  }
+});

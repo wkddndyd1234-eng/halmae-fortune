@@ -5,7 +5,7 @@ import issueDemo from '../netlify/functions/demo-issue.mjs';
 import getReport from '../netlify/functions/report.mjs';
 import {sign} from '../netlify/functions/shared.mjs';
 
-const birth = {name:'테스트', birthDate:'2000-01-01', gender:'female'};
+const birth = {name:'테스트', consent:true, birthDate:'2000-01-01', gender:'female'};
 const demoCode = 'local-demo-code';
 const reportSecret = 'local-test-signing-secret-32-characters';
 const post = body => new Request('https://example.test', {

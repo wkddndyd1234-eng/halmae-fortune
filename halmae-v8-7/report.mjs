@@ -1,4 +1,6 @@
 import {orders,json,verify,error} from './shared.mjs';
+import {paymentConfig,PRICE} from './payment-config.mjs';
+import {approvedPayment,findPayment} from './toss.mjs';
 import {calculateSaju} from './saju.mjs';
 const weekdays=['일','월','화','수','목','금','토'];
 const seasonData=[
@@ -20,7 +22,7 @@ const themes=[
  ['11월','인연을 돌보는 달','오래 가는 관계는 거창한 약속보다 꾸준한 행동으로 자랍니다.','먼저 안부를 전할 사람 정하기'],
  ['12월','한 해를 매듭짓는 달','잘된 일과 아쉬운 일을 함께 받아들이고 다음 장을 준비하세요.','2028년으로 가져갈 원칙 한 가지 쓰기']];
 function section(kicker,title,lead,paragraphs,bullets=[],quote=''){return {kicker,title,lead,paragraphs,bullets,quote}}
-function build(o){// 기존 테스트 주문의 음력 기록은 저장 시 검증한 양력 환산일로 열람합니다.
+export function buildReport(o){// 기존 테스트 주문의 음력 기록은 저장 시 검증한 양력 환산일로 열람합니다.
  const legacyLunar=o.calendarType==='lunar';
  const saju=calculateSaju(legacyLunar?{...o,birthDate:o.solarDate,calendarType:'solar',isLeapMonth:false}:o);
  const originalCalendar=legacyLunar?(o.isLeapMonth?'음력 윤달':'음력'):'양력';const date=new Date(saju.solarDate+'T00:00:00Z'),month=date.getUTCMonth()+1,day=date.getUTCDate(),weekday=weekdays[date.getUTCDay()],season=seasonData.find(s=>s.months.includes(month));const name=o.name;const t=o.birthTime?`${o.birthTime}에 태어났다고 기록했구나.`:'태어난 시각은 미상으로 기록했구나.';const intro=`${name}아, ${o.birthDate.replaceAll('-','.')} (${originalCalendar}), 양력 환산 ${saju.solarDate}, ${weekday}요일, ${t}`;const chapters=[
@@ -37,22 +39,76 @@ section('第九帖','내 삶을 다시 쓰는 계획','오늘부터 시작하는
 section('SPECIAL EDITION','2027년, 새로운 장의 문턱','2027년 특별 부록을 여는 말',[`2027년의 열두 달을 차례로 넘기며 일·돈·관계·회복을 균형 있게 돌아볼 수 있도록 구성했다.`,`아래 월별 글은 특정 사주 원국에서 산출한 월운 예측이 아니라, 새해 계획을 돕는 월별 성찰 가이드다. 정밀 세운·월운 계산을 검증하기 전까지 운세 예측처럼 판매해서는 안 된다.`,`매달 마지막 날, 그달의 질문에 대한 답을 한 줄 남겨 보거라. 열두 줄이 쌓이면 ${name}만의 2027년 장부가 될 것이다.`],['월별 제안은 달력 기반 공통 계획 가이드','명리학적 개인별 월운 예측은 미제공','각 달의 기록을 실제 경험과 비교해 보기'],'“한 해를 잘 보냈는지는 마지막에 네가 써 내려간 문장이 알려줄 거란다.”')];
 // 기존 보고서의 공통 성찰 문구 앞에 입력별 계산 결과를 분리해 제시한다.
 const elementLine=Object.entries(saju.elements).map(([e,n])=>`${e} ${n}`).join(' · ');
+const maxCount = Math.max(...Object.values(saju.elements));
+const frequent = Object.keys(saju.elements).filter(key=>saju.elements[key]===maxCount);
+const absent = Object.keys(saju.elements).filter(key=>saju.elements[key]===0);
+const stemGroups = [...'甲乙丙丁戊己庚辛壬癸'];
+const tenGodPairs = [['비견','겁재'],['식신','상관'],['편재','정재'],['편관','정관'],['편인','정인']];
+const dayIndex = stemGroups.indexOf(saju.dayStem);
+const stemRelations = [[0,'연간'],[1,'월간'],[3,'시간']].map(([i,label])=>{
+ const glyph = saju.pillars[i]?.[0];
+ if (!glyph) return `${label} 미상`;
+ const index = stemGroups.indexOf(glyph);
+ const relation = (Math.floor(index/2)-Math.floor(dayIndex/2)+5)%5;
+ return `${label} ${glyph} · ${tenGodPairs[relation][(index+dayIndex)%2]}`;
+});
 const dayMeanings={甲:'큰 나무처럼 성장과 원칙',乙:'풀과 덩굴처럼 유연한 연결',丙:'햇빛처럼 표현과 온기',丁:'등불처럼 집중과 섬세함',戊:'산처럼 중심과 책임',己:'밭처럼 돌봄과 축적',庚:'쇠처럼 결단과 기준',辛:'보석처럼 세밀함과 정제',壬:'큰 물처럼 흐름과 시야',癸:'이슬처럼 관찰과 적응'};
 chapters.splice(2,0,
  section('命式 · 계산 기록','나의 사주 네 기둥',`${saju.pillars[0]} · ${saju.pillars[1]} · ${saju.pillars[2]} · ${saju.pillars[3]||'시주 미상'}`,[
  `연주 ${saju.pillars[0]}, 월주 ${saju.pillars[1]}, 일주 ${saju.pillars[2]}${saju.pillars[3]?', 시주 '+saju.pillars[3]:''}로 계산되었다. 이 네 기둥은 전통 명리의 상징 체계이며 실제 성격이나 미래를 과학적으로 예측하는 수단은 아니다.`,
  `일간은 ${saju.dayStem}(${saju.dayElement})으로, 전통적으로 ${dayMeanings[saju.dayStem]}의 이미지에 빗대어 읽는다. 네 실제 경험과 맞는 부분만 자기 성찰의 질문으로 가져가 보렴.`,
+ `일간 ${saju.dayStem}과 다른 천간의 오행·음양 관계는 ${stemRelations.join(' / ')}이다. 이 십성 분류는 겉으로 드러난 천간만 비교한 기록이며 지장간과 원국의 세력은 반영하지 않았다.`,
  `출생 기록: ${o.birthDate} (${originalCalendar}) · 양력 ${saju.solarDate} · ${saju.birthTime||'출생 시각 미상'}.`],
  ['연주 '+saju.pillars[0],'월주 '+saju.pillars[1],'일주 '+saju.pillars[2],'시주 '+(saju.pillars[3]||'미상'),...saju.warnings],
  '“계산 결과와 삶의 판단은 구분해서 보거라.”'),
  section('五行 · 기초 분포','겉으로 드러난 오행',elementLine,[
  `네 사주에서 겉으로 드러난 천간과 지지의 오행만 단순하게 세면 ${elementLine}이다. 시각을 입력하지 않았다면 여섯 글자만 계산에 반영했다.`,
- `이 분포는 지장간, 계절의 세력, 합충과 용신을 반영하지 않는다. 가장 많은 오행이 반드시 좋거나 가장 적은 오행이 나쁘다는 뜻이 아니다.`,
+ `가장 많이 표시된 오행은 ${frequent.join('·')}(${maxCount}회)이다. ${absent.length?'표면에 표시되지 않은 오행은 '+absent.join('·')+'이다.':'다섯 오행이 모두 한 번 이상 표시된다.'} 이 분포는 지장간, 계절의 세력, 합충과 용신을 반영하지 않는다. 가장 많은 오행이 반드시 좋거나 가장 적은 오행이 나쁘다는 뜻이 아니다.`,
  `목은 성장, 화는 표현, 토는 유지, 금은 정리, 수는 관찰이라는 전통적인 비유를 떠올리며 네 삶에서 어떤 태도를 더 연습할지 생각해 보렴.`],
  Object.entries(saju.elements).map(([e,n])=>`${e}: ${n}`),
  '“숫자는 단서일 뿐, 네 삶의 정답은 아니란다.”'));
 
-for(const [label,title,body,action] of themes)chapters.push(section('2027 MONTHLY · '+label,title,`${name}에게 건네는 ${label}의 질문`,[body,`이번 달에는 ‘${action}’을 실천해 보고, 무엇이 달라졌는지 적어 보자. 결과가 기대와 달라도 실패가 아니라 다음 선택을 위한 기록이 된다.`,`월별 문구는 개인 운세의 길흉이나 사건 발생을 예언하지 않는다. ${name}의 생활과 목표에 맞춰 활용할 수 있는 자기 점검 제안이다.`],[action,'월말에 실제로 일어난 일 세 가지 기록','다음 달에 이어갈 행동 한 가지 선택'],`“${label}의 장부에 어떤 한 줄을 남기고 싶으냐?”`));
+const monthlyQuestions = [
+ ['새 일정에서 무엇을 비우면 목표에 시간을 줄 수 있을까?','한 달 뒤 어떤 기록으로 첫걸음을 확인할까?'],
+ ['서로 다르게 받아들인 약속이 있었을까?','고마움을 말했을 때 상대는 어떻게 반응했을까?'],
+ ['실험의 비용과 위험을 어디까지 감당할 수 있을까?','무엇을 배웠을 때 실험을 계속할까?'],
+ ['가장 중요한 일에 시간을 얼마나 쓰고 있을까?','미뤄도 되는 일은 누구와 먼저 조율할까?'],
+ ['최근 예상 밖 지출에 공통된 상황이 있었을까?','줄인 지출을 어떤 목적에 돌리고 싶을까?'],
+ ['어떤 활동 뒤에 기력이 가장 많이 남았을까?','일정이 밀려도 지킬 휴식 시간은 언제일까?'],
+ ['어떤 부탁에 답하기 전에 생각할 시간이 필요했을까?','경계를 말한 뒤에도 지키고 싶은 약속은 뭘까?'],
+ ['배운 내용을 적용할 작은 과제는 무엇일까?','첫 결과를 누구에게 보여주고 의견을 구할까?'],
+ ['정리한 계획에 쓰던 시간을 어디에 돌릴까?','계속하기로 한 계획의 다음 기한은 언제일까?'],
+ ['기대와 달랐지만 얻은 결과는 무엇일까?','결과를 바꾸는 데 내 행동이 어떤 역할을 했을까?'],
+ ['최근 시간을 내지 못한 사람은 누구였을까?','그 사람의 상황을 알기 위해 무엇을 물을까?'],
+ ['올해 가장 책임 있게 내린 결정은 무엇일까?','그때의 기준을 내년에 어떤 상황에서 다시 쓸까?'],
+];
+themes.forEach(([label,title,body,action],index)=>{
+ const [review,next] = monthlyQuestions[index];
+ chapters.push(section('2027 MONTHLY · '+label,title,`${name}에게 건네는 ${label}의 질문`,
+  [body,`이번 달에는 ‘${action}’부터 시작해 보자.`],[action,review,next],
+  `“${label}의 장부에 어떤 한 줄을 남기고 싶으냐?”`));
+});
 chapters.push(section('EPILOGUE','할매가 마지막으로 남기는 편지',`${name}아, 네 장부의 마지막 장을 넘기는구나.`,[`태어난 날은 네가 선택한 것이 아니지만, 오늘의 행동은 네가 고를 수 있단다. 누구나 흔들리고 때로는 오래 돌아가기도 하지. 중요한 것은 그 시간이 네 삶의 전부라고 믿지 않는 것이다.`,`너의 계절을 ${season.symbol}이라는 말로 표현해 보았지만, 너는 어느 하나의 계절보다 넓은 사람이란다. 마음에 남는 문장이 있다면 가져가고, 맞지 않는 말은 조용히 내려놓아도 괜찮다.`,`올해와 내년, 그리고 그다음 해에도 네 삶의 저자는 너란다. 이 장부가 너에게 필요한 질문 하나를 남겼다면 할매는 그걸로 충분하다.`],['이 책에서 가장 오래 남은 문장','오늘 시작할 작은 행동 하나','다시 읽고 싶은 날짜'],`“${name}아, 네 인생은 아직 쓰이는 중이란다.”`));
-return {meta:{name,birthDate:o.birthDate,solarDate:saju.solarDate,calendarType:legacyLunar?'lunar':'solar',birthTime:o.birthTime||'미상',pillars:saju.pillars,elementCounts:saju.elements,calculationWarnings:saju.warnings,weekday:weekday+'요일',season:season.name,edition:'v8.7 · 계산 연동 검증용 시제품 · 대운/세운 미제공',chapterCount:chapters.length},chapters}}
-export default async req=>{if(req.method!=='GET')return json({error:'Method not allowed'},405);try{const token=(req.headers.get('authorization')||'').replace(/^Bearer /,'');const p=verify(token);if(!p||p.scope!=='report'||p.demo!==true)return json({error:'유효한 보고서 접근 권한이 없습니다.'},403);const o=await orders().get(p.orderId,{type:'json'});if(!o||o.status!=='demo')return json({error:'발급 권한이 확인되지 않았습니다.'},403);return json({...build(o),demo:true})}catch(e){return error(e)}};
+return {meta:{name,birthDate:o.birthDate,solarDate:saju.solarDate,calendarType:legacyLunar?'lunar':'solar',birthTime:o.birthTime||'미상',pillars:saju.pillars,elementCounts:saju.elements,calculationWarnings:saju.warnings,weekday:weekday+'요일',season:season.name,edition:'v8.7 · 계산 연동 검증용 시제품 · 대운/세운 미제공',chapterCount:chapters.length},chapters:chapters.map((chapter,index)=>({...chapter,basis:index<=3?'계산·출생 기록':index===4||index===5?'계절 비유와 성찰 질문':'공통 성찰 가이드'}))}}
+export default async req => {
+ if (req.method !== 'GET') return json({error:'Method not allowed'},405);
+ try {
+  const claim = verify((req.headers.get('authorization') ?? '').replace(/^Bearer /,''));
+  const demo = claim?.scope === 'report' && claim.demo === true;
+  const config = claim?.scope === 'toss-test-report' ? paymentConfig(req) : null;
+  if (!demo && !config) return json({error:'유효한 보고서 접근 권한이 없습니다.'},403);
+  const o = await orders().get(claim.orderId,{type:'json'});
+  if (!o || o.orderId !== claim.orderId) return json({error:'발급 권한이 확인되지 않았습니다.'},403);
+  if (demo) {
+   if (o.status !== 'demo' || (o.channel && o.channel !== 'admin-demo')) {
+    return json({error:'관리자 테스트 발급 권한이 확인되지 않았습니다.'},403);
+   }
+  } else {
+   if (o.channel !== 'toss-test' || o.status !== 'test-paid' || o.amount !== PRICE ||
+       !approvedPayment(await findPayment(config,o.orderId),o.orderId,o.paymentKey)) {
+    return json({error:'완료된 테스트 카드 결제를 확인하지 못했습니다.'},403);
+   }
+  }
+  return json({...buildReport(o),demo});
+ } catch (e) { return error(e); }
+};
