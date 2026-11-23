@@ -42,7 +42,7 @@ export function branchRelations(pillars){
 }
 export function fortuneCycles(input){
  const saju=calculateSaju(input);
- const [y,m,d]=saju.birthDate.split('-').map(Number);
+ const [y,m,d]=saju.solarDate.split('-').map(Number);
  const [hour,minute]=saju.birthTime?saju.birthTime.split(':').map(Number):[12,0];
  const born=Date.UTC(y,m-1,d,hour-9,minute);
  const yearStem=stems.indexOf(saju.pillars[0][0]);
