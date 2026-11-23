@@ -72,6 +72,11 @@ form.addEventListener('submit',event=>{
   compassHeadline:reading.headline,compassDetail:reading.introduction,
   personality:reading.temperament,balanceQuestion:reading.balance,career:reading.work,love:reading.relationships,
  })) byId(id).textContent=value;
+ const artwork=byId('day-symbol-art');
+ artwork.setAttribute('aria-label',reading.symbol+'의 상징, '+reading.headline);
+ artwork.parentElement.dataset.symbol=reading.imageId;
+ byId('day-symbol-use').setAttribute('href','#art-'+reading.imageId);
+ byId('ledgerQuestion').textContent=`‘${reading.headline}’라는 그림이 마음에 남았니? 네 사주를 일과 관계에 연결한 질문이 장부 안에서 이어진단다.`;
  const notices = [];
  if (!input.birthTime) notices.push('태어난 시간을 모르니 시주는 비워 두었어요.');
  if (saju.warnings.some(w=>w.startsWith('절기'))) notices.push('절기 가까이 태어나 연주나 월주가 출생 시각에 따라 달라질 수 있어요.');
@@ -80,7 +85,7 @@ form.addEventListener('submit',event=>{
  byId('calcNotice').hidden=!notices.length;
  renderReadingChart(byId('pillars'),byId('fiveElements'),saju);
  readingText=[byId('greeting').textContent,byId('resultMeta').textContent,
-  saju.pillars.map(pillar=>pillar??'미상').join(' · '),...Object.values(reading),
+  saju.pillars.map(pillar=>pillar??'미상').join(' · '),reading.headline,reading.introduction,reading.temperament,reading.work,reading.balance,reading.relationships,
   ...notices,'전통 사주 상징을 바탕으로 한 자기 성찰용 풀이입니다.'].join('\n\n');
  result.hidden=false;
  offer.hidden=false;
@@ -88,17 +93,9 @@ form.addEventListener('submit',event=>{
  focusHeading('resultHeading');
 });
 
-form.addEventListener('reset',()=>{
- draft=null;
- readingText='';
- saveBirthDraft(null);
- error.textContent='';
- result.hidden=true;
- offer.hidden=true;
- queueMicrotask(()=>{
-  updateDays();
-  minute.disabled=hour.value==='';
- });
+byId('editBirth').addEventListener('click',()=>{
+ name.focus({preventScroll:true});
+ form.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
 });
 byId('conversionNext').addEventListener('click',()=>focusHeading('offerHeading'));
 byId('checkoutLink').addEventListener('click',event=>{

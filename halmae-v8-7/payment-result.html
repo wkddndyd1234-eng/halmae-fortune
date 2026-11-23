@@ -6,6 +6,7 @@
   <meta name="referrer" content="no-referrer">
   <title>테스트 결제 결과 · 할매의 운명방</title>
   <link rel="stylesheet" href="/v85.css">
+  <link rel="stylesheet" href="/v88.css">
 </head>
 <body>
 <main class="paper">
@@ -15,13 +16,17 @@
   <button id="retry" type="button" hidden>결제 다시 확인</button>
   <p id="order-number" hidden></p>
   <p><a id="recover" href="/recovery.html" hidden>이메일로 테스트 보고서 복구</a></p>
-  <p id="access" hidden>365일 동안 다시 볼 수 있어요. 아래 링크는 30분 안에 열어 주세요. 다시 볼 때는 새 링크를 받을 수 있어요. 주문 번호를 보관하고 링크는 공유하지 마세요.</p>
-  <p id="purchase-expiry" hidden></p>
+  <section class="ledger-cover ledger-receipt" id="opened-ledger" hidden>
+    <span class="ledger-seal" aria-hidden="true">開</span>
+    <h2>장부의 봉인이 열렸어요</h2>
+    <p id="access">365일 동안 다시 볼 수 있어요. 이 링크는 최대 30분 동안 열 수 있으니 공유하지 마세요.</p>
+    <p id="purchase-expiry" hidden></p>
+    <a class="ledger-cta" id="report" hidden>장부 표지와 목차 열기</a>
+  </section>
   <form id="renew">
     <label>이 브라우저에서 결제한 주문 번호<input name="orderId" maxlength="39" required autocomplete="off"></label>
     <button type="submit">새 열람 링크 받기</button>
   </form>
-  <p><a id="report" hidden>테스트 보고서 열기</a></p>
 </main>
 <script type="module" src="/payment-result.js"></script>
 </body>

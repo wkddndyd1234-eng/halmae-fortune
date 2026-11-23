@@ -54,8 +54,9 @@ test('같은 계절의 다른 일주·오행은 무료 도입과 기질·일·�
  for(const section of ['headline','introduction','temperament','work','relationships']){
   assert.notEqual(first[section],second[section]);
  }
- assert.match(first.introduction,/戊午/);
- assert.match(first.relationships,/午/);
+ assert.match(first.introduction,/산/);
+ assert.doesNotMatch(first.introduction,/戊午|일간|일주/);
+ assert.match(first.relationships,/고마웠던 장면/);
 });
 
 test('계산된 열 가지 일간은 각 상징과 생활 장면, 균형 질문으로 구분된다',()=>{
@@ -66,7 +67,8 @@ test('계산된 열 가지 일간은 각 상징과 생활 장면, 균형 질문�
   const saju=calculateSaju({birthDate,birthTime:'01:30'});
   const reading=readFreeInsights(saju.pillars[2],saju.elements);
   assert.match(reading.headline,new RegExp(symbols[stems.indexOf(saju.dayStem)]));
-  assert.ok(reading.introduction.includes(saju.pillars[2]));
+  assert.match(reading.introduction,new RegExp(symbols[stems.indexOf(saju.dayStem)]));
+  assert.doesNotMatch(reading.introduction,/일간|일주/);
   return reading;
  });
  for(const field of ['headline','introduction','temperament','balance']){
@@ -103,4 +105,19 @@ test('주문 화면 장부 미리보기는 가상 입력으로 생성한 실제 
  assert.ok(quote);
  const report=buildReport({name:'가상',birthDate:'2000-01-01',birthTime:'12:00'});
  assert.ok(report.chapters[5].paragraphs.some(paragraph=>paragraph.includes(quote)));
+});
+
+
+test('열 가지 일간 이미지가 고유한 경량 수묵 그림과 연결된다',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const art=await readFile(new URL('../day-symbols.svg',import.meta.url),'utf8');
+ assert.ok(Buffer.byteLength(art)<10_000);
+ const expected={甲:'gap',乙:'eul',丙:'byeong',丁:'jeong',戊:'mu',己:'gi',庚:'gyeong',辛:'sin',壬:'im',癸:'gye'};
+ for(let day=1;day<=10;day++){
+  const saju=calculateSaju({birthDate:'2000-01-'+String(day).padStart(2,'0')});
+  const story=readFreeInsights(saju.pillars[2],saju.elements);
+  assert.equal(story.imageId,expected[saju.dayStem]);
+  assert.ok(art.includes('<symbol id="art-'+story.imageId+'"'));
+ }
+ assert.equal([...art.matchAll(/<symbol id=/g)].length,10);
 });

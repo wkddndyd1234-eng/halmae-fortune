@@ -10,22 +10,24 @@
 <body>
 <main class="paper">
   <a href="/">← 할매의 운명방</a>
-  <p class="eyebrow">할매의 깊은 장부</p>
-  <h1>나의 사주를 바탕으로 읽는 26장 웹 보고서</h1>
-  <div class="checkout-summary"><strong>39,900원 <small>출시 예정가</small></strong>
-    <p>결제 승인 후 바로 열람 · 365일 동안 다시 보기</p>
-  </div>
+  <header class="ledger-cover checkout-cover">
+    <span class="ledger-seal" aria-hidden="true">封</span>
+    <h1>할매의 봉인된 운명 장부</h1>
+    <p class="ledger-price">39,900원 <small>정식 판매 예정가</small></p>
+    <p>26장 · 결제 승인 후 바로 열람 · 365일 다시 보기</p>
+    <a class="ledger-cta" href="#form">출생 정보 확인하기</a>
+  </header>
   <section class="checkout-preview" aria-labelledby="sample-heading">
     <h2 id="sample-heading">장부 미리 읽기</h2>
     <p class="small">가상 입력 2000년 1월 1일 정오 · 일과 재능의 방향에서 발췌</p>
-    <blockquote>일의 장에서는 월간과 일간의 관계를 질문의 출발점으로 삼는다. 월간 丙 · 편인의 전통 주제는 학습과 돌봄이다.</blockquote>
+    <blockquote>일은 잘하는 것과 오래 견딜 수 있는 것이 겹칠 때 조금씩 제 모습을 드러낸다.</blockquote>
   </section>
   <details class="checkout-details"><summary>보고서 구성과 열람 안내</summary>
     <p>나의 사주 기록 4장, 사주 요소를 연결한 성찰 질문 8장, 공통 가이드 14장을 담았어요. 공통 가이드에는 2027년 열두 달의 계획과 실천 질문이 있어요. 개인별 월운, 대운·세운은 제공하지 않아요.</p>
     <p>365일은 결제 승인 시각부터 계산해요. 열람 링크 하나는 최대 30분 동안 쓸 수 있고, 열람 기간 안에 새 링크를 받을 수 있어요.</p>
   </details>
   <p class="notice" id="availability" role="status">출시 준비 중이에요. 현재 이 화면에서는 결제할 수 없어요.</p>
-  <form id="form" method="post">
+  <form id="form" method="post" tabindex="-1">
     <p id="prefill" class="notice" role="status" hidden>무료 풀이에 쓴 정보예요. 주문 전에 수정할 수 있어요.</p>
     <label>별칭 (선택)<input name="name" maxlength="30" autocomplete="off"></label>
     <label>생년월일 <span class="small birth-help" id="birth-help">양력 기준 · 음력 생일은 양력 날짜로 변환 후 입력해 주세요.</span><input type="date" name="birthDate" aria-describedby="birth-help" required min="1900-01-01"></label>

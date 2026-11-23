@@ -32,7 +32,7 @@ fetch('/.netlify/functions/recovery',{cache:'no-store'}).then(r=>r.json()).then(
   document.querySelector('#recover').hidden = !enabled;
 }).catch(()=>{});
 
-function showReport({token,orderId,purchaseExpiresAt}) {
+function showReport({token,orderId,purchaseExpiresAt},{fresh=false}={}) {
   const order = document.querySelector('#order-number');
   order.hidden = !orderId;
   if (orderId) {
@@ -47,7 +47,9 @@ function showReport({token,orderId,purchaseExpiresAt}) {
   }
   const link = document.querySelector('#report');
   link.href = '/report.html#'+encodeURIComponent(token);
-  link.hidden = document.querySelector('#access').hidden = false;
+  const ledger = document.querySelector('#opened-ledger');
+  ledger.hidden = link.hidden = false;
+  if (fresh) ledger.classList.add('ledger-unseal');
   status.textContent = '테스트 결제가 완료됐어요. 지금 보고서를 열 수 있어요. 실제로 청구된 금액은 없어요.';
 }
 
@@ -84,7 +86,7 @@ async function confirm() {
     rememberReport(result);
     forgetCheckout();
     recordConversion('test_payment_success');
-    showReport(result);
+    showReport(result,{fresh:true});
   } catch (error) {
     status.textContent = error.message;
     retry.hidden = false;
