@@ -101,23 +101,22 @@ test('01:30 승계 값과 미상 입력의 원국·오행이 유료 보고서와
 test('주문 화면 장부 미리보기는 가상 입력으로 생성한 실제 보고서 발췌다',async()=>{
  const {readFile}=await import('node:fs/promises');
  const checkout=await readFile(new URL('../checkout.html',import.meta.url),'utf8');
- const quote=checkout.match(/<blockquote>([^<]+)<\/blockquote>/)?.[1];
- assert.ok(quote);
+ const quotes=[...checkout.matchAll(/<blockquote>([^<]+)<\/blockquote>/g)].map(match=>match[1]);
+ assert.equal(quotes.length,2);
  const report=buildReport({name:'가상',birthDate:'2000-01-01',birthTime:'12:00'});
- assert.ok(report.chapters[5].paragraphs.some(paragraph=>paragraph.includes(quote)));
+ for(const quote of quotes) assert.ok(report.chapters[5].paragraphs.some(paragraph=>paragraph.includes(quote)));
 });
 
 
-test('열 가지 일간 이미지가 고유한 경량 수묵 그림과 연결된다',async()=>{
+test('열 가지 일간이 독립된 경량 WebP 아트와 연결된다',async()=>{
  const {readFile}=await import('node:fs/promises');
- const art=await readFile(new URL('../day-symbols.svg',import.meta.url),'utf8');
- assert.ok(Buffer.byteLength(art)<10_000);
  const expected={甲:'gap',乙:'eul',丙:'byeong',丁:'jeong',戊:'mu',己:'gi',庚:'gyeong',辛:'sin',壬:'im',癸:'gye'};
  for(let day=1;day<=10;day++){
   const saju=calculateSaju({birthDate:'2000-01-'+String(day).padStart(2,'0')});
   const story=readFreeInsights(saju.pillars[2],saju.elements);
   assert.equal(story.imageId,expected[saju.dayStem]);
-  assert.ok(art.includes('<symbol id="art-'+story.imageId+'"'));
+  const art=await readFile(new URL('../art/'+story.imageId+'.webp',import.meta.url));
+  assert.equal(art.toString('ascii',8,12),'WEBP');
+  assert.ok(art.byteLength<35_000);
  }
- assert.equal([...art.matchAll(/<symbol id=/g)].length,10);
 });

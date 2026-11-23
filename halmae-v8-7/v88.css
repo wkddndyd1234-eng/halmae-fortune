@@ -70,26 +70,9 @@
 }
 
 .symbol-scene{position:relative;isolation:isolate;margin:0 0 .9rem;overflow:hidden;border:1px solid #9f815b;border-radius:10px;background:radial-gradient(ellipse at 50% 40%,#322b26,#111216 72%);aspect-ratio:360/220}
-.symbol-scene svg{display:block;width:100%;height:100%}
-.symbol-scene > span{position:absolute;pointer-events:none}
-.symbol-light{inset:0;background:radial-gradient(ellipse at 52% 43%,#f4c66a28,transparent 64%)}
-.symbol-mist{inset:auto -9% 0;height:42%;background:linear-gradient(14deg,transparent 25%,#e1c7aa22 50%,transparent 75%)}
-.symbol-ripple,.symbol-leaf{display:none}
-.symbol-scene:is([data-symbol="im"],[data-symbol="gye"]) .symbol-ripple{display:block;inset:auto 32% 13%;height:8%;border:1px solid #e2c39a60;border-radius:50%}
-.symbol-scene:is([data-symbol="gap"],[data-symbol="eul"],[data-symbol="gi"]) .symbol-leaf{display:block;left:65%;top:28%;width:9px;height:4px;border-radius:100% 0;background:#dfb68080}
 @media(prefers-reduced-motion:no-preference){
  #result:not([hidden]) .reading-compass,#result:not([hidden]) .free-insights{animation:none}
  #result:not([hidden]) .symbol-scene{animation:symbol-enter .35s ease-out both}
- #result:not([hidden]) :is(#compassHeadline,#compassDetail,.reading-story){animation:symbol-enter .42s .16s ease-out both}
- .symbol-light{animation:symbol-glow 9s ease-in-out infinite alternate}
- .symbol-mist{animation:symbol-mist 14s ease-in-out infinite alternate}
- .symbol-ripple{animation:symbol-ripple 5s ease-out infinite}
- .symbol-leaf{animation:symbol-leaf 8s ease-in-out infinite}
  @keyframes symbol-enter{from{opacity:.15;transform:translateY(4px)}to{opacity:1;transform:none}}
- @keyframes symbol-glow{from{opacity:.4}to{opacity:1}}
- @keyframes symbol-mist{from{transform:translateX(-5%)}to{transform:translateX(5%)}}
- @keyframes symbol-ripple{from{opacity:.65;transform:scale(.65)}to{opacity:0;transform:scale(1.25)}}
- @keyframes symbol-leaf{0%{opacity:0;transform:translate(-10px,-10px) rotate(-20deg)}25%{opacity:.75}100%{opacity:0;transform:translate(28px,45px) rotate(72deg)}}
 }
-.symbol-library{position:absolute;width:0;height:0;overflow:hidden}
 @media(max-width:520px){#result>.paper{padding-inline:14px}.reading-chart{padding-inline:9px}}

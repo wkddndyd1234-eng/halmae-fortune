@@ -15,15 +15,36 @@ export function rememberOrder(orderId) {
   catch { /* A buyer can enter their order number manually. */ }
 }
 
-export function recordConversion(event) {
+const conversionKey = 'halmae-conversion-counts';
+const variantKey = 'halmae-reading-variant';
+const variants = new Set(['ledger','story']);
+const events = new Set([
+  'free_reading_start','free_reading_success','ledger_preview_mid','ledger_preview_end',
+  'checkout_click','checkout_view','report_sample_view','test_order_created',
+  'test_payment_open','test_payment_cancel','test_payment_failure','test_payment_success',
+  'test_report_view',
+]);
+
+export function readingVariant(preferred='ledger') {
+  const variant = variants.has(preferred) ? preferred : 'ledger';
   try {
-    const key = 'halmae-conversion-counts';
-    const counts = JSON.parse(sessionStorage.getItem(key) || '{}');
+    const saved = sessionStorage.getItem(variantKey);
+    if (variants.has(saved)) return saved;
+    sessionStorage.setItem(variantKey,variant);
+  } catch { /* The page keeps its configured variant if storage is unavailable. */ }
+  return variant;
+}
+
+export function recordConversion(event) {
+  if (!events.has(event)) return;
+  try {
+    const key = conversionKey+':'+readingVariant();
+    const stored = JSON.parse(sessionStorage.getItem(key) || '{}');
+    const counts = Object.fromEntries([...events].filter(name=>Number.isSafeInteger(stored?.[name])&&stored[name]>=0)
+      .map(name=>[name,stored[name]]));
     counts[event] = (counts[event] || 0) + 1;
     sessionStorage.setItem(key,JSON.stringify(counts));
-  } catch {
-    // Storage may be disabled. Counters are optional and stay in this tab.
-  }
+  } catch { /* Counters are optional and stay in this tab. */ }
 }
 
 export async function post(name, body, token) {
@@ -63,6 +84,6 @@ export function clearPurchaseStorage() {
   saveBirthDraft(null);
   forgetCheckout();
   forgetReport();
-  removeSessionKeys(['halmae-conversion-counts']);
+  removeSessionKeys([conversionKey,variantKey,...[...variants].map(variant=>conversionKey+':'+variant)]);
   try { localStorage.removeItem(orderKey); } catch { /* Storage is inaccessible. */ }
 }

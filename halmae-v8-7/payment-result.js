@@ -89,6 +89,7 @@ async function confirm() {
     showReport(result,{fresh:true});
   } catch (error) {
     status.textContent = error.message;
+    recordConversion('test_payment_failure');
     retry.hidden = false;
   }
 }

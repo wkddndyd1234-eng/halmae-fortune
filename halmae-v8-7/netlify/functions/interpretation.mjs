@@ -45,7 +45,7 @@ export function addChapterInterpretations(chapters,saju,relations) {
   const low = counts.filter(([,count])=>count===min).map(([element])=>element);
   const dayEvidence = `일주 ${saju.pillars[2]}의 일간 ${saju.dayStem}(${saju.dayElement})`;
   const evidence = ({label,glyph,relation}) => `${label} ${glyph} · ${relation}`;
-  const work = relation => `${evidence(relation)}의 전통 주제는 ${relation.theme}이다. 한 가지 실험으로 ${relation.action}을 적어 보렴.`;
+  const work = relation => `${evidence(relation)}의 전통 주제는 ${relation.theme}이다. 할매가 건네는 작은 제안이야. ‘${relation.action}’부터 해 보렴.`;
   const options = low.map(element=>`${element}(${min}회)에서는 ‘${elementActions[element]}’`).join(', ');
   const readings = [
     [4, `${dayEvidence}을 이번 장의 출발점으로 삼자. 최근 선택 하나를 떠올리고 ‘${stemActions[day]}’가 도움이 되는 상황을 찾아보렴.`],

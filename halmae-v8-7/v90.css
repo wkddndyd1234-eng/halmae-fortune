@@ -1,0 +1,30 @@
+.reading-v9 .reading-paper{padding:0 0 20px;overflow:hidden;background:#191410}
+.reading-v9 .reading-paper>:not(.reading-compass){margin-inline:clamp(12px,4vw,24px)}
+.reading-v9 .reading-compass{margin:0;padding:0;border:0;border-radius:0;background:#191410}
+.reading-v9 .symbol-scene{margin:0;border:0;border-radius:0;aspect-ratio:1}
+.symbol-scene img{display:block;width:100%;height:100%;object-fit:cover}
+.reading-heading{padding:1.15rem clamp(14px,4vw,26px)}
+.reading-heading h2{margin:0 0 .5rem;font-size:clamp(1.65rem,6vw,2.3rem);line-height:1.35;color:#ffdda0;word-break:keep-all}
+.reading-heading p + p{margin-top:.55rem}
+.reading-heading .result-meta{text-align:left;padding:.4rem 0 0;border:0}
+.reading-v9 .reading-story{gap:1rem}
+.reading-v9 .reading-story h3{margin:0 0 .4rem;color:#f0cd8d;font-size:1.03rem}
+.reading-interlude{padding:12px 14px;border-left:2px solid #c5a066;background:#2c2118}
+.reading-interlude p{margin:0 0 .55rem}
+.ledger-benefits{color:#ebd6b0}
+.ledger-toc li{position:relative;padding-inline-end:2rem}
+.ledger-toc li::after{content:'封';position:absolute;right:0;top:.5rem;color:#e4c085;border:1px solid #9f7550;border-radius:50%;width:1.35rem;text-align:center;font-size:.7rem}
+.sample-page{padding:10px 13px;background:#35291d;border:1px solid #9e7c4c;border-radius:5px}
+.sample-page summary{min-height:36px;color:#f5d698;font-weight:700}
+.ledger-order-actions{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem}
+.ledger-order-actions a,.ledger-order-actions button{min-height:44px;margin:0}
+.checkout-order{display:grid;gap:8px;margin:16px 0;padding:12px;border:1px solid #8f7149;border-radius:8px;background:#2b2118;text-align:center}
+.checkout-order p{margin:0;color:#f2dcaf}
+.checkout-order a{display:inline-flex;align-items:center;justify-content:center;min-height:44px}
+@media(min-width:700px){
+ .reading-v9 .symbol-scene{aspect-ratio:4/3}
+}
+@media(prefers-reduced-motion:no-preference){
+ #result:not([hidden]) .reading-heading{animation:symbol-enter .42s .12s ease-out both}
+}
+.ledger-cover .ledger-seal{background:radial-gradient(circle at 35% 28%,#edcd87,#a87541 70%);color:#302114;border-color:#f0c880;box-shadow:0 0 0 3px #59432c,0 4px 9px #0008}

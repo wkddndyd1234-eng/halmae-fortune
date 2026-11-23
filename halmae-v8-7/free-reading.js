@@ -2,13 +2,18 @@ import {renderReadingChart} from './reading-chart.js';
 import {calculateSaju} from './saju.mjs';
 import {fromFreeForm,saveBirthDraft,todayInKorea} from './birth-handoff.js';
 import {readFreeInsights} from './free-insights.js';
-import {recordConversion} from './purchase.js';
+import {readingVariant,recordConversion} from './purchase.js';
 
 const byId = id=>document.getElementById(id);
 const form = byId('fortune');
 const [year,month,day,hour,minute] = ['year','month','day','time','minute'].map(byId);
 const result = byId('result');
 const offer = byId('offer');
+result.dataset.variant=readingVariant(result.dataset.variant);
+if(result.dataset.variant==='story'){
+ const story=result.querySelector('.reading-story');
+ story.append(story.querySelector('.reading-interlude'));
+}
 const error = byId('error');
 const name = byId('name');
 let draft = null;
@@ -49,10 +54,18 @@ hour.addEventListener('change',()=>{
 function focusHeading(id) {
  const heading=byId(id);
  heading.focus({preventScroll:true});
- heading.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+ (id==='resultHeading'?result:heading).scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
 }
 
+let started=false;
+function recordStart(){
+ if (started) return;
+ started=true;
+ recordConversion('free_reading_start');
+}
+form.addEventListener('input',recordStart);
 form.addEventListener('submit',event=>{
+ recordStart();
  event.preventDefault();
  const input=fromFreeForm({name:name.value,year:year.value,month:month.value,day:day.value,hour:hour.value,minute:minute.value});
  error.textContent='';
@@ -69,13 +82,12 @@ form.addEventListener('submit',event=>{
  byId('greeting').textContent=input.name?input.name+'님, 네 이야기를 들려주마.':'네 이야기를 들려주마.';
  byId('resultMeta').textContent=`${input.birthDate} 양력 · ${input.birthTime||'출생 시각 미상'}`;
  for (const [id,value] of Object.entries({
-  compassHeadline:reading.headline,compassDetail:reading.introduction,
+  resultHeading:reading.headline,compassDetail:reading.introduction,
   personality:reading.temperament,balanceQuestion:reading.balance,career:reading.work,love:reading.relationships,
  })) byId(id).textContent=value;
  const artwork=byId('day-symbol-art');
- artwork.setAttribute('aria-label',reading.symbol+'의 상징, '+reading.headline);
- artwork.parentElement.dataset.symbol=reading.imageId;
- byId('day-symbol-use').setAttribute('href','#art-'+reading.imageId);
+ artwork.alt=reading.symbol+'의 상징, '+reading.headline;
+ artwork.src='/art/'+reading.imageId+'.webp';
  byId('ledgerQuestion').textContent=`‘${reading.headline}’라는 그림이 마음에 남았니? 네 사주를 일과 관계에 연결한 질문이 장부 안에서 이어진단다.`;
  const notices = [];
  if (!input.birthTime) notices.push('태어난 시간을 모르니 시주는 비워 두었어요.');
@@ -97,8 +109,14 @@ byId('editBirth').addEventListener('click',()=>{
  name.focus({preventScroll:true});
  form.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
 });
-byId('conversionNext').addEventListener('click',()=>focusHeading('offerHeading'));
-byId('checkoutLink').addEventListener('click',event=>{
+for(const [id,event] of [['conversionMid','ledger_preview_mid'],['conversionNext','ledger_preview_end']]){
+ byId(id).addEventListener('click',()=>{
+  recordConversion(event);
+  focusHeading('offerHeading');
+ });
+}
+byId('returnReading').addEventListener('click',()=>focusHeading('resultHeading'));
+for(const link of offer.querySelectorAll('[data-order-link]')) link.addEventListener('click',event=>{
  if (event.button!==0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
  saveBirthDraft(draft);
  recordConversion('checkout_click');
