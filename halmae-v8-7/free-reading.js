@@ -1,3 +1,4 @@
+import {renderReadingChart} from './reading-chart.js';
 import {calculateSaju} from './saju.mjs';
 import {fromFreeForm,saveBirthDraft,todayInKorea} from './birth-handoff.js';
 import {readFreeInsights} from './free-insights.js';
@@ -51,37 +52,6 @@ function focusHeading(id) {
  heading.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
 }
 
-function renderPillars(pillars,elements) {
- byId('pillars').replaceChildren(...pillars.map((pillar,index)=>{
-  const tile=document.createElement('div');
-  tile.className='pillar';
-  const label=document.createElement('small');
-  label.textContent=['연주 · 태어난 해','월주 · 태어난 절기','일주 · 태어난 날','시주 · 태어난 시각'][index];
-  const value=document.createElement('strong');
-  value.textContent=pillar ?? '미상';
-  tile.append(label,value);
-  return tile;
- }));
- const total=Object.values(elements).reduce((sum,count)=>sum+count,0);
- byId('fiveElements').replaceChildren(...Object.entries(elements).map(([element,count])=>{
-  const row=document.createElement('div');
-  row.className='element-row';
-  const label=document.createElement('span');
-  label.textContent=element;
-  const track=document.createElement('div');
-  track.className='track';
-  track.setAttribute('aria-hidden','true');
-  const bar=document.createElement('div');
-  bar.className='fill';
-  bar.style.width=(count/total*100)+'%';
-  const value=document.createElement('b');
-  value.textContent=count;
-  track.append(bar);
-  row.append(label,track,value);
-  return row;
- }));
-}
-
 form.addEventListener('submit',event=>{
  event.preventDefault();
  const input=fromFreeForm({name:name.value,year:year.value,month:month.value,day:day.value,hour:hour.value,minute:minute.value});
@@ -100,7 +70,7 @@ form.addEventListener('submit',event=>{
  byId('resultMeta').textContent=`${input.birthDate} 양력 · ${input.birthTime||'출생 시각 미상'}`;
  for (const [id,value] of Object.entries({
   compassHeadline:reading.headline,compassDetail:reading.introduction,
-  personality:reading.temperament,career:reading.work,love:reading.relationships,
+  personality:reading.temperament,balanceQuestion:reading.balance,career:reading.work,love:reading.relationships,
  })) byId(id).textContent=value;
  const notices = [];
  if (!input.birthTime) notices.push('태어난 시간을 모르니 시주는 비워 두었어요.');
@@ -108,7 +78,7 @@ form.addEventListener('submit',event=>{
  if (input.birthTime.startsWith('23:')) notices.push('밤 11시대는 하루의 경계를 잡는 방식에 따라 일주와 시주가 달라질 수 있어요.');
  byId('calcNotice').textContent=notices.join(' ');
  byId('calcNotice').hidden=!notices.length;
- renderPillars(saju.pillars,saju.elements);
+ renderReadingChart(byId('pillars'),byId('fiveElements'),saju);
  readingText=[byId('greeting').textContent,byId('resultMeta').textContent,
   saju.pillars.map(pillar=>pillar??'미상').join(' · '),...Object.values(reading),
   ...notices,'전통 사주 상징을 바탕으로 한 자기 성찰용 풀이입니다.'].join('\n\n');

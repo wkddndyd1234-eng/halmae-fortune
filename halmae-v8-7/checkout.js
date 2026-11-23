@@ -5,6 +5,7 @@ const form = document.querySelector('#form');
 const msg = document.querySelector('#msg');
 const buy = document.querySelector('#buy');
 const admin = document.querySelector('#admin');
+const adminPanel = document.querySelector('#preview-admin');
 const next = document.querySelector('#next');
 const issue = document.querySelector('#issue');
 const resetBirth = document.querySelector('#reset-birth');
@@ -48,7 +49,11 @@ clearStorage.addEventListener('click',async()=>{
 });
 fetch(endpoint+'payment',{cache:'no-store'})
   .then(response => response.ok ? response.json() : {enabled:false})
-  .then(({enabled,recoveryEnabled}) => {
+  .then(({enabled,recoveryEnabled,adminPreview}) => {
+    if (adminPreview) {
+      adminPanel.hidden = false;
+      admin.disabled = false;
+    }
     if (enabled && recoveryEnabled) {
       document.querySelector('#recovery-options').hidden = false;
       document.querySelector('#recover').hidden = false;
@@ -57,6 +62,8 @@ fetch(endpoint+'payment',{cache:'no-store'})
       buy.hidden = false;
       buy.disabled = false;
       document.querySelector('#test-guide').hidden = false;
+      document.querySelector('#recent-preview').hidden = false;
+      clearStorage.hidden = false;
       document.querySelector('#availability').textContent = '실제 청구 없는 테스트 결제';
     }
   }).catch(() => {});
@@ -84,7 +91,7 @@ function loadToss() {
 
 form.addEventListener('submit', async event => {
   event.preventDefault();
-  if (busy) return;
+  if (busy || ![buy,admin].includes(event.submitter) || event.submitter.disabled) return;
   const customer = event.submitter === buy;
   busy = true;
   buy.disabled = admin.disabled = clearStorage.disabled = resetBirth.disabled = true;
@@ -127,7 +134,8 @@ form.addEventListener('submit', async event => {
   } finally {
     busy = false;
     buy.disabled = buy.hidden;
-    admin.disabled = clearStorage.disabled = resetBirth.disabled = false;
+    admin.disabled = adminPanel.hidden;
+    clearStorage.disabled = resetBirth.disabled = false;
   }
 });
 
@@ -144,5 +152,3 @@ issue.addEventListener('click',async () => {
     issue.disabled = false;
   }
 });
-
-admin.disabled = false;

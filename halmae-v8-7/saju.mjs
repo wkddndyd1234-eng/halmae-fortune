@@ -3,6 +3,9 @@ const stems=[...'甲乙丙丁戊己庚辛壬癸'];
 const branches=[...'子丑寅卯辰巳午未申酉戌亥'];
 const elements=['목','목','화','화','토','토','금','금','수','수'];
 const branchElements=['수','토','목','목','토','화','화','토','금','금','토','수'];
+export function pillarElements(pillar){
+ return pillar ? [elements[stems.indexOf(pillar[0])],branchElements[branches.indexOf(pillar[1])]] : null;
+}
 const mod=(n,m)=>(n%m+m)%m;
 function validGregorian(y,m,d){const dt=new Date(Date.UTC(y,m-1,d));return dt.getUTCFullYear()===y&&dt.getUTCMonth()===m-1&&dt.getUTCDate()===d}
 export function normalizeBirth(input){

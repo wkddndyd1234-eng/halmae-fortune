@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {calculateSaju,normalizeBirth} from '../netlify/functions/saju.mjs';
+import {calculateSaju,normalizeBirth,pillarElements} from '../netlify/functions/saju.mjs';
 import {fromFreeForm,readBirthDraft,saveBirthDraft,todayInKorea,validateBirthDraft} from '../birth-handoff.js';
 import {readFreeInsights} from '../free-insights.js';
+import {buildReport} from '../netlify/functions/report.mjs';
 
 test('무료 입력을 양력 날짜와 분 단위 시간으로 변환하고 선택 필드만 전달',()=>{
  const values={name:' 해윤 ',year:'2000',month:'2',day:'29',hour:'0',minute:'7',relation:'기혼'};
@@ -55,4 +56,51 @@ test('같은 계절의 다른 일주·오행은 무료 도입과 기질·일·�
  }
  assert.match(first.introduction,/戊午/);
  assert.match(first.relationships,/午/);
+});
+
+test('계산된 열 가지 일간은 각 상징과 생활 장면, 균형 질문으로 구분된다',()=>{
+ const symbols=['큰 나무','덩굴','태양','등불','산','밭','쇠','보석','큰 물','이슬'];
+ const stems=[...'甲乙丙丁戊己庚辛壬癸'];
+ const readings=Array.from({length:10},(_,index)=>{
+  const birthDate='2000-01-'+String(index+1).padStart(2,'0');
+  const saju=calculateSaju({birthDate,birthTime:'01:30'});
+  const reading=readFreeInsights(saju.pillars[2],saju.elements);
+  assert.match(reading.headline,new RegExp(symbols[stems.indexOf(saju.dayStem)]));
+  assert.ok(reading.introduction.includes(saju.pillars[2]));
+  return reading;
+ });
+ for(const field of ['headline','introduction','temperament','balance']){
+  assert.equal(new Set(readings.map(reading=>reading[field])).size,10);
+ }
+});
+
+test('01:30 승계 값과 미상 입력의 원국·오행이 유료 보고서와 일치한다',()=>{
+ const source={name:'가상',year:'2000',month:'1',day:'1',hour:'1',minute:'30'};
+ for(const hour of ['1','','3']){
+  const draft=fromFreeForm({...source,hour});
+  const reading=calculateSaju(draft);
+  const report=buildReport(draft);
+  assert.deepEqual(reading.pillars,report.meta.pillars);
+  assert.deepEqual(reading.elements,report.meta.elementCounts);
+  assert.equal(draft.birthTime,hour?'0'+hour+':30':'');
+  assert.equal(report.meta.birthTime,draft.birthTime||'미상');
+  const pairs=reading.pillars.flatMap(pillar=>pillarElements(pillar)??[]);
+  assert.equal(pairs.length,hour?8:6);
+  for(const [element,count] of Object.entries(report.meta.elementCounts)){
+   assert.equal(pairs.filter(item=>item===element).length,count);
+  }
+ }
+ const a=calculateSaju(fromFreeForm(source));
+ const b=calculateSaju(fromFreeForm({...source,hour:'3'}));
+ assert.notEqual(a.pillars[3],b.pillars[3]);
+ assert.notDeepEqual(a.elements,b.elements);
+});
+
+test('주문 화면 장부 미리보기는 가상 입력으로 생성한 실제 보고서 발췌다',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const checkout=await readFile(new URL('../checkout.html',import.meta.url),'utf8');
+ const quote=checkout.match(/<blockquote>([^<]+)<\/blockquote>/)?.[1];
+ assert.ok(quote);
+ const report=buildReport({name:'가상',birthDate:'2000-01-01',birthTime:'12:00'});
+ assert.ok(report.chapters[5].paragraphs.some(paragraph=>paragraph.includes(quote)));
 });

@@ -1,12 +1,16 @@
 import {orders,json,parse,verify,error} from './shared.mjs';
-import {DAY,PRICE,paymentConfig} from './payment-config.mjs';
+import {DAY,PRICE,isPreview,paymentConfig} from './payment-config.mjs';
 import {mailConfig} from './recovery-mail.mjs';
 import {browserKey,eligibleOrder,fingerprint,orderPattern,recordApproval,reportLink} from './entitlement.mjs';
 import {approvedPayment,confirmPayment} from './toss.mjs';
 
 export default async req => {
   const config = paymentConfig(req);
-  if (req.method === 'GET') return json({enabled:Boolean(config),...(mailConfig(config)?{recoveryEnabled:true}:{})});
+  if (req.method === 'GET') {
+    const adminPreview = isPreview(req) && (process.env.DEMO_ACCESS_CODE?.length ?? 0)>=12;
+    return json({enabled:Boolean(config),...(mailConfig(config)?{recoveryEnabled:true}:{}),
+      ...(adminPreview?{adminPreview:true}:{})});
+  }
   if (req.method !== 'POST') return json({error:'Method not allowed'},405);
   if (!config) return json({error:'테스트 결제는 현재 준비 중입니다.'},503);
   try {

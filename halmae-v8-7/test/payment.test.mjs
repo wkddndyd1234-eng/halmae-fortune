@@ -64,7 +64,8 @@ test('서버 승인과 현재 상태가 확인된 주문만 보고서를 발급�
     return tossPayment ? Response.json(tossPayment) : new Response(null,{status:404});
   });
 
-  assert.deepEqual(await (await payment(request())).json(),{enabled:true});
+  assert.deepEqual(await (await payment(request())).json(),{enabled:true,adminPreview:true});
+  assert.deepEqual(await (await payment(request(null,null,'https://example.test'))).json(),{enabled:false});
   assert.equal((await order(request({...birth,consent:false}))).status,400);
   assert.equal((await order(request({...birth,calendarType:'lunar'}))).status,400);
   const created = await order(request(birth));

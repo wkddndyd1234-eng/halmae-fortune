@@ -7,10 +7,14 @@ const previewOrigins = new Set([
   'https://test-v87--halmae-fortune-v87-preview.netlify.app',
 ]);
 
+export function isPreview(req) {
+  return previewOrigins.has(new URL(req.url).origin);
+}
+
 export function paymentConfig(req) {
   const {PAYMENT_MODE, TOSS_TEST_CLIENT_KEY, TOSS_TEST_SECRET_KEY, REPORT_TOKEN_SECRET} = process.env;
   const origin = new URL(req.url).origin;
-  if (PAYMENT_MODE !== 'test' || !previewOrigins.has(origin) ||
+  if (PAYMENT_MODE !== 'test' || !isPreview(req) ||
       !/^test_(?:gck|ck)_[A-Za-z0-9_]+$/.test(TOSS_TEST_CLIENT_KEY ?? '') ||
       !/^test_(?:gsk|sk)_[A-Za-z0-9_]+$/.test(TOSS_TEST_SECRET_KEY ?? '') ||
       (REPORT_TOKEN_SECRET?.length ?? 0) < 32) return null;

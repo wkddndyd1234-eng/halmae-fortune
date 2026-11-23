@@ -1,0 +1,38 @@
+.reading-story{display:grid;gap:.9rem;margin:1.25rem 0}
+.reading-story article{padding:14px 17px;border:1px solid #614c30;border-radius:12px;background:#241b12}
+.reading-story h4{margin:0 0 6px;color:#f1d398;font-size:1.04rem}
+.reading-story p{margin:0}
+.reading-compass h3{overflow-wrap:anywhere}
+.reading-chart{margin:1.5rem 0;padding:clamp(10px,3vw,22px);border:1px solid #745938;border-radius:14px;background:#18130f}
+.reading-chart h4{margin:0;color:#f0ce90}
+.reading-chart h5{margin:1rem 0 .45rem;font-size:.98rem;color:#f0ce90}
+.reading-chart p{margin:.4rem 0}
+.chart-pillars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;align-items:start}
+.chart-pillar,.chart-element{min-width:0;border:1px solid #6a5338;border-radius:8px;background:#251c15}
+.chart-pillar summary,.chart-element summary{cursor:pointer;min-height:44px;list-style:none}
+.chart-pillar summary::-webkit-details-marker,.chart-element summary::-webkit-details-marker{display:none}
+.chart-pillar summary{display:grid;justify-items:center;gap:4px;padding:6px 2px;color:#f5deba}
+.chart-pillar summary::after,.chart-element summary::after{content:'+';font:inherit;color:#edc87a}
+.chart-pillar[open] summary::after,.chart-element[open] summary::after{content:'−'}
+.chart-pillar-label{font-size:.76rem}
+.pillar-glyphs{display:flex;justify-content:center;gap:2px;font-size:.8rem}
+.chart-glyph{color:var(--element-color);font-size:clamp(.78rem,4vw,1.3rem);font-weight:700}
+.chart-explanation{padding:0 6px;font-size:.78rem;line-height:1.65;color:#f3e0c4;overflow-wrap:anywhere}
+.chart-elements{display:grid;gap:5px}
+.chart-element summary{display:grid;grid-template-columns:2ch minmax(0,1fr) 3ch 1ch;align-items:center;gap:8px;padding:4px 8px}
+.chart-element-name{color:var(--element-color);font-weight:700}
+.chart-count{color:#f4e4cb;white-space:nowrap;font-size:.82rem}
+.chart-track{height:7px;border-radius:6px;background:#41352a;overflow:hidden}
+.chart-fill{display:block;height:100%;background:var(--element-color)}
+[data-element="목"]{--element-color:#a4d7a6}
+[data-element="화"]{--element-color:#ffad9b}
+[data-element="토"]{--element-color:#ecc878}
+[data-element="금"]{--element-color:#e4e8ee}
+[data-element="수"]{--element-color:#a7cbff}
+.checkout-preview{padding:12px 16px;border-left:2px solid #d7b779;background:#241b14}
+.checkout-preview p{margin:.35rem 0}
+.checkout-preview blockquote{margin:.55rem 0;color:#f6e3c7}
+.checkout-policy{padding:12px;border:1px solid #775f40;border-radius:8px}
+.preview-admin{margin-top:1.2rem}
+.reading-story p + p{margin-top:.65rem}
+@media(max-width:420px){.chart-pillars{grid-template-columns:repeat(2,minmax(0,1fr))}}
