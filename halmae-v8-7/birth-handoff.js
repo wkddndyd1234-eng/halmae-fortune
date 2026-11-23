@@ -7,7 +7,7 @@ export function todayInKorea(now=Date.now()) {
 
 export function validateBirthDraft(input,today=todayInKorea()) {
   if (typeof input?.name !== 'string' || typeof input.birthDate !== 'string' ||
-      typeof input.birthTime !== 'string') return null;
+      typeof input.birthTime !== 'string' || !['male','female'].includes(input.gender)) return null;
   const name = input.name.trim();
   const {birthDate,birthTime} = input;
   if (name.length>20 || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate) ||
@@ -15,12 +15,12 @@ export function validateBirthDraft(input,today=todayInKorea()) {
       (birthTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(birthTime))) return null;
   const instant = new Date(birthDate+'T00:00:00Z');
   if (!Number.isFinite(instant.getTime()) || instant.toISOString().slice(0,10)!==birthDate) return null;
-  return {name,birthDate,birthTime};
+  return {name,birthDate,birthTime,gender:input.gender};
 }
 
-export function fromFreeForm({name,year,month,day,hour,minute}) {
+export function fromFreeForm({name,gender,year,month,day,hour,minute}) {
   return validateBirthDraft({
-    name,birthDate:`${year}-${pad(month)}-${pad(day)}`,
+    name,gender,birthDate:`${year}-${pad(month)}-${pad(day)}`,
     birthTime:hour===''?'':`${pad(hour)}:${pad(minute)}`,
   });
 }
