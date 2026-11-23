@@ -69,10 +69,10 @@ form.addEventListener('input',recordStart);
 form.addEventListener('submit',event=>{
  recordStart();
  event.preventDefault();
- const input=fromFreeForm({name:name.value,year:year.value,month:month.value,day:day.value,hour:hour.value,minute:minute.value});
+ const input=fromFreeForm({name:name.value,gender:byId('gender').value,year:year.value,month:month.value,day:day.value,hour:hour.value,minute:minute.value});
  error.textContent='';
  if (!input) {
-  error.textContent='별칭과 생년월일을 확인해 주세요. 미래 날짜는 입력할 수 없어요.';
+  error.textContent='성별과 생년월일을 확인해 주세요. 미래 날짜는 입력할 수 없어요.';
   return;
  }
  let saju;
@@ -82,7 +82,7 @@ form.addEventListener('submit',event=>{
  draft=input;
  const reading=readFreeInsights(saju.pillars[2],saju.elements,relationshipNotes[byId('relation').value]);
  byId('greeting').textContent=input.name?input.name+'님, 네 이야기를 들려주마.':'네 이야기를 들려주마.';
- byId('resultMeta').textContent=`${input.birthDate} 양력 · ${input.birthTime||'출생 시각 미상'}`;
+ byId('resultMeta').textContent=`${input.gender==='male'?'남성':'여성'} · ${input.birthDate} 양력 · ${input.birthTime||'출생 시각 미상'}`;
  for (const [id,value] of Object.entries({
   resultHeading:reading.headline,compassDetail:reading.introduction,
   personality:reading.temperament,balanceQuestion:reading.balance,career:reading.work,love:reading.relationships,
