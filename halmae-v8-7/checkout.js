@@ -1,7 +1,4 @@
 const form=document.querySelector('#form'),msg=document.querySelector('#msg'),next=document.querySelector('#next');
-const calendar=form.elements.calendarType,leap=form.elements.isLeapMonth;
-const sync=()=>{const lunar=calendar.value==='lunar';leap.disabled=!lunar;if(!lunar)leap.checked=false;leap.closest('label').hidden=!lunar};
-calendar.addEventListener('change',sync);sync();
 let orderId;
 form.addEventListener('submit',async e=>{
  e.preventDefault();msg.textContent='테스트 주문을 생성하고 있어요…';next.hidden=true;

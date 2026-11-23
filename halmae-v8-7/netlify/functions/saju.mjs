@@ -1,26 +1,21 @@
-import {lunarMonthStarts,preciseTermMinutes} from './calendar-data.mjs';
+import {preciseTermMinutes} from './calendar-data.mjs';
 const stems=[...'甲乙丙丁戊己庚辛壬癸'];
 const branches=[...'子丑寅卯辰巳午未申酉戌亥'];
 const elements=['목','목','화','화','토','토','금','금','수','수'];
 const branchElements=['수','토','목','목','토','화','화','토','금','금','토','수'];
 const mod=(n,m)=>(n%m+m)%m;
-const dateText=(y,m,d)=>`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 function validGregorian(y,m,d){const dt=new Date(Date.UTC(y,m-1,d));return dt.getUTCFullYear()===y&&dt.getUTCMonth()===m-1&&dt.getUTCDate()===d}
 export function normalizeBirth(input){
  const date=String(input.birthDate||'');if(!/^\d{4}-\d{2}-\d{2}$/.test(date))throw Error('생년월일 형식이 올바르지 않습니다.');
- const [y,m,d]=date.split('-').map(Number),cal=input.calendarType||'solar',leap=input.isLeapMonth===true||input.isLeapMonth==='true';
- if(y<1900||y>2050||!['solar','lunar'].includes(cal)||cal==='solar'&&leap)throw Error('달력 기준 또는 지원 연도를 확인해 주세요.');
- let sy=y,sm=m,sd=d;
- if(cal==='solar'){if(!validGregorian(y,m,d))throw Error('존재하지 않는 양력 날짜입니다.');}
- else{
-  const idx=lunarMonthStarts.findIndex(r=>r[0]===y&&r[1]===m&&r[2]===(leap?1:0));
-  if(idx<0||!Number.isInteger(d)||d<1||idx+1>=lunarMonthStarts.length||d>lunarMonthStarts[idx+1][3]-lunarMonthStarts[idx][3])throw Error('존재하지 않거나 지원되지 않는 음력 날짜·윤달입니다.');
-  const dt=new Date((lunarMonthStarts[idx][3]+d-1)*86400000);sy=dt.getUTCFullYear();sm=dt.getUTCMonth()+1;sd=dt.getUTCDate();
- }
- const solarDate=dateText(sy,sm,sd);
- if(Date.UTC(sy,sm-1,sd)>Date.now())throw Error('미래 생년월일은 입력할 수 없습니다.');
+ const [y,m,d]=date.split('-').map(Number);
+ const calendarType=input.calendarType ?? 'solar';
+ const isLeapMonth=input.isLeapMonth ?? false;
+ if(calendarType!=='solar'||(isLeapMonth!==false&&isLeapMonth!=='false'))throw Error('양력 생년월일만 입력할 수 있습니다.');
+ if(y<1900||y>2050)throw Error('생년월일 지원 연도를 확인해 주세요.');
+ if(!validGregorian(y,m,d))throw Error('존재하지 않는 양력 날짜입니다.');
+ if(Date.UTC(y,m-1,d)>Date.now())throw Error('미래 생년월일은 입력할 수 없습니다.');
  const time=String(input.birthTime||'');if(time&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))throw Error('출생 시각 형식이 올바르지 않습니다.');
- return {birthDate:date,calendarType:cal,isLeapMonth:leap,solarDate,birthTime:time,gender:input.gender||''};
+ return {birthDate:date,calendarType,isLeapMonth:false,solarDate:date,birthTime:time,gender:input.gender||''};
 }
 const term=(year,index)=>{const row=preciseTermMinutes[year-1899];if(!row||index<0||index>23)throw Error('절기 계산 범위를 벗어났습니다.');return row[index]*60000};
 export function calculateSaju(input){

@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import {orders,json,parse,error} from './shared.mjs';
 import {normalizeBirth} from './saju.mjs';
-const PRICE=29900;
+const PRICE=39900;
 export default async req=>{
  if(req.method!=='POST')return json({error:'Method not allowed'},405);
  try{
