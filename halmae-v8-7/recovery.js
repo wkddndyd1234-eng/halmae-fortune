@@ -16,7 +16,7 @@ try {
     form.hidden = Boolean(token);
     exchange.hidden = !token;
     status.textContent = token ? '테스트 결제 상태를 확인한 후 보고서를 열 수 있습니다.' :
-      '이메일을 등록한 테스트 주문은 승인 후 7일 동안 다른 기기에서도 복구할 수 있습니다.';
+      '이메일을 등록한 테스트 주문은 승인 시각부터 365일 동안 다른 기기에서도 복구할 수 있습니다.';
   } else {
     status.textContent = '이 프리뷰에서는 이메일 복구가 제공되지 않습니다.';
   }
@@ -29,7 +29,7 @@ form.addEventListener('submit', async event => {
   event.submitter.disabled = true;
   try {
     await post('recovery',{action:'request',...Object.fromEntries(new FormData(form))});
-    status.textContent = '입력이 등록 정보와 일치하고 수신이 가능하면 복구 메일이 도착합니다.';
+    status.textContent = '입력이 일치하고 발송 제한 내라면 복구 메일이 도착합니다. 링크는 최대 15분 동안 한 번만 사용할 수 있습니다.';
     form.reset();
   } catch (error) {
     status.textContent = error.message;

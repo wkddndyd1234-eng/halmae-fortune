@@ -1,7 +1,22 @@
-import {checkoutKey,callbackKey,post,recordConversion,reportKey,rememberReport,forgetCheckout,forgetReport} from '/purchase.js';
+import {checkoutKey,callbackKey,post,recordConversion,reportKey,rememberReport,forgetCheckout,forgetReport,recentOrder} from '/purchase.js';
 
 const status = document.querySelector('#status');
 const retry = document.querySelector('#retry');
+const renew = document.querySelector('#renew');
+renew.elements.orderId.value = recentOrder() ?? '';
+renew.addEventListener('submit',async event=>{
+  event.preventDefault();
+  event.submitter.disabled = true;
+  try {
+    const result = await post('access',{orderId:renew.elements.orderId.value.trim()});
+    rememberReport(result);
+    showReport(result);
+  } catch(error) {
+    status.textContent = error.message;
+  } finally {
+    event.submitter.disabled = false;
+  }
+});
 const params = new URLSearchParams(location.search);
 const failure = params.get('failed') === '1';
 const callback = {
@@ -17,10 +32,19 @@ fetch('/.netlify/functions/recovery',{cache:'no-store'}).then(r=>r.json()).then(
   document.querySelector('#recover').hidden = !enabled;
 }).catch(()=>{});
 
-function showReport({token,orderId}) {
+function showReport({token,orderId,purchaseExpiresAt}) {
   const order = document.querySelector('#order-number');
   order.hidden = !orderId;
-  if (orderId) order.textContent = '테스트 주문 번호: '+orderId;
+  if (orderId) {
+    order.textContent = '테스트 주문 번호: '+orderId;
+    renew.elements.orderId.value = orderId;
+  }
+  const expiry = document.querySelector('#purchase-expiry');
+  expiry.hidden = !Number.isFinite(purchaseExpiresAt);
+  if (!expiry.hidden) {
+    const formatted = new Intl.DateTimeFormat('ko-KR',{dateStyle:'long',timeStyle:'short',timeZone:'Asia/Seoul'});
+    expiry.textContent = '구매 열람 만료 '+formatted.format(purchaseExpiresAt)+' (한국 시간)';
+  }
   const link = document.querySelector('#report');
   link.href = '/report.html#'+encodeURIComponent(token);
   link.hidden = document.querySelector('#access').hidden = false;
@@ -47,7 +71,7 @@ if (failure) {
     showReport(saved);
   } else {
     forgetReport();
-    status.textContent = '이 탭에서 시작한 테스트 주문을 찾지 못했습니다. 결제를 마쳤다면 이메일 복구 가능 여부를 확인해 주세요.';
+    status.textContent = '결제 완료일부터 365일 동안 웹 열람할 수 있습니다. 같은 브라우저에서 새 링크를 받거나 동의한 이메일로 복구해 주세요.';
   }
 }
 

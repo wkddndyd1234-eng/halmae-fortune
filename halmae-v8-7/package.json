@@ -1,1 +1,1 @@
-{"name":"halmae-v8-5","private":true,"version":"8.5.0","type":"module","dependencies":{"@netlify/blobs":"^9.1.0"}}
+{"name":"halmae-v8-5","private":true,"version":"8.5.0","type":"module","dependencies":{"@netlify/blobs":"10.7.13"}}

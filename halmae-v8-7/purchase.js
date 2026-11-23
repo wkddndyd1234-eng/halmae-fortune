@@ -1,5 +1,17 @@
 export const checkoutKey = 'halmae-test-checkout';
 export const reportKey = 'halmae-last-test-report';
+const orderKey = 'halmae-preview-order';
+
+export function recentOrder() {
+  try { return localStorage.getItem(orderKey); }
+  catch { return null; }
+}
+
+export function rememberOrder(orderId) {
+  if (!orderId) return;
+  try { localStorage.setItem(orderKey,orderId); }
+  catch { /* A buyer can enter their order number manually. */ }
+}
 
 export function recordConversion(event) {
   try {
@@ -26,6 +38,7 @@ export async function post(name, body, token) {
 export const callbackKey = 'halmae-test-payment-callback';
 
 export function rememberReport(result) {
+  rememberOrder(result.orderId);
   try { sessionStorage.setItem(reportKey,JSON.stringify(result)); }
   catch { /* A report link still works without browser storage. */ }
 }
@@ -48,4 +61,5 @@ export function clearPurchaseStorage() {
   forgetCheckout();
   forgetReport();
   removeSessionKeys(['halmae-conversion-counts']);
+  try { localStorage.removeItem(orderKey); } catch { /* Storage is inaccessible. */ }
 }

@@ -1,6 +1,7 @@
-import {orders,json,parse,sign,verify,error} from './shared.mjs';
-import {DAY,PRICE,paymentConfig} from './payment-config.mjs';
-import {mailConfig,sendRecovery} from './recovery-mail.mjs';
+import {orders,json,parse,verify,error} from './shared.mjs';
+import {PRICE,paymentConfig} from './payment-config.mjs';
+import {mailConfig} from './recovery-mail.mjs';
+import {eligibleOrder,recordApproval,reportLink} from './entitlement.mjs';
 import {approvedPayment,confirmPayment} from './toss.mjs';
 
 export default async req => {
@@ -17,8 +18,7 @@ export default async req => {
     if (amount !== PRICE) return json({error:'주문 금액을 확인해 주세요.'},400);
     const store = orders();
     const order = await store.get(orderId,{type:'json'});
-    if (!order || order.orderId !== orderId || order.channel !== 'toss-test' || order.amount !== PRICE ||
-        !['pending','test-paid'].includes(order.status)) {
+    if (!eligibleOrder(order,orderId)) {
       return json({error:'테스트 주문 상태를 확인해 주세요.'},409);
     }
     if (order.paymentKey && order.paymentKey !== paymentKey) {
@@ -28,19 +28,10 @@ export default async req => {
     if (!approvedPayment(payment, orderId, paymentKey)) {
       return json({error:'완료된 테스트 카드 결제를 확인하지 못했습니다.'},409);
     }
-    // Concurrent retries may record the same verified approval.
-    if (order.status !== 'test-paid') {
-      await store.setJSON(orderId,{...order,status:'test-paid',paymentKey,approvedAt:payment.approvedAt});
-    }
-    const exp = Date.parse(payment.approvedAt) + 7 * DAY;
-    if (!Number.isFinite(exp) || exp <= Date.now()) {
-      return json({error:'테스트 보고서 열람 기간이 끝났습니다.'},410);
-    }
-    const mail = mailConfig(config);
-    if (mail && order.recoveryEmail && order.status !== 'test-paid') {
-      try { await sendRecovery(mail,order); } catch { /* The buyer can request another email. */ }
-    }
-    return json({orderId,token:sign({orderId,scope:'toss-test-report',exp}),expiresAt:exp});
+    // Concurrent approvals of this order record the same provider timestamp and expiry.
+    const purchase = await recordApproval(store,order,payment);
+    const link = purchase && reportLink(purchase);
+    return link ? json(link) : json({error:'테스트 보고서 열람 기간이 끝났습니다.'},410);
   } catch (e) {
     return error(e);
   }

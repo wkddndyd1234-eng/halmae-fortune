@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import {orders,json,parse,sign,error} from './shared.mjs';
 import {mailConfig,recoveryEmail} from './recovery-mail.mjs';
+import {browserCredential,browserHeader,fingerprint} from './entitlement.mjs';
 import {normalizeBirth} from './saju.mjs';
 import {DAY,ORDER_NAME,PRICE,paymentConfig} from './payment-config.mjs';
 
@@ -24,10 +25,11 @@ export default async req => {
   let birth;
   try { birth = normalizeBirth(x); }
   catch (e) { return json({error:e.message},400); }
-  delete birth.gender;
+  const {birthDate,birthTime} = birth;
   const orderId = 'HM-'+crypto.randomUUID();
   const createdAt = Date.now();
   const result = {orderId,amount:PRICE,status:'pending',paymentEnabled:Boolean(config)};
+  const credential = config ? browserCredential(req) : null;
   if (config) {
     result.clientKey = config.clientKey;
     result.orderName = ORDER_NAME;
@@ -35,7 +37,9 @@ export default async req => {
     result.successUrl = config.origin+'/payment-result.html';
     result.failUrl = config.origin+'/payment-result.html?failed=1';
   }
-  await orders().setJSON(orderId,{orderId,name:name||'손님',...birth,amount:PRICE,channel,status:'pending',createdAt,...(email?{recoveryEmail:email}:{})});
-  return json(result);
+  await orders().setJSON(orderId,{orderId,name:name||'손님',birthDate,...(birthTime?{birthTime}:{}),amount:PRICE,channel,status:'pending',createdAt,...(email?{recoveryEmailHash:fingerprint('email',email)}:{}),...(credential?{browserHash:fingerprint('browser',credential)}:{})});
+  const response = json(result);
+  if (credential) response.headers.set('Set-Cookie',browserHeader(credential));
+  return response;
  } catch (e) { return error(e); }
 };

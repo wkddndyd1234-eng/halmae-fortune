@@ -94,6 +94,7 @@ test('서버 승인과 현재 상태가 확인된 주문만 보고서를 발급�
   const [access,concurrentAccess] = await Promise.all(approved.map(response=>response.json()));
   assert.deepEqual(concurrentAccess,access);
   assert.equal(orders.get(o.orderId).status,'test-paid');
+  assert.equal(orders.get(o.orderId).purchaseExpiresAt,Date.parse(approvedAt)+365*24*60*60*1000);
   assert.ok(approvals>=2 && approvals<=3);
   assert.equal(new Set(idempotency).size,1);
   const approvedAttempts = approvals;

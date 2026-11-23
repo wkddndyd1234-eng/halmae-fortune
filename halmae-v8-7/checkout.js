@@ -1,4 +1,4 @@
-import {recordConversion,post,checkoutKey,forgetCheckout,clearPurchaseStorage} from '/purchase.js';
+import {recordConversion,post,checkoutKey,forgetCheckout,clearPurchaseStorage,rememberOrder} from '/purchase.js';
 
 const form = document.querySelector('#form');
 const msg = document.querySelector('#msg');
@@ -11,14 +11,19 @@ let adminOrderId;
 let busy = false;
 
 recordConversion('checkout_view');
-document.querySelector('#clear-storage').addEventListener('click',()=>{
+document.querySelector('#clear-storage').addEventListener('click',async()=>{
   clearPurchaseStorage();
   form.reset();
   form.elements.email.disabled = true;
   document.querySelector('#code').value = '';
   adminOrderId = undefined;
   next.hidden = true;
-  msg.textContent = '이 탭의 테스트 정보를 지웠습니다.';
+  try {
+    await post('access',{action:'forget'});
+    msg.textContent = '이 브라우저의 테스트 열람 정보를 지웠습니다.';
+  } catch {
+    msg.textContent = '저장 정보를 지웠습니다. 열람 쿠키는 브라우저의 사이트 데이터 설정에서 삭제해 주세요.';
+  }
 });
 fetch(endpoint+'payment',{cache:'no-store'})
   .then(response => response.ok ? response.json() : {enabled:false})
@@ -77,6 +82,7 @@ form.addEventListener('submit', async event => {
     }
     recordConversion('test_order_created');
     forgetCheckout();
+    rememberOrder(order.orderId);
     msg.textContent = '테스트 주문 번호: '+order.orderId+' · 결제창을 엽니다.';
     sessionStorage.setItem(checkoutKey,JSON.stringify({orderId:order.orderId,token:order.checkoutToken}));
     const TossPayments = await loadToss();

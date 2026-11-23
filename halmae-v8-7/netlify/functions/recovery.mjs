@@ -1,10 +1,11 @@
-import {error,json,orders,parse,sign,verify} from './shared.mjs';
-import {DAY,PRICE,paymentConfig} from './payment-config.mjs';
-import {approvedPayment,findPayment} from './toss.mjs';
+import {error,json,orders,parse,verify} from './shared.mjs';
+import {paymentConfig} from './payment-config.mjs';
+import {eligibleOrder,fingerprint,orderPattern,reportLink,verifiedPurchase} from './entitlement.mjs';
 import {mailConfig,recoveryEmail,sendRecovery} from './recovery-mail.mjs';
 
 const accepted = () => json({accepted:true},202);
-const orderPattern = /^HM-[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
+const denied = () => json({error:'유효한 구매 또는 복구 링크를 확인하지 못했습니다. 필요하면 새 링크를 요청해 주세요.'},403);
+const interval = 15*60_000;
 
 export default async req => {
   const config = paymentConfig(req);
@@ -18,33 +19,34 @@ export default async req => {
     if (!exchange && input?.action !== 'request') return json({error:'복구 요청을 확인해 주세요.'},400);
     const claim = exchange ? verify(input.token) : null;
     const orderId = exchange ? claim?.orderId : input.orderId;
-    if (exchange && claim?.scope !== 'toss-test-recovery') {
-      return json({error:'유효한 복구 링크가 필요합니다.'},403);
-    }
-    if (typeof orderId !== 'string' || !orderPattern.test(orderId)) return accepted();
+    if (typeof orderId !== 'string' || !orderPattern.test(orderId) ||
+        (exchange && claim?.scope !== 'toss-test-recovery-v2')) return exchange ? denied() : accepted();
     const store = orders();
     const order = await store.get(orderId,{type:'json'});
-    if (!order?.recoveryEmail || order.orderId !== orderId || order.channel !== 'toss-test' ||
-        order.amount !== PRICE || !['pending','test-paid'].includes(order.status)) {
-      return exchange ? json({error:'복구 가능한 테스트 주문이 없습니다.'},403) : accepted();
+    if (!eligibleOrder(order,orderId) || !(order.recoveryEmailHash || order.recoveryEmail)) {
+      return exchange ? denied() : accepted();
     }
     if (!exchange) {
-      if (recoveryEmail(input.email) === order.recoveryEmail && order.createdAt + 8*DAY > Date.now()) {
-        // Uniform response avoids disclosing whether an address matches a stored order.
-        try { await sendRecovery(mail,order); } catch { /* Mail failure is not a payment failure. */ }
-      }
+      const email = recoveryEmail(input.email);
+      const expected = order.recoveryEmailHash ?? fingerprint('email',order.recoveryEmail);
+      if (!email || fingerprint('email',email) !== expected) return accepted();
+      try {
+        const now = Date.now();
+        const windowEnd = (Math.floor(now/interval)+1)*interval;
+        const rateKey = 'recovery/rate/'+orderId+'/'+windowEnd;
+        const limit = await store.setJSON(rateKey,{expiresAt:windowEnd},{onlyIfNew:true});
+        if (!limit.modified) return accepted();
+        const purchase = await verifiedPurchase(config,store,order);
+        if (purchase) await sendRecovery(mail,purchase,email,rateKey);
+      } catch { /* Return the same public response for unmatched, expired and failed requests. */ }
       return accepted();
     }
-    const paid = await findPayment(config,orderId);
-    const paymentKey = order.paymentKey ?? paid?.paymentKey;
-    const expiresAt = Date.parse(paid?.approvedAt) + 7*DAY;
-    if (!approvedPayment(paid,orderId,paymentKey) || expiresAt <= Date.now()) {
-      return json({error:'열람 가능한 카드 승인을 확인하지 못했습니다. 미승인 주문은 주문 화면에서 다시 시도해 주세요.'},403);
-    }
-    if (order.status === 'pending') {
-      await store.setJSON(orderId,{...order,status:'test-paid',paymentKey,approvedAt:paid.approvedAt});
-    }
-    return json({orderId,token:sign({orderId,scope:'toss-test-report',exp:expiresAt}),expiresAt});
+    const purchase = await verifiedPurchase(config,store,order);
+    if (!purchase || claim.exp<=Date.now()) return denied();
+    const marker = 'recovery/used/'+fingerprint('consumed',input.token);
+    const consumed = await store.setJSON(marker,{expiresAt:claim.exp},{onlyIfNew:true});
+    const link = consumed.modified && reportLink(purchase);
+    return link ? json(link) : denied();
   } catch(e) {
     return error(e);
   }
