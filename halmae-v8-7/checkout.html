@@ -40,6 +40,7 @@
   <form id="form" method="post" tabindex="-1">
     <p id="prefill" class="notice" role="status" hidden>무료 풀이에 쓴 정보예요. 주문 전에 수정할 수 있어요.</p>
     <label>별칭 (선택)<input name="name" maxlength="30" autocomplete="off"></label>
+    <label>성별 (전통 명리 대운 계산 기준)<select name="gender" required><option value="">선택해 주세요</option><option value="male">남성</option><option value="female">여성</option></select></label>
     <label>생년월일 <span class="small birth-help" id="birth-help">양력 기준 · 음력 생일은 양력 날짜로 변환 후 입력해 주세요.</span><input type="date" name="birthDate" aria-describedby="birth-help" required min="1900-01-01"></label>
     <label>출생 시간 (한국 시간 · 모르면 비워두세요)<input type="time" name="birthTime"></label>
     <fieldset id="recovery-options" hidden>
