@@ -17,18 +17,24 @@ let adminOrderId;
 let busy = false;
 
 form.elements.birthDate.max = todayInKorea();
+const calendarType=form.elements.calendarType;
+const leapMonth=form.elements.isLeapMonth;
+function updateCalendar(){document.querySelector('#checkout-leap').hidden=calendarType.value!=='lunar';if(calendarType.value!=='lunar')leapMonth.value='false';updatePreview();}
+calendarType.addEventListener('change',updateCalendar);
+leapMonth.addEventListener('change',updatePreview);
 const draft = window.opener ? null : readBirthDraft();
 const prefill = document.querySelector('#prefill');
 if (draft) {
   for (const [key,value] of Object.entries(draft)) form.elements[key].value = value;
   prefill.hidden = false;
 }
+updateCalendar();
 
 function updatePreview() {
   const {birthDate,birthTime,gender} = form.elements;
   let saju;
   if(birthDate.validity.valid && birthTime.validity.valid){
-    try { saju=calculateSaju({birthDate:birthDate.value,birthTime:birthTime.value,gender:gender.value}); }
+    try { saju=calculateSaju({birthDate:birthDate.value,birthTime:birthTime.value,gender:gender.value,calendarType:calendarType.value,isLeapMonth:leapMonth.value==='true'}); }
     catch { /* Incomplete or unsupported input shows the example. */ }
   }
   renderLedgerPreview(document.querySelector('#checkout-preview'),saju);
@@ -41,7 +47,7 @@ resetBirth.addEventListener('click',()=>{
   saveBirthDraft(null);
   for (const field of ['name','birthDate','birthTime','gender']) form.elements[field].value = '';
   prefill.hidden = true;
-  updatePreview();
+  calendarType.value='solar';updateCalendar();
   form.elements.name.focus();
   msg.textContent = '출생 입력을 지웠어요.';
 });
@@ -50,7 +56,7 @@ recordConversion('checkout_view');
 clearStorage.addEventListener('click',async()=>{
   clearPurchaseStorage();
   form.reset();
-  updatePreview();
+  updateCalendar();
   prefill.hidden = true;
   form.elements.email.disabled = true;
   form.elements.email.required = false;
@@ -117,7 +123,7 @@ form.addEventListener('submit', async event => {
   try {
     const data = Object.fromEntries(new FormData(form));
     const order = await post('order',{
-      name:data.name,birthDate:data.birthDate,birthTime:data.birthTime,gender:data.gender,
+      name:data.name,birthDate:data.birthDate,birthTime:data.birthTime,gender:data.gender,calendarType:data.calendarType,isLeapMonth:data.isLeapMonth==='true',
       consent:form.elements.consent.checked,channel:customer?'toss-test':'admin-demo',
       ...(customer && form.elements.recoveryConsent.checked ?
         {email:data.email,recoveryConsent:true} : {}),
