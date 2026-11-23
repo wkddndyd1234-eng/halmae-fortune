@@ -26,7 +26,7 @@ export default async req => {
   try { birth = normalizeBirth(x); }
   catch (e) { return json({error:e.message},400); }
   if (!['male','female'].includes(birth.gender)) return json({error:'성별을 선택해 주세요.'},400);
-  const {birthDate,birthTime,gender} = birth;
+  const {birthDate,birthTime,gender,calendarType,isLeapMonth} = birth;
   const orderId = 'HM-'+crypto.randomUUID();
   const createdAt = Date.now();
   const result = {orderId,amount:PRICE,status:'pending',paymentEnabled:Boolean(config)};
@@ -38,7 +38,7 @@ export default async req => {
     result.successUrl = config.origin+'/payment-result.html';
     result.failUrl = config.origin+'/payment-result.html?failed=1';
   }
-  await orders().setJSON(orderId,{orderId,name:name||'손님',birthDate,gender,...(birthTime?{birthTime}:{}),amount:PRICE,channel,status:'pending',createdAt,...(email?{recoveryEmailHash:fingerprint('email',email)}:{}),...(credential?{browserHash:fingerprint('browser',credential)}:{})});
+  await orders().setJSON(orderId,{orderId,name:name||'손님',birthDate,gender,calendarType,isLeapMonth,...(birthTime?{birthTime}:{}),amount:PRICE,channel,status:'pending',createdAt,...(email?{recoveryEmailHash:fingerprint('email',email)}:{}),...(credential?{browserHash:fingerprint('browser',credential)}:{})});
   const response = json(result);
   if (credential) response.headers.set('Set-Cookie',browserHeader(credential));
   return response;
