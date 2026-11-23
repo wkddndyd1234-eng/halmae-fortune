@@ -25,10 +25,10 @@ if (draft) {
 }
 
 function updatePreview() {
-  const {birthDate,birthTime} = form.elements;
+  const {birthDate,birthTime,gender} = form.elements;
   let saju;
   if(birthDate.validity.valid && birthTime.validity.valid){
-    try { saju=calculateSaju({birthDate:birthDate.value,birthTime:birthTime.value}); }
+    try { saju=calculateSaju({birthDate:birthDate.value,birthTime:birthTime.value,gender:gender.value}); }
     catch { /* Incomplete or unsupported input shows the example. */ }
   }
   renderLedgerPreview(document.querySelector('#checkout-preview'),saju);
@@ -39,7 +39,7 @@ updatePreview();
 
 resetBirth.addEventListener('click',()=>{
   saveBirthDraft(null);
-  for (const field of ['name','birthDate','birthTime']) form.elements[field].value = '';
+  for (const field of ['name','birthDate','birthTime','gender']) form.elements[field].value = '';
   prefill.hidden = true;
   updatePreview();
   form.elements.name.focus();
@@ -117,7 +117,7 @@ form.addEventListener('submit', async event => {
   try {
     const data = Object.fromEntries(new FormData(form));
     const order = await post('order',{
-      name:data.name,birthDate:data.birthDate,birthTime:data.birthTime,
+      name:data.name,birthDate:data.birthDate,birthTime:data.birthTime,gender:data.gender,
       consent:form.elements.consent.checked,channel:customer?'toss-test':'admin-demo',
       ...(customer && form.elements.recoveryConsent.checked ?
         {email:data.email,recoveryConsent:true} : {}),
