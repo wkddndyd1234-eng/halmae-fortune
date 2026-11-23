@@ -6,9 +6,9 @@ import demo from '../netlify/functions/demo-issue.mjs';
 import report from '../netlify/functions/report.mjs';
 
 const preview = 'https://test-v87--halmae-fortune-v87-preview.netlify.app';
-const request = (body, token, origin=preview) => new Request(origin+'/api',{
+const request = (body, token, origin=preview,extraHeaders={}) => new Request(origin+'/api',{
   method:body ? 'POST':'GET',
-  headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},
+  headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{}),...extraHeaders},
   body:body ? JSON.stringify(body):undefined,
 });
 const birth = {channel:'toss-test',birthDate:'2000-01-01',consent:true};
@@ -100,6 +100,14 @@ test('서버 승인과 현재 상태가 확인된 주문만 보고서를 발급�
   const approvedAttempts = approvals;
   const retry = await payment(request(payload,o.checkoutToken));
   assert.deepEqual(await retry.json(),access);
+  const cookie=created.headers.get('set-cookie').split(';')[0];
+  const browserRequest=extra=>request(payload,null,preview,{Cookie:cookie,Origin:preview,...extra});
+  assert.equal((await payment(browserRequest())).status,200);
+  assert.equal((await payment(browserRequest({Origin:'https://example.test'}))).status,403);
+  const saved=orders.get(o.orderId);
+  orders.set(o.orderId,{...saved,createdAt:Date.now()-24*60*60*1000});
+  assert.equal((await payment(browserRequest())).status,403);
+  orders.set(o.orderId,saved);
   assert.equal(approvals,approvedAttempts);
   const book = await report(request(null,access.token));
   assert.equal(book.status,200);

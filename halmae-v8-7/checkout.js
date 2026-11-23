@@ -1,3 +1,4 @@
+import {readBirthDraft,saveBirthDraft,todayInKorea} from './birth-handoff.js';
 import {recordConversion,post,checkoutKey,forgetCheckout,clearPurchaseStorage,rememberOrder} from '/purchase.js';
 
 const form = document.querySelector('#form');
@@ -6,15 +7,35 @@ const buy = document.querySelector('#buy');
 const admin = document.querySelector('#admin');
 const next = document.querySelector('#next');
 const issue = document.querySelector('#issue');
+const resetBirth = document.querySelector('#reset-birth');
+const clearStorage = document.querySelector('#clear-storage');
 const endpoint = '/.netlify/functions/';
 let adminOrderId;
 let busy = false;
 
+form.elements.birthDate.max = todayInKorea();
+const draft = window.opener ? null : readBirthDraft();
+const prefill = document.querySelector('#prefill');
+if (draft) {
+  for (const [key,value] of Object.entries(draft)) form.elements[key].value = value;
+  prefill.hidden = false;
+}
+
+resetBirth.addEventListener('click',()=>{
+  saveBirthDraft(null);
+  for (const field of ['name','birthDate','birthTime']) form.elements[field].value = '';
+  prefill.hidden = true;
+  form.elements.name.focus();
+  msg.textContent = '출생 입력을 지웠어요.';
+});
+
 recordConversion('checkout_view');
-document.querySelector('#clear-storage').addEventListener('click',async()=>{
+clearStorage.addEventListener('click',async()=>{
   clearPurchaseStorage();
   form.reset();
+  prefill.hidden = true;
   form.elements.email.disabled = true;
+  form.elements.email.required = false;
   document.querySelector('#code').value = '';
   adminOrderId = undefined;
   next.hidden = true;
@@ -28,19 +49,22 @@ document.querySelector('#clear-storage').addEventListener('click',async()=>{
 fetch(endpoint+'payment',{cache:'no-store'})
   .then(response => response.ok ? response.json() : {enabled:false})
   .then(({enabled,recoveryEnabled}) => {
-    if (recoveryEnabled) {
+    if (enabled && recoveryEnabled) {
       document.querySelector('#recovery-options').hidden = false;
       document.querySelector('#recover').hidden = false;
     }
     if (enabled) {
       buy.hidden = false;
-      document.querySelector('#availability').textContent = '테스트 카드로 주문과 보고서 열람을 체험할 수 있습니다. 실제 청구는 발생하지 않습니다.';
+      buy.disabled = false;
+      document.querySelector('#test-guide').hidden = false;
+      document.querySelector('#availability').textContent = '실제 청구 없는 테스트 결제';
     }
   }).catch(() => {});
 
 form.elements.recoveryConsent.addEventListener('change',()=>{
   const {email,recoveryConsent} = form.elements;
   email.disabled = !recoveryConsent.checked;
+  email.required = recoveryConsent.checked;
   if (email.disabled) email.value = '';
 });
 
@@ -63,7 +87,7 @@ form.addEventListener('submit', async event => {
   if (busy) return;
   const customer = event.submitter === buy;
   busy = true;
-  buy.disabled = admin.disabled = document.querySelector('#clear-storage').disabled = true;
+  buy.disabled = admin.disabled = clearStorage.disabled = resetBirth.disabled = true;
   next.hidden = true;
   msg.textContent = '테스트 주문을 준비하고 있습니다…';
   try {
@@ -74,6 +98,8 @@ form.addEventListener('submit', async event => {
       ...(customer && form.elements.recoveryConsent.checked ?
         {email:data.email,recoveryConsent:true} : {}),
     });
+    saveBirthDraft(null);
+    prefill.hidden = true;
     if (!customer) {
       adminOrderId = order.orderId;
       next.hidden = false;
@@ -84,7 +110,9 @@ form.addEventListener('submit', async event => {
     forgetCheckout();
     rememberOrder(order.orderId);
     msg.textContent = '테스트 주문 번호: '+order.orderId+' · 결제창을 엽니다.';
-    sessionStorage.setItem(checkoutKey,JSON.stringify({orderId:order.orderId,token:order.checkoutToken}));
+    try {
+      sessionStorage.setItem(checkoutKey,JSON.stringify({orderId:order.orderId,token:order.checkoutToken}));
+    } catch { /* The server can also use the browser credential set at checkout. */ }
     const TossPayments = await loadToss();
     const payment = TossPayments(order.clientKey).payment({customerKey:TossPayments.ANONYMOUS});
     recordConversion('test_payment_open');
@@ -98,7 +126,8 @@ form.addEventListener('submit', async event => {
     msg.textContent = cancelled ? '테스트 결제를 취소했습니다.' : error.message;
   } finally {
     busy = false;
-    buy.disabled = admin.disabled = document.querySelector('#clear-storage').disabled = false;
+    buy.disabled = buy.hidden;
+    admin.disabled = clearStorage.disabled = resetBirth.disabled = false;
   }
 });
 
@@ -115,3 +144,5 @@ issue.addEventListener('click',async () => {
     issue.disabled = false;
   }
 });
+
+admin.disabled = false;

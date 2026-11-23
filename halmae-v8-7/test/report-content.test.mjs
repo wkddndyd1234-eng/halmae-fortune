@@ -26,7 +26,12 @@ test('26장 보고서는 계산 기록, 계산 연결, 공통 가이드를 표�
   assert.match(summer.chapters[11].paragraphs.at(-1),/출생 시간이 미상/);
   assert.notDeepEqual(january.chapters[4],summer.chapters[4]);
   const monthly = book => book.chapters.filter(ch=>ch.kicker.startsWith('2027 MONTHLY'));
-  assert.equal(monthly(january).length,12);
+  const months=monthly(january);
+  assert.equal(months.length,12);
+  assert.deepEqual(months.map(ch=>ch.title.split(' · ')[0]),Array.from({length:12},(_,index)=>index+1+'월'));
+  assert.ok(months.every(ch=>ch.kicker.includes('공통 성찰') && ch.bullets.length===3));
+  assert.equal(new Set(months.map(ch=>ch.paragraphs[1])).size,12);
+  assert.deepEqual(months,monthly(buildReport({name:'다른 별칭',birthDate:'1992-01-21'})));
   const text=january.chapters.flatMap(ch=>[...ch.paragraphs,...ch.bullets]);
   assert.equal(new Set(text).size,text.length);
   assert.deepEqual(monthly(january),monthly(summer));

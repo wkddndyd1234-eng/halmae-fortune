@@ -1,3 +1,5 @@
+import {saveBirthDraft} from './birth-handoff.js';
+
 export const checkoutKey = 'halmae-test-checkout';
 export const reportKey = 'halmae-last-test-report';
 const orderKey = 'halmae-preview-order';
@@ -58,6 +60,7 @@ export function forgetReport() {
 }
 
 export function clearPurchaseStorage() {
+  saveBirthDraft(null);
   forgetCheckout();
   forgetReport();
   removeSessionKeys(['halmae-conversion-counts']);

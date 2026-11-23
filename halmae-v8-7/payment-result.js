@@ -48,7 +48,7 @@ function showReport({token,orderId,purchaseExpiresAt}) {
   const link = document.querySelector('#report');
   link.href = '/report.html#'+encodeURIComponent(token);
   link.hidden = document.querySelector('#access').hidden = false;
-  status.textContent = '테스트 결제가 승인되었습니다. 실제 청구는 발생하지 않았습니다.';
+  status.textContent = '테스트 결제가 완료됐어요. 지금 보고서를 열 수 있어요. 실제로 청구된 금액은 없어요.';
 }
 
 const checkout = read(checkoutKey);
@@ -60,11 +60,12 @@ if (failure) {
   status.textContent = cancelled ? '테스트 결제를 취소했습니다.' : '테스트 결제가 완료되지 않았습니다. 주문 화면에서 다시 시도해 주세요.';
   recordConversion(cancelled?'test_payment_cancel':'test_payment_failure');
 } else {
-  if (callback.orderId && callback.orderId === checkout?.orderId) {
+  if (callback.orderId && callback.paymentKey && (!checkout || callback.orderId === checkout.orderId)) {
     pending = callback;
-    sessionStorage.setItem(callbackKey,JSON.stringify(pending));
+    try { sessionStorage.setItem(callbackKey,JSON.stringify(pending)); }
+    catch { /* The current callback can still be confirmed with the browser cookie. */ }
   }
-  if (pending?.orderId && pending.orderId === checkout?.orderId) {
+  if (pending?.orderId && (!checkout || pending.orderId === checkout.orderId)) {
     retry.addEventListener('click',confirm);
     await confirm();
   } else if (saved?.expiresAt > Date.now()) {
@@ -77,9 +78,9 @@ if (failure) {
 
 async function confirm() {
   retry.hidden = true;
-  status.textContent = '테스트 승인 상태를 확인하고 있습니다…';
+  status.textContent = '결제가 완료됐는지 확인하고 있어요…';
   try {
-    const result = await post('payment',pending,checkout.token);
+    const result = await post('payment',pending,checkout?.token);
     rememberReport(result);
     forgetCheckout();
     recordConversion('test_payment_success');

@@ -1,7 +1,7 @@
 import {orders,json,parse,verify,error} from './shared.mjs';
-import {PRICE,paymentConfig} from './payment-config.mjs';
+import {DAY,PRICE,paymentConfig} from './payment-config.mjs';
 import {mailConfig} from './recovery-mail.mjs';
-import {eligibleOrder,recordApproval,reportLink} from './entitlement.mjs';
+import {browserKey,eligibleOrder,fingerprint,orderPattern,recordApproval,reportLink} from './entitlement.mjs';
 import {approvedPayment,confirmPayment} from './toss.mjs';
 
 export default async req => {
@@ -12,12 +12,17 @@ export default async req => {
   try {
     const {orderId,paymentKey,amount} = await parse(req);
     const claim = verify((req.headers.get('authorization') ?? '').replace(/^Bearer /,''));
-    if (claim?.scope !== 'toss-test-checkout' || claim.orderId !== orderId) {
-      return json({error:'이 브라우저에서 시작한 유효한 테스트 주문이 필요합니다.'},403);
-    }
-    if (amount !== PRICE) return json({error:'주문 금액을 확인해 주세요.'},400);
+    const denied = () => json({error:'이 브라우저에서 시작한 유효한 테스트 주문이 필요합니다.'},403);
+    const signedCheckout = claim?.scope === 'toss-test-checkout' && claim.orderId === orderId;
+    const key = browserKey(req);
+    const origin = req.headers.get('origin');
+    if (typeof orderId !== 'string' || !orderPattern.test(orderId) ||
+        (!signedCheckout && (!key || (origin && origin !== config.origin)))) return denied();
     const store = orders();
     const order = await store.get(orderId,{type:'json'});
+    if (!signedCheckout && (order?.browserHash !== fingerprint('browser',key) ||
+        !Number.isFinite(order.createdAt) || order.createdAt+DAY<=Date.now())) return denied();
+    if (amount !== PRICE) return json({error:'주문 금액을 확인해 주세요.'},400);
     if (!eligibleOrder(order,orderId)) {
       return json({error:'테스트 주문 상태를 확인해 주세요.'},409);
     }

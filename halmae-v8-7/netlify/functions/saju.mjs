@@ -13,7 +13,7 @@ export function normalizeBirth(input){
  if(calendarType!=='solar'||(isLeapMonth!==false&&isLeapMonth!=='false'))throw Error('양력 생년월일만 입력할 수 있습니다.');
  if(y<1900||y>2050)throw Error('생년월일 지원 연도를 확인해 주세요.');
  if(!validGregorian(y,m,d))throw Error('존재하지 않는 양력 날짜입니다.');
- if(Date.UTC(y,m-1,d)>Date.now())throw Error('미래 생년월일은 입력할 수 없습니다.');
+ if(date>new Date(Date.now()+9*60*60*1000).toISOString().slice(0,10))throw Error('미래 생년월일은 입력할 수 없습니다.');
  const time=String(input.birthTime||'');if(time&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))throw Error('출생 시각 형식이 올바르지 않습니다.');
  return {birthDate:date,calendarType,isLeapMonth:false,solarDate:date,birthTime:time,gender:input.gender||''};
 }
