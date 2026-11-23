@@ -10,6 +10,9 @@ const byId = id=>document.getElementById(id);
 const form = byId('fortune');
 const [year,month,day,hour,minute] = ['year','month','day','time','minute'].map(byId);
 const result = byId('result');
+const calendarType=byId('calendarType');
+const isLeapMonth=byId('isLeapMonth');
+calendarType.addEventListener('change',()=>{byId('leapField').hidden=calendarType.value!=='lunar';if(calendarType.value!=='lunar')isLeapMonth.value='false';});
 const offer = byId('offer');
 result.dataset.variant=readingVariant(result.dataset.variant);
 if(result.dataset.variant==='story'){
@@ -69,7 +72,7 @@ form.addEventListener('input',recordStart);
 form.addEventListener('submit',event=>{
  recordStart();
  event.preventDefault();
- const input=fromFreeForm({name:name.value,gender:byId('gender').value,year:year.value,month:month.value,day:day.value,hour:hour.value,minute:minute.value});
+ const input=fromFreeForm({name:name.value,gender:byId('gender').value,calendarType:calendarType.value,isLeapMonth:isLeapMonth.value==='true',year:year.value,month:month.value,day:day.value,hour:hour.value,minute:minute.value});
  error.textContent='';
  if (!input) {
   error.textContent='성별과 생년월일을 확인해 주세요. 미래 날짜는 입력할 수 없어요.';
@@ -77,12 +80,12 @@ form.addEventListener('submit',event=>{
  }
  let saju;
  try { saju=calculateSaju(input); }
- catch { error.textContent='생년월일과 출생 시각을 다시 확인해 주세요.'; return; }
+ catch (e) { error.textContent=e.message||'생년월일과 출생 시각을 다시 확인해 주세요.'; return; }
 
  draft=input;
  const reading=readFreeInsights(saju.pillars[2],saju.elements,relationshipNotes[byId('relation').value]);
  byId('greeting').textContent=input.name?input.name+'님, 네 이야기를 들려주마.':'네 이야기를 들려주마.';
- byId('resultMeta').textContent=`${input.gender==='male'?'남성':'여성'} · ${input.birthDate} 양력 · ${input.birthTime||'출생 시각 미상'}`;
+ byId('resultMeta').textContent=`${input.gender==='male'?'남성':'여성'} · ${input.birthDate} ${input.calendarType==='lunar'?(input.isLeapMonth?'음력 윤달':'음력 평달'):'양력'} · ${input.birthTime||'출생 시각 미상'}`;
  for (const [id,value] of Object.entries({
   resultHeading:reading.headline,compassDetail:reading.introduction,
   personality:reading.temperament,balanceQuestion:reading.balance,career:reading.work,love:reading.relationships,
