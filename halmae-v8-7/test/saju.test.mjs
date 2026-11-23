@@ -11,3 +11,29 @@ test('유효한 날짜라도 음력 입력 거절',()=>assert.throws(()=>normali
 for(const isLeapMonth of [true,'true',1,'1']){
  test(`양력 요청의 윤달 표시 거절 (${typeof isLeapMonth} ${isLeapMonth})`,()=>assert.throws(()=>normalizeBirth({birthDate:'2024-01-01',calendarType:'solar',isLeapMonth}),/양력 생년월일만/));
 }
+
+test('2024 입춘 경계 전후 1분은 연주와 월주만 변경',()=>{
+ const date='2024-02-04';
+ const before=calculateSaju({birthDate:date,birthTime:'17:26'});
+ const after=calculateSaju({birthDate:date,birthTime:'17:27'});
+ assert.deepEqual(before.pillars.slice(0,2),['癸卯','乙丑']);
+ assert.deepEqual(after.pillars.slice(0,2),['甲辰','丙寅']);
+ assert.deepEqual(before.pillars.slice(2),after.pillars.slice(2));
+ assert.ok(after.warnings.some(w=>w.includes('절기 경계')));
+ const unknown=calculateSaju({birthDate:date});
+ assert.equal(unknown.pillars[3],null);
+ assert.deepEqual(unknown.pillars.slice(0,2),before.pillars.slice(0,2));
+ assert.ok(unknown.warnings.some(w=>w.includes('시각 미상')));
+});
+
+test('23시에는 자시로 바뀌고 일주는 자정에 바뀐다',()=>{
+ const at = (birthDate,birthTime)=>calculateSaju({birthDate,birthTime});
+ const before = at('2000-01-01','22:59');
+ const late = at('2000-01-01','23:00');
+ const midnight = at('2000-01-02','00:00');
+ assert.equal(before.pillars[2],'戊午');
+ assert.equal(late.pillars[2],'戊午');
+ assert.equal(late.pillars[3],'壬子');
+ assert.equal(midnight.pillars[2],'己未');
+ assert.ok(late.warnings.some(w=>w.includes('23시')));
+});

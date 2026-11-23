@@ -1,10 +1,11 @@
 import {orders,json,parse,sign,verify,error} from './shared.mjs';
 import {DAY,PRICE,paymentConfig} from './payment-config.mjs';
+import {mailConfig,sendRecovery} from './recovery-mail.mjs';
 import {approvedPayment,confirmPayment} from './toss.mjs';
 
 export default async req => {
   const config = paymentConfig(req);
-  if (req.method === 'GET') return json({enabled:Boolean(config)});
+  if (req.method === 'GET') return json({enabled:Boolean(config),...(mailConfig(config)?{recoveryEnabled:true}:{})});
   if (req.method !== 'POST') return json({error:'Method not allowed'},405);
   if (!config) return json({error:'테스트 결제는 현재 준비 중입니다.'},503);
   try {
@@ -35,7 +36,11 @@ export default async req => {
     if (!Number.isFinite(exp) || exp <= Date.now()) {
       return json({error:'테스트 보고서 열람 기간이 끝났습니다.'},410);
     }
-    return json({token:sign({orderId,scope:'toss-test-report',exp}),expiresAt:exp});
+    const mail = mailConfig(config);
+    if (mail && order.recoveryEmail && order.status !== 'test-paid') {
+      try { await sendRecovery(mail,order); } catch { /* The buyer can request another email. */ }
+    }
+    return json({orderId,token:sign({orderId,scope:'toss-test-report',exp}),expiresAt:exp});
   } catch (e) {
     return error(e);
   }

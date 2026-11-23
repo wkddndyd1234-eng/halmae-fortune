@@ -20,3 +20,9 @@
   [headers.values]
     Cache-Control = "no-store"
     Referrer-Policy = "no-referrer"
+
+[[headers]]
+  for = "/recovery.html"
+  [headers.values]
+    Cache-Control = "no-store"
+    Referrer-Policy = "no-referrer"

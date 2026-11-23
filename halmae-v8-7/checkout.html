@@ -18,6 +18,12 @@
     <label>별칭 (선택)<input name="name" maxlength="30" autocomplete="off"></label>
     <label>생년월일 (양력)<input type="date" name="birthDate" required min="1900-01-01"></label>
     <label>한국 표준시 출생 시간 (모르면 비워두세요)<input type="time" name="birthTime"></label>
+    <fieldset id="recovery-options" hidden>
+      <legend>다른 기기에서 열람 (선택)</legend>
+      <label class="check"><input type="checkbox" name="recoveryConsent"> 이메일을 테스트 보고서 복구에 사용하는 데 동의합니다.</label>
+      <label>테스트 복구 이메일<input type="email" name="email" maxlength="254" autocomplete="email" disabled></label>
+      <p>수신할 수 있는 본인 소유 테스트 주소를 사용해 주세요. 승인 후 복구 메일이 도착하면 주문 번호를 보관해 주세요.</p>
+    </fieldset>
     <p>보고서는 웹으로 열람합니다. 테스트 결제 후에는 발급 링크로 7일간 다시 열 수 있습니다.</p>
     <label class="check"><input type="checkbox" name="consent" required> <span><a href="/privacy.html">개인정보처리방침</a>을 읽었고 가상 출생 정보의 테스트 처리에 동의합니다.</span></label>
     <p class="small"><a href="/terms.html">이용약관</a> · <a href="/refund.html">취소·환불 안내</a> · <a href="/payment-result.html">최근 테스트 보고서</a></p>
@@ -31,6 +37,8 @@
       </div>
     </details>
   </form>
+  <p><a id="recover" href="/recovery.html" hidden>이메일로 테스트 보고서 복구</a></p>
+  <p><button id="clear-storage" type="button">이 탭의 테스트 정보 지우기</button></p>
   <p id="msg" role="status"></p>
   <p class="small">고객센터: <a href="mailto:valueseeker123@naver.com">valueseeker123@naver.com</a></p>
 </main>

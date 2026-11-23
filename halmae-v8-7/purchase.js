@@ -22,3 +22,30 @@ export async function post(name, body, token) {
   if (!response.ok) throw Error(result.error || '요청을 처리하지 못했습니다.');
   return result;
 }
+
+export const callbackKey = 'halmae-test-payment-callback';
+
+export function rememberReport(result) {
+  try { sessionStorage.setItem(reportKey,JSON.stringify(result)); }
+  catch { /* A report link still works without browser storage. */ }
+}
+
+export function forgetCheckout() {
+  removeSessionKeys([checkoutKey,callbackKey]);
+}
+
+
+function removeSessionKeys(keys) {
+  try { for (const key of keys) sessionStorage.removeItem(key); }
+  catch { /* Storage is already inaccessible. */ }
+}
+
+export function forgetReport() {
+  removeSessionKeys([reportKey]);
+}
+
+export function clearPurchaseStorage() {
+  forgetCheckout();
+  forgetReport();
+  removeSessionKeys(['halmae-conversion-counts']);
+}

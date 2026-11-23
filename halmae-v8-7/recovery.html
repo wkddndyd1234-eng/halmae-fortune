@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>테스트 보고서 복구 · 할매의 운명방</title>
+  <link rel="stylesheet" href="/v85.css">
+</head>
+<body>
+<main class="paper">
+  <a href="/checkout.html">← 주문 화면으로</a>
+  <h1>테스트 보고서 복구</h1>
+  <p id="status" role="status">이메일 복구 가능 여부를 확인하고 있습니다…</p>
+  <form id="recovery" hidden>
+    <label>테스트 주문 번호<input name="orderId" maxlength="39" required autocomplete="off"></label>
+    <label>주문에 등록한 이메일<input name="email" type="email" maxlength="254" required autocomplete="email"></label>
+    <button type="submit">복구 링크 요청</button>
+  </form>
+  <button id="exchange" type="button" hidden>승인 확인 후 보고서 열기</button>
+</main>
+<script type="module" src="/recovery.js"></script>
+</body>
+</html>

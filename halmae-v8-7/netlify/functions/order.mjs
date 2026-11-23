@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import {orders,json,parse,sign,error} from './shared.mjs';
+import {mailConfig,recoveryEmail} from './recovery-mail.mjs';
 import {normalizeBirth} from './saju.mjs';
 import {DAY,ORDER_NAME,PRICE,paymentConfig} from './payment-config.mjs';
 
@@ -15,6 +16,11 @@ export default async req => {
   const config = channel === 'toss-test' ? paymentConfig(req) : null;
   if (channel === 'toss-test' && !config) return json({error:'테스트 결제는 현재 준비 중입니다.'},503);
   if (x.consent !== true) return json({error:'테스트 정보 처리에 동의해 주세요.'},400);
+  const optedIn = Boolean(mailConfig(config)) && x.recoveryConsent === true;
+  const email = optedIn ? recoveryEmail(x.email) : '';
+  if (optedIn && !email) {
+    return json({error:'복구 이메일 주소를 확인해 주세요.'},400);
+  }
   let birth;
   try { birth = normalizeBirth(x); }
   catch (e) { return json({error:e.message},400); }
@@ -29,7 +35,7 @@ export default async req => {
     result.successUrl = config.origin+'/payment-result.html';
     result.failUrl = config.origin+'/payment-result.html?failed=1';
   }
-  await orders().setJSON(orderId,{orderId,name:name||'손님',...birth,amount:PRICE,channel,status:'pending',createdAt});
+  await orders().setJSON(orderId,{orderId,name:name||'손님',...birth,amount:PRICE,channel,status:'pending',createdAt,...(email?{recoveryEmail:email}:{})});
   return json(result);
  } catch (e) { return error(e); }
 };

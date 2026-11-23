@@ -1,3 +1,4 @@
+import {addChapterInterpretations,readStems} from './interpretation.mjs';
 import {orders,json,verify,error} from './shared.mjs';
 import {paymentConfig,PRICE} from './payment-config.mjs';
 import {approvedPayment,findPayment} from './toss.mjs';
@@ -42,16 +43,8 @@ const elementLine=Object.entries(saju.elements).map(([e,n])=>`${e} ${n}`).join('
 const maxCount = Math.max(...Object.values(saju.elements));
 const frequent = Object.keys(saju.elements).filter(key=>saju.elements[key]===maxCount);
 const absent = Object.keys(saju.elements).filter(key=>saju.elements[key]===0);
-const stemGroups = [...'甲乙丙丁戊己庚辛壬癸'];
-const tenGodPairs = [['비견','겁재'],['식신','상관'],['편재','정재'],['편관','정관'],['편인','정인']];
-const dayIndex = stemGroups.indexOf(saju.dayStem);
-const stemRelations = [[0,'연간'],[1,'월간'],[3,'시간']].map(([i,label])=>{
- const glyph = saju.pillars[i]?.[0];
- if (!glyph) return `${label} 미상`;
- const index = stemGroups.indexOf(glyph);
- const relation = (Math.floor(index/2)-Math.floor(dayIndex/2)+5)%5;
- return `${label} ${glyph} · ${tenGodPairs[relation][(index+dayIndex)%2]}`;
-});
+const relations = readStems(saju);
+const stemRelations = relations.map(({label,glyph,relation})=>glyph?`${label} ${glyph} · ${relation}`:`${label} 미상`);
 const dayMeanings={甲:'큰 나무처럼 성장과 원칙',乙:'풀과 덩굴처럼 유연한 연결',丙:'햇빛처럼 표현과 온기',丁:'등불처럼 집중과 섬세함',戊:'산처럼 중심과 책임',己:'밭처럼 돌봄과 축적',庚:'쇠처럼 결단과 기준',辛:'보석처럼 세밀함과 정제',壬:'큰 물처럼 흐름과 시야',癸:'이슬처럼 관찰과 적응'};
 chapters.splice(2,0,
  section('命式 · 계산 기록','나의 사주 네 기둥',`${saju.pillars[0]} · ${saju.pillars[1]} · ${saju.pillars[2]} · ${saju.pillars[3]||'시주 미상'}`,[
@@ -67,6 +60,8 @@ chapters.splice(2,0,
  `목은 성장, 화는 표현, 토는 유지, 금은 정리, 수는 관찰이라는 전통적인 비유를 떠올리며 네 삶에서 어떤 태도를 더 연습할지 생각해 보렴.`],
  Object.entries(saju.elements).map(([e,n])=>`${e}: ${n}`),
  '“숫자는 단서일 뿐, 네 삶의 정답은 아니란다.”'));
+
+addChapterInterpretations(chapters,saju,relations);
 
 const monthlyQuestions = [
  ['새 일정에서 무엇을 비우면 목표에 시간을 줄 수 있을까?','한 달 뒤 어떤 기록으로 첫걸음을 확인할까?'],
@@ -84,12 +79,12 @@ const monthlyQuestions = [
 ];
 themes.forEach(([label,title,body,action],index)=>{
  const [review,next] = monthlyQuestions[index];
- chapters.push(section('2027 MONTHLY · '+label,title,`${name}에게 건네는 ${label}의 질문`,
+ chapters.push(section('2027 MONTHLY · 공통 계획 · '+label,title,`${name}에게 건네는 ${label}의 질문`,
   [body,`이번 달에는 ‘${action}’부터 시작해 보자.`],[action,review,next],
   `“${label}의 장부에 어떤 한 줄을 남기고 싶으냐?”`));
 });
 chapters.push(section('EPILOGUE','할매가 마지막으로 남기는 편지',`${name}아, 네 장부의 마지막 장을 넘기는구나.`,[`태어난 날은 네가 선택한 것이 아니지만, 오늘의 행동은 네가 고를 수 있단다. 누구나 흔들리고 때로는 오래 돌아가기도 하지. 중요한 것은 그 시간이 네 삶의 전부라고 믿지 않는 것이다.`,`너의 계절을 ${season.symbol}이라는 말로 표현해 보았지만, 너는 어느 하나의 계절보다 넓은 사람이란다. 마음에 남는 문장이 있다면 가져가고, 맞지 않는 말은 조용히 내려놓아도 괜찮다.`,`올해와 내년, 그리고 그다음 해에도 네 삶의 저자는 너란다. 이 장부가 너에게 필요한 질문 하나를 남겼다면 할매는 그걸로 충분하다.`],['이 책에서 가장 오래 남은 문장','오늘 시작할 작은 행동 하나','다시 읽고 싶은 날짜'],`“${name}아, 네 인생은 아직 쓰이는 중이란다.”`));
-return {meta:{name,birthDate:o.birthDate,solarDate:saju.solarDate,calendarType:legacyLunar?'lunar':'solar',birthTime:o.birthTime||'미상',pillars:saju.pillars,elementCounts:saju.elements,calculationWarnings:saju.warnings,weekday:weekday+'요일',season:season.name,edition:'v8.7 · 계산 연동 검증용 시제품 · 대운/세운 미제공',chapterCount:chapters.length},chapters:chapters.map((chapter,index)=>({...chapter,basis:index<=3?'계산·출생 기록':index===4||index===5?'계절 비유와 성찰 질문':'공통 성찰 가이드'}))}}
+return {meta:{name,birthDate:o.birthDate,solarDate:saju.solarDate,calendarType:legacyLunar?'lunar':'solar',birthTime:o.birthTime||'미상',pillars:saju.pillars,elementCounts:saju.elements,calculationWarnings:saju.warnings,weekday:weekday+'요일',season:season.name,edition:'v8.7 · 계산 연동 검증용 시제품 · 대운/세운 미제공',chapterCount:chapters.length},chapters:chapters.map((chapter,index)=>({...chapter,basis:index<=3?'계산·출생 기록':index<=11?'계산 연결 성찰 질문':'공통 성찰 가이드'}))}}
 export default async req => {
  if (req.method !== 'GET') return json({error:'Method not allowed'},405);
  try {
