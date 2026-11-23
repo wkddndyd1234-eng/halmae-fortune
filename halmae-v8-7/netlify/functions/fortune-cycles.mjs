@@ -63,10 +63,12 @@ export function fortuneCycles(input){
  }));
  const yearPillar=sexagenary(mod(2027-1984,60));
  const monthly=Array.from({length:12},(_,i)=>{
-  const start=i===11?term(2028,0):term(2027,i*2+2);
-  const end=i===10?term(2028,0):i===11?term(2028,2):term(2027,i*2+4);
-  const monthStem=mod((mod(2027-1984,60)%10%5)*2+2+i,10);
-  const pillar=stems[monthStem]+branches[mod(i+2,12)];
+  const start=term(2027,i*2);
+  const end=i===11?term(2028,0):term(2027,(i+1)*2);
+  const solarYear=i===0?2026:2027;
+  const monthOrder=i===0?11:i-1;
+  const monthStem=mod((mod(solarYear-1984,60)%10%5)*2+2+monthOrder,10);
+  const pillar=stems[monthStem]+branches[mod(monthOrder+2,12)];
   return {month:i+1,start:new Date(start).toISOString(),end:new Date(end).toISOString(),
    pillar,tenGod:tenGod(saju.dayStem,pillar[0]),
    dayBranchClash:opposite(clashes,saju.dayBranch,pillar[1]),
