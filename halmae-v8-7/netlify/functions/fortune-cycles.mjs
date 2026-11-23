@@ -49,22 +49,22 @@ export function fortuneCycles(input){
  const forward=saju.gender==='male'?yearStem%2===0:saju.gender==='female'?yearStem%2!==0:null;
  const starts=[];
  for(let year=y-1;year<=y+2;year++)for(let k=0;k<12;k++){
-  const idx=2*k+2;
-  const t=term(year,idx);
+  const idx=k===11?0:2*k+2;
+  const t=term(k===11?year+1:year,idx);
   starts.push(t);
  }
  starts.sort((a,b)=>a-b);
  const boundary=forward===null?null:forward?starts.find(t=>t>born):starts.filter(t=>t<=born).at(-1);
  const monthIndex=pillarIndex(saju.pillars[1]);
- const startAgeYears=boundary===null||boundary===undefined?null:Math.abs(boundary-born)/86400000/3/365.2425*365.2425;
+ const startAgeYears=boundary===null||boundary===undefined?null:Math.abs(boundary-born)/86400000/3;
  const decadePillars=startAgeYears===null?[]:Array.from({length:8},(_,i)=>({
   order:i+1,startAge:Number((startAgeYears+i*10).toFixed(2)),
   pillar:sexagenary(monthIndex+(forward?i+1:-i-1))
  }));
  const yearPillar=sexagenary(mod(2027-1984,60));
  const monthly=Array.from({length:12},(_,i)=>{
-  const start=term(2027,i*2+2);
-  const end=i===11?term(2028,2):term(2027,i*2+4);
+  const start=i===11?term(2028,0):term(2027,i*2+2);
+  const end=i===10?term(2028,0):i===11?term(2028,2):term(2027,i*2+4);
   const monthStem=mod((mod(2027-1984,60)%10%5)*2+2+i,10);
   const pillar=stems[monthStem]+branches[mod(i+2,12)];
   return {month:i+1,start:new Date(start).toISOString(),end:new Date(end).toISOString(),
