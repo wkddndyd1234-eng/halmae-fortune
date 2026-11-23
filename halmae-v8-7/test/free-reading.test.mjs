@@ -1,3 +1,4 @@
+import {ledgerPreview,leastVisibleElements} from '../netlify/functions/ledger-preview.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {calculateSaju,normalizeBirth,pillarElements} from '../netlify/functions/saju.mjs';
@@ -98,13 +99,25 @@ test('01:30 승계 값과 미상 입력의 원국·오행이 유료 보고서와
  assert.notDeepEqual(a.elements,b.elements);
 });
 
-test('주문 화면 장부 미리보기는 가상 입력으로 생성한 실제 보고서 발췌다',async()=>{
- const {readFile}=await import('node:fs/promises');
- const checkout=await readFile(new URL('../checkout.html',import.meta.url),'utf8');
- const quotes=[...checkout.matchAll(/<blockquote>([^<]+)<\/blockquote>/g)].map(match=>match[1]);
- assert.equal(quotes.length,2);
- const report=buildReport({name:'가상',birthDate:'2000-01-01',birthTime:'12:00'});
- for(const quote of quotes) assert.ok(report.chapters[5].paragraphs.some(paragraph=>paragraph.includes(quote)));
+test('개인별 미리보기는 같은 입력으로 발급한 장부의 실제 본문과 일치한다',()=>{
+ const inputs=[
+  {name:'가상',birthDate:'2000-01-01',birthTime:'12:00'},
+  {name:'가상',birthDate:'2000-01-02',birthTime:'01:30'},
+  {name:'가상',birthDate:'2024-02-04',birthTime:'17:27'},
+ ];
+ const previews=inputs.map(input=>{
+  const saju=calculateSaju(input);
+  const preview=ledgerPreview(saju);
+  const report=buildReport(input);
+  assert.ok(report.chapters[5].paragraphs.some(paragraph=>paragraph.includes(preview.excerpt)));
+  assert.ok(preview.hook.includes(saju.dayStem));
+  assert.ok(preview.hook.includes(saju.dayBranch));
+  assert.ok(preview.hook.includes(leastVisibleElements(saju.elements).low.join('·')));
+  assert.equal(report.chapters.length,26);
+  return preview;
+ });
+ assert.notEqual(previews[0].hook,previews[1].hook);
+ assert.notEqual(previews[0].excerpt,previews[1].excerpt);
 });
 
 

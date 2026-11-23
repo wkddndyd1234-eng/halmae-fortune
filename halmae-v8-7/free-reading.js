@@ -1,3 +1,5 @@
+import {ledgerPreview} from './ledger-preview.mjs';
+import {renderLedgerPreview} from './ledger-preview-view.js';
 import {renderReadingChart} from './reading-chart.js';
 import {calculateSaju} from './saju.mjs';
 import {fromFreeForm,saveBirthDraft,todayInKorea} from './birth-handoff.js';
@@ -88,7 +90,8 @@ form.addEventListener('submit',event=>{
  const artwork=byId('day-symbol-art');
  artwork.alt=reading.symbol+'의 상징, '+reading.headline;
  artwork.src='/art/'+reading.imageId+'.webp';
- byId('ledgerQuestion').textContent=`‘${reading.headline}’라는 그림이 마음에 남았니? 네 사주를 일과 관계에 연결한 질문이 장부 안에서 이어진단다.`;
+ byId('ledgerQuestion').textContent=ledgerPreview(saju).hook;
+ renderLedgerPreview(byId('reportSample'),saju);
  const notices = [];
  if (!input.birthTime) notices.push('태어난 시간을 모르니 시주는 비워 두었어요.');
  if (saju.warnings.some(w=>w.startsWith('절기'))) notices.push('절기 가까이 태어나 연주나 월주가 출생 시각에 따라 달라질 수 있어요.');
@@ -109,10 +112,19 @@ byId('editBirth').addEventListener('click',()=>{
  name.focus({preventScroll:true});
  form.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
 });
+let offerStatusRequested=false;
 for(const [id,event] of [['conversionMid','ledger_preview_mid'],['conversionNext','ledger_preview_end']]){
  byId(id).addEventListener('click',()=>{
   recordConversion(event);
   focusHeading('offerHeading');
+  if(offerStatusRequested) return;
+  offerStatusRequested=true;
+  fetch('/.netlify/functions/payment',{cache:'no-store'}).then(response=>response.ok?response.json():{})
+   .then(({enabled})=>{
+    if(enabled===true) byId('offerAvailability').textContent='토스 테스트 결제 · 실제 청구 없음';
+    if(enabled===false) byId('offerAvailability').textContent='현재 결제를 받을 수 없어요.';
+   }).catch(()=>{});
+
  });
 }
 byId('returnReading').addEventListener('click',()=>focusHeading('resultHeading'));
@@ -121,9 +133,14 @@ for(const link of offer.querySelectorAll('[data-order-link]')) link.addEventList
  saveBirthDraft(draft);
  recordConversion('checkout_click');
 });
-byId('reportSample').addEventListener('toggle',event=>{
- if (event.currentTarget.open) recordConversion('report_sample_view');
-});
+if('IntersectionObserver' in window){
+ const sampleObserver=new IntersectionObserver(entries=>{
+  if(!entries.some(entry=>entry.isIntersecting)) return;
+  recordConversion('report_sample_view');
+  sampleObserver.disconnect();
+ });
+ sampleObserver.observe(byId('reportSample'));
+}
 byId('saveReading').addEventListener('click',()=>{
  if (!readingText) return;
  const url=URL.createObjectURL(new Blob([readingText],{type:'text/plain;charset=utf-8'}));

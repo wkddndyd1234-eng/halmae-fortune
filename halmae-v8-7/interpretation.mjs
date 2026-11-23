@@ -1,11 +1,6 @@
+import {leastVisibleElements,workEvidence as evidence,workReflection as work} from './ledger-preview.mjs';
+export {readStems} from './ledger-preview.mjs';
 const stems = [...'甲乙丙丁戊己庚辛壬癸'];
-const categories = [
- ['비견','겁재','자기 기준과 협력','혼자 정할 기준 하나와 도움을 요청할 기준 하나를 나눠 적기'],
- ['식신','상관','표현과 생산','생각 하나를 초안으로 만든 뒤 믿을 만한 사람에게 보여주기'],
- ['편재','정재','자원의 배분','새 기회에 쓸 몫과 매달 지킬 몫을 각각 정해 보기'],
- ['편관','정관','규칙과 책임','맡은 일의 완료 기준과 책임 범위를 상대와 합의하기'],
- ['편인','정인','학습과 돌봄','지금 필요한 조언을 구하고 실제로 써 볼 방법을 하나 고르기'],
-];
 const stemActions = [
  '큰 목표를 정하고 그 방향으로 이어지는 첫 행동을 고르기',
  '상황이 바뀌어도 지킬 원칙과 유연하게 바꿀 방법을 나누기',
@@ -26,26 +21,11 @@ const elementActions = {
  수:'결정을 내리기 전 관찰 내용을 한 번 기록하기',
 };
 
-export function readStems(saju) {
-  const day = stems.indexOf(saju.dayStem);
-  return [[0,'연간'],[1,'월간'],[3,'시간']].map(([pillar,label])=>{
-    const glyph = saju.pillars[pillar]?.[0];
-    if (!glyph) return {label};
-    const index = stems.indexOf(glyph);
-    const group = categories[(Math.floor(index/2)-Math.floor(day/2)+5)%5];
-    return {label,glyph,relation:group[(index+day)%2],theme:group[2],action:group[3]};
-  });
-}
-
 export function addChapterInterpretations(chapters,saju,relations) {
   const day = stems.indexOf(saju.dayStem);
   const [year,month,hour] = relations;
-  const counts = Object.entries(saju.elements);
-  const min = Math.min(...counts.map(([,count])=>count));
-  const low = counts.filter(([,count])=>count===min).map(([element])=>element);
+  const {min,low} = leastVisibleElements(saju.elements);
   const dayEvidence = `일주 ${saju.pillars[2]}의 일간 ${saju.dayStem}(${saju.dayElement})`;
-  const evidence = ({label,glyph,relation}) => `${label} ${glyph} · ${relation}`;
-  const work = relation => `${evidence(relation)}의 전통 주제는 ${relation.theme}이다. 할매가 건네는 작은 제안이야. ‘${relation.action}’부터 해 보렴.`;
   const options = low.map(element=>`${element}(${min}회)에서는 ‘${elementActions[element]}’`).join(', ');
   const readings = [
     [4, `${dayEvidence}을 이번 장의 출발점으로 삼자. 최근 선택 하나를 떠올리고 ‘${stemActions[day]}’가 도움이 되는 상황을 찾아보렴.`],

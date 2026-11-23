@@ -1,3 +1,5 @@
+import {calculateSaju} from './saju.mjs';
+import {renderLedgerPreview} from './ledger-preview-view.js';
 import {readBirthDraft,saveBirthDraft,todayInKorea} from './birth-handoff.js';
 import {recordConversion,post,checkoutKey,forgetCheckout,clearPurchaseStorage,rememberOrder} from '/purchase.js';
 
@@ -22,10 +24,24 @@ if (draft) {
   prefill.hidden = false;
 }
 
+function updatePreview() {
+  const {birthDate,birthTime} = form.elements;
+  let saju;
+  if(birthDate.validity.valid && birthTime.validity.valid){
+    try { saju=calculateSaju({birthDate:birthDate.value,birthTime:birthTime.value}); }
+    catch { /* Incomplete or unsupported input shows the example. */ }
+  }
+  renderLedgerPreview(document.querySelector('#checkout-preview'),saju);
+}
+form.elements.birthDate.addEventListener('input',updatePreview);
+form.elements.birthTime.addEventListener('input',updatePreview);
+updatePreview();
+
 resetBirth.addEventListener('click',()=>{
   saveBirthDraft(null);
   for (const field of ['name','birthDate','birthTime']) form.elements[field].value = '';
   prefill.hidden = true;
+  updatePreview();
   form.elements.name.focus();
   msg.textContent = '출생 입력을 지웠어요.';
 });
@@ -34,6 +50,7 @@ recordConversion('checkout_view');
 clearStorage.addEventListener('click',async()=>{
   clearPurchaseStorage();
   form.reset();
+  updatePreview();
   prefill.hidden = true;
   form.elements.email.disabled = true;
   form.elements.email.required = false;
@@ -64,7 +81,7 @@ fetch(endpoint+'payment',{cache:'no-store'})
       document.querySelector('#test-guide').hidden = false;
       document.querySelector('#recent-preview').hidden = false;
       clearStorage.hidden = false;
-      document.querySelector('#availability').textContent = '실제 청구 없는 테스트 결제';
+      document.querySelector('#availability').textContent = '토스 테스트 결제 · 실제 청구 없음';
     }
   }).catch(() => {});
 

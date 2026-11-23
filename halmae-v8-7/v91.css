@@ -1,0 +1,16 @@
+.reading-v9 .ledger-bridge{margin-block:18px 10px}
+.ledger-bridge .conversion-cta{min-height:44px}
+.reading-tools{display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-block:12px}
+.reading-tools > .sig-button{flex:none;min-width:0;width:auto}
+.reading-tools details{min-width:0;flex:1}
+.reading-tools summary{min-height:44px;padding:9px 6px;color:#edd4a7;cursor:pointer}
+.reading-tools .sig-actions{margin:0}
+.ledger-terms{display:grid;justify-items:start;gap:6px;margin:16px 0;padding:12px 14px;border:1px solid #95744d;border-radius:9px;background:#241a13}
+.ledger-terms p{margin:0}
+.ledger-terms .ledger-price{font-size:1.5rem}
+.ledger-terms .notice{padding:7px 10px}
+.ledger-terms .ledger-cta,.ledger-terms button{margin:0}
+@media(max-width:420px){
+ .ledger-terms .ledger-cta{width:100%;box-sizing:border-box}
+ .reading-tools details .sig-button{min-width:0}
+}
