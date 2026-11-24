@@ -19,13 +19,14 @@ let busy = false;
 form.elements.birthDate.max = todayInKorea();
 const calendarType=form.elements.calendarType;
 const leapMonth=form.elements.isLeapMonth;
-function updateCalendar(){document.querySelector('#checkout-leap').hidden=calendarType.value!=='lunar';if(calendarType.value!=='lunar')leapMonth.value='false';updatePreview();}
+function updateCalendar(){form.elements.birthDate.type=calendarType.value==='lunar'?'text':'date';form.elements.birthDate.placeholder='YYYY-MM-DD';document.querySelector('#checkout-leap').hidden=calendarType.value!=='lunar';if(calendarType.value!=='lunar')leapMonth.value='false';updatePreview();}
 calendarType.addEventListener('change',updateCalendar);
 leapMonth.addEventListener('change',updatePreview);
 const draft = window.opener ? null : readBirthDraft();
 const prefill = document.querySelector('#prefill');
 if (draft) {
-  for (const [key,value] of Object.entries(draft)) form.elements[key].value = value;
+  calendarType.value=draft.calendarType;updateCalendar();
+  for (const [key,value] of Object.entries(draft)) if(form.elements[key])form.elements[key].value = value;
   prefill.hidden = false;
 }
 updateCalendar();
@@ -41,6 +42,7 @@ function updatePreview() {
 }
 form.elements.birthDate.addEventListener('input',updatePreview);
 form.elements.birthTime.addEventListener('input',updatePreview);
+form.elements.gender.addEventListener('change',updatePreview);
 updatePreview();
 
 resetBirth.addEventListener('click',()=>{
