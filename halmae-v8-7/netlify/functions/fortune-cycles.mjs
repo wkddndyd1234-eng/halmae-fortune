@@ -48,9 +48,11 @@ export function fortuneCycles(input){
  const yearStem=stems.indexOf(saju.pillars[0][0]);
  const forward=saju.gender==='male'?yearStem%2===0:saju.gender==='female'?yearStem%2!==0:null;
  const starts=[];
- for(let year=y-1;year<=y+2;year++)for(let k=0;k<12;k++){
+ for(let year=y-1;year<=y+1;year++)for(let k=0;k<12;k++){
   const idx=k===11?0:2*k+2;
-  const t=term(k===11?year+1:year,idx);
+  const actualYear=k===11?year+1:year;
+  if(actualYear<1899||actualYear>=1899+preciseTermMinutes.length)continue;
+  const t=term(actualYear,idx);
   starts.push(t);
  }
  starts.sort((a,b)=>a-b);
