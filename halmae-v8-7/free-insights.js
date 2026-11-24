@@ -45,10 +45,10 @@ export function readFreeInsights(dayPillar,counts,relationshipNote='') {
     symbol:name,
     imageId:imageIds[stem],
     headline:`${image}`,
-    introduction:`${image}, 옛날 풀이에서 오늘 네게 건네는 첫 그림이란다. 자, 잠깐 앉아 보렴. 이 모습이 네 마음에 닿는 장면이 있는지 같이 떠올려 보자꾸나.`,
-    temperament:`할매 눈엔 ‘${strength}’이 먼저 떠오른단다. ${scene}`,
-    balance,
-    work:`겉에 보이는 오행 중 가장 많이 나온 것은 ${leading.join('·')}, 각각 ${topCount}회란다. ${work}`,
-    relationships:`사람 사이에서 마음이 걸리는 날엔 말이다. ${branchQuestions[branch]}${relationshipNote?' '+relationshipNote:''}`,
+    introduction:`첫째 마당 · 할매가 네 타고난 글자를 펼쳐 보니 ${stem}${branch} 일주가 나오는구나. ${image}의 모습이 떠오른다. 이것은 네 성격을 단정하는 말이 아니라, 네 삶을 비춰 볼 오래된 상징이란다. 잠깐 앉아 이 그림이 마음에 닿는지 들어 보렴.`,
+    temperament:`둘째 마당 · ${stem}의 상징에는 ‘${strength}’이라는 이야기가 담겨 있지. ${scene} 네 경험과 다르면 억지로 맞출 필요는 없단다.`,
+    balance:`넷째 마당 · 여기까지 듣고 나니 네 앞의 갈림길이 궁금해지는구나. ${balance} 2027년 열두 달의 절기 흐름과 대운은 별도의 계산이 필요하니, 이 짧은 풀이에서 결과를 지어내지는 않으마.`,
+    work:`셋째 마당 · 네 사주에서 겉으로 드러난 오행을 세면 ${leading.join('·')}이 각각 ${topCount}회로 가장 많구나. 이 숫자가 재능이나 성공을 보장하지는 않아. 다만 일과 선택을 돌아보는 질문으로 ${work}`,
+    relationships:`셋째 마당의 인연 이야기 · 일지 ${branch}의 상징을 빌려 말해 보자꾸나. ${branchQuestions[branch]}${relationshipNote?' '+relationshipNote:''}`,
   };
 }
