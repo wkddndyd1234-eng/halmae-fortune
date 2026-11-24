@@ -1,1 +1,58 @@
-const token=location.hash.slice(1);history.replaceState(null,'',location.pathname);const E=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el};(async()=>{try{if(!token)throw Error('보고서 접근 토큰이 없습니다.');const r=await fetch('/.netlify/functions/report',{headers:{Authorization:'Bearer '+token},cache:'no-store'});const j=await r.json();if(!r.ok)throw Error(j.error||'열람 실패');document.querySelector('#status').textContent=j.demo?'관리자 테스트 발급 · 실제 결제 없음':'카드 결제 테스트 · 승인 시각부터 365일 웹 열람';document.querySelector('#book').hidden=false;import('/purchase.js').then(({recordConversion})=>{if(!j.demo)recordConversion('test_report_view')}).catch(()=>{});document.querySelector('#cover-name').textContent=j.meta.name+'님의 인생 장부';document.querySelector('#cover-date').textContent=j.meta.solarDate+' 양력 · '+j.meta.weekday;const toc=document.querySelector('#toc'),root=document.querySelector('#chapters');j.chapters.forEach((ch,i)=>{const id='chapter-'+(i+1),li=E('li');const a=E('a','',ch.title);a.href='#'+id;li.append(a);toc.append(li);const sec=E('section','chapter');sec.id=id;sec.append(E('p','eyebrow',[ch.kicker,ch.basis].filter(Boolean).join(' · ')),E('h2','chapter-title',ch.title),E('p','chapter-lead',ch.lead));for(const p of ch.paragraphs)sec.append(E('p','chapter-text',p));if(ch.bullets?.length){const ul=E('ul','chapter-points');for(const b of ch.bullets)ul.append(E('li','',b));sec.append(ul)}if(ch.quote)sec.append(E('blockquote','chapter-quote',ch.quote));sec.append(E('p','chapter-number',String(i+1).padStart(2,'0')+' / '+String(j.chapters.length).padStart(2,'0')));root.append(sec)})}catch(e){document.querySelector('#status').textContent=e.message}})();
+const token=location.hash.slice(1);
+history.replaceState(null,'',location.pathname);
+
+const byId=id=>document.getElementById(id);
+function element(tag,className,text){
+ const node=document.createElement(tag);
+ if(className) node.className=className;
+ if(text!==undefined) node.textContent=text;
+ return node;
+}
+
+function renderChapter(chapter,index,total){
+ const id='chapter-'+(index+1);
+ const link=element('a','',chapter.title);
+ link.href='#'+id;
+ const entry=element('li');
+ entry.append(link);
+ byId('toc').append(entry);
+
+ const section=element('section','chapter');
+ section.id=id;
+ section.append(
+  element('p','eyebrow',[chapter.kicker,chapter.basis].filter(Boolean).join(' · ')),
+  element('h2','chapter-title',chapter.title),
+  element('p','chapter-lead',chapter.lead),
+ );
+ const groups=chapter.groups??[{paragraphs:chapter.paragraphs}];
+ for(const group of groups){
+  const block=element('div','chapter-group');
+  if(group.title) block.append(element('h3','chapter-subtitle',group.title));
+  for(const text of group.paragraphs) block.append(element('p','chapter-text',text));
+  section.append(block);
+ }
+ if(chapter.bullets?.length){
+  const list=element('ul','chapter-points');
+  for(const bullet of chapter.bullets) list.append(element('li','',bullet));
+  section.append(list);
+ }
+ if(chapter.quote) section.append(element('blockquote','chapter-quote',chapter.quote));
+ section.append(element('a','chapter-back','차례로 돌아가기'));
+ section.lastChild.href='#toc-heading';
+ section.append(element('p','chapter-number',`${String(index+1).padStart(2,'0')} / ${total}`));
+ byId('chapters').append(section);
+}
+
+async function readReport(){
+ if(!token) throw Error('보고서 접근 토큰이 없습니다.');
+ const response=await fetch('/.netlify/functions/report',{headers:{Authorization:'Bearer '+token},cache:'no-store'});
+ const report=await response.json();
+ if(!response.ok) throw Error(report.error||'열람 실패');
+ byId('cover-name').textContent=report.meta.name+'님의 인생 장부';
+ byId('cover-date').textContent=report.meta.solarDate+' 양력 · '+report.meta.weekday;
+ report.chapters.forEach((chapter,index)=>renderChapter(chapter,index,report.chapters.length));
+ byId('status').textContent=report.demo?'관리자 테스트 발급 · 실제 결제 없음':'카드 결제 테스트 · 승인 시각부터 365일 웹 열람';
+ byId('book').hidden=false;
+ if(!report.demo) import('/purchase.js').then(({recordConversion})=>recordConversion('test_report_view')).catch(()=>{});
+}
+readReport().catch(error=>{byId('status').textContent=error.message;});

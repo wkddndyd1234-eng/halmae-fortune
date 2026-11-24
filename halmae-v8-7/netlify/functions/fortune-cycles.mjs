@@ -59,7 +59,11 @@ export function fortuneCycles(input){
 }
 
 export function annualReflection(saju,annual){
- return `정미년의 丁과 네 일간 ${saju.dayStem}을 함께 보면 ${annual.tenGod}의 관계가 나와. 옛 명리에서는 이 서로 다른 글자가 만나는 모습을 전통 상징으로 읽는단다.`;
+ const meeting=annual.relations.find(item=>item.position==='일')??annual.relations[0];
+ const question=meeting?
+  `정미의 未와 네 ${meeting.position}지 ${meeting.natal} 사이엔 ${meeting.type}도 보여. 그 자리에 얽힌 약속을 오래 지켜야 할 몫과 다시 상의할 몫으로 나눠 보는 거야.`:
+  '정미의 未와 원국 지지를 두 글자씩 대조한 표에는 바로 드러나는 합충형해가 없어. 올해를 한 사건으로 묶기보다 지금 맡은 역할에서 계속할 몫을 하나 골라 보렴.';
+ return `정미년의 丁과 네 일간 ${saju.dayStem}의 관계를 살피면 ${annual.tenGod}의 관계가 나와. ${question} 장부 속 상징은 네가 실제로 지킬 수 있는 약속을 돌아보는 데 써 보렴.`;
 }
 
 export function cyclesForSaju(saju){

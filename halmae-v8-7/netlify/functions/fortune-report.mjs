@@ -1,3 +1,4 @@
+import {monthlyGroups,natalGroups} from '../lib/premium-reading.mjs';
 import {annualReflection,fortuneCycles} from './fortune-cycles.mjs';
 const names={甲:'곧게 뻗는 큰 나무',乙:'바람을 타는 풀과 덩굴',丙:'먼 곳까지 비추는 태양',丁:'어둠 속을 밝히는 등불',戊:'흔들리지 않는 산',己:'생명을 기르는 밭',庚:'단단한 쇠',辛:'정교하게 빛나는 보석',壬:'넓게 흐르는 강과 바다',癸:'스며드는 이슬과 비'};
 const ten={비견:'나와 비슷한 힘을 가진 동료와 자립',겁재:'경쟁과 나눔 사이의 긴장',식신:'꾸준한 생산과 표현',상관:'틀을 바꾸려는 표현과 문제 제기',편재:'움직이는 자원과 외부 기회',정재:'관리하는 재물과 책임',편관:'압박과 돌파의 과제',정관:'규칙과 공적인 역할',편인:'독특한 배움과 직관',정인:'보호와 축적된 배움'};
@@ -11,21 +12,8 @@ const luckText=(cycles,reason)=>{
  return cycles.map(cycle=>`근사 대운 ${cycle.pillar}(${cycle.tenGod}) · 운의 두 지지는 ${cycle.relations.join('·')||'직접 합충형해 없음'}`).join(' / ');
 };
 const cautious='출생 시각을 모르는 절입일이라 이 구간의 개인별 풀이를 비워 두었단다. 정확한 시간을 다시 입력해 보렴.';
-const domainsByRole={
-  비견:['함께 쓰는 자원과 자기 몫의 구분','독립적인 역할과 협업의 균형'],
-  겁재:['공동 지출과 약속의 경계','동료와의 경쟁과 분담'],
-  식신:['쌓아 온 기술의 대가','꾸준한 생산과 표현'],
-  상관:['새 제안의 비용과 조건','기존 방식에 대한 다른 의견'],
-  편재:['외부 제안과 거래 조건','외부 기회와 역할의 확장'],
-  정재:['정기 수입과 계약 조건','지속적인 운영과 책임'],
-  편관:['부담해야 할 비용과 위험','압박 아래 감당할 일의 범위'],
-  정관:['약속한 보수와 지급 조건','공적인 역할과 신뢰'],
-  편인:['익숙하지 않은 제안의 근거','다른 방식의 배움과 해석'],
-  정인:['지원의 조건과 장기 비용','지식 축적과 도움의 활용'],
-};
 const transitText=items=>items.length?items.map(r=>r.position+'지 '+r.natal+'와 '+r.transit+'의 '+r.type).join(' · '):'직접적인 합충형해 없음';
-const monthlyAdvice={비견:'자기 주도권을 되찾는 일과 동료와의 협력 사이에서 균형을 살펴보렴.',겁재:'경쟁이 커질수록 공동 자원과 약속의 경계를 분명히 하는 편이 좋단다.',식신:'꾸준히 쌓아 온 기술을 결과물로 드러내는 흐름으로 읽어 보렴.',상관:'기존 방식에 의문이 생길 때 표현의 힘과 상대의 입장을 함께 살피렴.',편재:'외부 제안과 거래의 폭을 넓히는 상징이지만 수익과 위험은 따로 확인하렴.',정재:'안정적인 수입과 계약의 책임을 중시하는 흐름으로 읽는단다.',편관:'책임과 압박을 마주하는 상징이니 무리한 돌파보다 감당할 범위를 살피렴.',정관:'공적인 역할과 신뢰, 약속의 무게를 돌아보는 흐름이란다.',편인:'익숙한 길 밖에서 배우고 해석하는 힘을 살펴보렴.',정인:'축적한 지식과 도움을 받아들이는 흐름으로 읽을 수 있단다.'};
-export function buildFortuneReport(order){
+export function buildFortuneReport(order,{now=Date.now()}={}){
  const f=fortuneCycles(order),s=f.saju,name=order.name||'손님';
  const [year,month,day,hour]=s.pillars;
  const e=Object.entries(s.elements).map(([key,value])=>key+' '+value+'개').join(' · ');
@@ -34,13 +22,13 @@ export function buildFortuneReport(order){
  const relations=f.relations.map(x=>x.a+'·'+x.b+'의 '+x.branches+' '+x.type);
  const relationText=relations.length?relations.join(', '):'이 방식에서 두 글자씩 대조한 합충형해가 없어요';
  const stemText=f.stemTenGods.map((x,i)=>x?['년','월','일','시'][i]+'간 '+x+'('+ten[x]+')':null).filter(Boolean).join(' / ');
- const base=`${name}아, 네 일간은 ${s.dayStem}(${s.dayElement})이구나. 전통 명리에서는 ${main}에 빗대어 읽지. 월지 ${month[1]}는 ${monthSeason}의 자리야.`;
+ const base=`${name}, 네 일간은 ${s.dayStem}(${s.dayElement})이구나. 전통 명리에서는 ${main}에 빗대어 읽지. 월지 ${month[1]}는 ${monthSeason}의 자리야.`;
  const evidence=`원국은 ${[year,month,day,hour||'시주 미상'].join(' · ')}이고, 겉에 드러난 오행은 ${e}란다. 이 수치는 지장간의 세력이나 용신을 판정한 점수가 아니야.`;
  const noHour=!hour?'태어난 시간을 모르니 시주와 시간에 기대는 해석은 비워 두었단다.':'시주는 '+hour+'로 계산했단다.';
  const chapters=[
- section('第一章','네 사주 네 기둥',base,[evidence,`연주 ${year}는 바깥 환경, 월주 ${month}는 계절과 사회적 자리, 일주 ${day}는 자신과 가까운 관계, 시주 ${hour||'미상'}는 후반의 지향을 읽는 상징이란다.`,noHour],[`출생 입력: ${s.birthDate} · ${s.calendarType==='lunar'?(s.isLeapMonth?'음력 윤달':'음력 평달'):'양력'}`,`양력 환산: ${s.solarDate}`,`성별: ${s.gender==='male'?'남성':s.gender==='female'?'여성':'기록 없음'}`,...s.warnings],`“${name}아, 이 네 기둥이 네 운명의 첫 문장이란다.”`),
- section('第二章','일간에 새겨진 너의 빛',`${s.dayStem} · ${main}`,[base,`같은 ${s.dayElement} 기운도 계절과 주변 글자에 따라 다르게 읽는단다. 강하다고 늘 밀어붙일 필요도, 약하다고 빛을 잃는 것도 아니지.`,`이 상징이 네 실제 성격을 단정하는 것은 아니야. 다만 네가 힘을 얻는 장면을 돌아보는 거울로 삼아 보렴.`],[`일간 ${s.dayStem}`,`일지 ${s.dayBranch}`]),
- section('第三章','오행이 들려주는 균형',e,[evidence,`월령은 ${f.season.season}이고 이 계절의 중심 상징은 ${f.season.chiefElement}이야. ${f.season.transition?'계절이 바뀌는 달이라 흙의 전환 상징도 함께 살펴. ':''}목은 ${elements.목}, 화는 ${elements.화}, 토는 ${elements.토}, 금은 ${elements.금}, 수는 ${elements.수}를 뜻하는 전통의 언어란다.`,`보이지 않는 오행이 곧 결핍이나 불운은 아니란다. 계절과 지장간을 함께 보아야 해서 단순 개수로 좋고 나쁨을 말할 수 없어.`],Object.entries(s.elements).map(([key,value])=>`${key}: ${value}`)),
+ section('第一章','네 사주 네 기둥',base,[evidence,`연주 ${year}는 바깥 환경, 월주 ${month}는 계절과 사회적 자리, 일주 ${day}는 자신과 가까운 관계, 시주 ${hour||'미상'}는 후반의 지향을 읽는 상징이란다.`,noHour],[`출생 입력: ${s.birthDate} · ${s.calendarType==='lunar'?(s.isLeapMonth?'음력 윤달':'음력 평달'):'양력'}`,`양력 환산: ${s.solarDate}`,`성별: ${s.gender==='male'?'남성':s.gender==='female'?'여성':'기록 없음'}`,...s.warnings],`“${name}, 이 네 기둥이 네 운명의 첫 문장이란다.”`),
+ section('第二章','일간에 새겨진 너의 빛',`${s.dayStem} · ${main}`,[`같은 ${s.dayElement} 기운도 계절과 주변 글자에 따라 다르게 읽는단다. 강하다고 늘 밀어붙일 필요도, 약하다고 빛을 잃는 것도 아니지.`,`이 상징이 네 실제 성격을 단정하는 것은 아니야. 다만 네가 힘을 얻는 장면을 돌아보는 거울로 삼아 보렴.`],[`일간 ${s.dayStem}`,`일지 ${s.dayBranch}`]),
+ section('第三章','오행이 들려주는 균형',e,[`월령은 ${f.season.season}이고 이 계절의 중심 상징은 ${f.season.chiefElement}이야. ${f.season.transition?'계절이 바뀌는 달이라 흙의 전환 상징도 함께 살펴. ':''}목은 ${elements.목}, 화는 ${elements.화}, 토는 ${elements.토}, 금은 ${elements.금}, 수는 ${elements.수}를 뜻하는 전통의 언어란다.`,`보이지 않는 오행이 곧 결핍이나 불운은 아니란다. 계절과 지장간을 함께 보아야 해서 단순 개수로 좋고 나쁨을 말할 수 없어.`],Object.entries(s.elements).map(([key,value])=>`${key}: ${value}`)),
  section('第四章','십성이 엮는 역할',stemText||'확인된 천간 관계가 적구나',[ `일간 ${s.dayStem}을 기준으로 다른 천간의 음양과 오행 관계를 살피면 ${stemText||'시각 미상으로 일부 관계가 생략되었다'}고 읽힌단다.`,`십성은 사람을 고정된 유형으로 나누는 판정표가 아니라, 관계와 역할을 표현하는 전통의 상징이지.`,`일과 재물, 배움과 책임을 읽을 때에도 한 가지 십성만으로 결론을 내리지 않는단다.`],f.stemTenGods.map((x,i)=>x?['년','월','일','시'][i]+'간: '+x:'').filter(Boolean)),
  section('第五章','일주와 가까운 인연',`${day} · 네가 서 있는 자리`,[`일주 ${day}는 일간 ${s.dayStem}과 일지 ${s.dayBranch}가 만난 모습이란다. ${main}의 이미지가 ${s.dayBranch}라는 자리와 만난 것으로 읽지.`,`전통적으로 일지는 가까운 관계의 자리로도 보지만, 상대의 마음이나 결혼 결과를 정해 주지는 않아.`,`사람을 만날 때 네가 편안해지는 방식과 마음이 부딪히는 순간을 실제 대화로 확인하렴.`]),
  section('第六章','지장간과 합충의 비밀',relationText,[`겉으로 보이는 지지 안에는 지장간이 숨어 있단다. 년지 ${year[1]}에는 ${f.hiddenStems[0]}, 월지 ${month[1]}에는 ${f.hiddenStems[1]}, 일지 ${day[1]}에는 ${f.hiddenStems[2]}${hour?', 시지 '+hour[1]+'에는 '+f.hiddenStems[3]:''}가 담긴다고 본단다.`,`지지를 두 글자씩 보면 ${relationText}라고 읽을 수 있어. 충은 변화나 부딪힘, 합은 연결과 결합의 상징으로 읽되 무조건 길흉을 결정하지는 않는단다.`,`형과 해는 긴장과 마찰의 상징으로도 읽지만 학파별 적용 조건이 다르단다. 지장간의 세력과 합화 성립 여부는 단정하지 않을게.`],relations),
@@ -59,8 +47,8 @@ export function buildFortuneReport(order){
   const hiddenFound=f.hiddenTenGods.flatMap((items,j)=>items.filter(x=>x.tenGod===a||x.tenGod===b).map(x=>['년','월','일','시'][j]+'지 '+x.stem+'('+x.tenGod+')'));
   chapters.push(section('第'+['七','八','九','十','十一','十二'][i]+'章',title,found.length?`네 천간에 ${found.join('·')}이 보이는구나.`:`이 주제와 연결되는 ${a}·${b}의 상징을 살펴보자.`,[
    `${a}는 ${ten[a]}, ${b}는 ${ten[b]}의 뜻으로 읽힌단다.`,
-   found.length?`네 사주의 겉천간에는 ${found.join('·')}이 나타나 있어 이 주제와 연결해 볼 수 있겠구나. 하지만 지장간까지 보지 않고 강약이나 성패를 단정할 수는 없어.`:`겉천간에 이 두 십성이 직접 나타나지 않았다고 그 영역의 복이 없다는 뜻은 아니야. 지장간과 운의 흐름에서 달라질 수 있단다.`,
-   hiddenFound.length?'지장간까지 살피면 '+hiddenFound.join(' · ')+'도 나타나는구나. 겉에 드러난 역할과 안에 담긴 역할은 구분해서 읽어야 한단다.':'이번 지장간 분류에는 해당 십성이 나타나지 않는구나. 이것만으로 복의 유무를 판단하지는 않아.',
+   found.length?`네 사주의 겉천간에는 ${found.join('·')}이 나타나 있어 이 주제와 연결해 볼 수 있겠구나. 하지만 지장간까지 보지 않고 강약이나 성패를 단정할 수는 없어.`:`겉천간에서 ${a}·${b}의 이름은 확인되지 않으니 아래 지장간을 펴 보렴. 때마다 만나는 운의 글자가 다른 단서를 건네기도 한단다.`,
+   hiddenFound.length?'지장간까지 살피면 '+hiddenFound.join(' · ')+'도 나타나는구나. 겉에 드러난 역할과 안에 담긴 역할은 구분해서 읽어야 한단다.':`이 원국에는 ${a}·${b}를 지장간에서도 확인할 수 없구나. 그 자리에서는 이 주제로 복의 유무를 판단하지 않아.`,
    caution
   ],[`일간: ${s.dayStem}`,`관련 십성: ${a}·${b}`]));
  }
@@ -83,7 +71,6 @@ export function buildFortuneReport(order){
  ]));
  f.monthly.forEach((m,i)=>{
   const relation=m.dayBranchClash?'일지와 충하는 변화의 상징':m.dayBranchCombine?'일지와 육합하는 연결의 상징':'일지와 직접적인 충·육합이 없는 흐름';
-  const [money,work]=domainsByRole[m.tenGod];
   const shared=[
    `한국 시간 ${fmt(m.start)}부터 ${fmt(m.end)} 직전까지가 ${m.pillar}의 절기 구간이야. 달력의 첫날에 월운이 바뀌지는 않아.`,
    ...(i===0?['1월 소한 전은 앞서 시작된 2026년 자월에 속한단다.']:[]),
@@ -92,13 +79,15 @@ export function buildFortuneReport(order){
    chapters.push(section('2027 · '+String(i+1).padStart(2,'0')+'월',`${i+1}월 · ${m.pillar}의 문`,'개인 해석 보류',[...shared,cautious]));
    return;
   }
-  chapters.push(section('2027 · '+String(i+1).padStart(2,'0')+'월',`${i+1}월 · ${m.pillar}의 문`,`${m.tenGod} · ${relation}`,[
-   ...shared,
-   `재물은 네 일간 ${s.dayStem}과 이 달 천간 ${m.pillar[0]}의 ${m.tenGod}에서 ‘${money}’를 살펴봐. 재물의 결과는 거래 조건과 현실 위험으로 확인하렴.`,
-   `일은 같은 ${m.tenGod}의 상징에서 ‘${work}’가 두드러지는 주제로 읽혀. ${monthlyAdvice[m.tenGod]}`,
-   `애정은 네 일지 ${s.dayBranch}와 이 달 ${m.pillar[1]}의 관계를 보아 ${relation}으로 읽어. 상대의 마음이나 사건을 예측하는 근거는 아니야.`,
-   `함께 살필 원국 관계는 ${transitText(m.relations)}이란다. ${luckText(m.decades,f.luck.unavailableReason)}`,
-  ],[`월운 간지: ${m.pillar}`,`일간 기준 십성: ${m.tenGod}`,`절입: ${fmt(m.start)} 한국 시간`]));
+  const groups=monthlyGroups(f,m,i,shared);
+  chapters.push({...section('2027 · '+String(i+1).padStart(2,'0')+'월',`${i+1}월 · ${m.pillar}의 문`,`${m.tenGod} · ${relation}`,groups.flatMap(g=>g.paragraphs),
+   [`월운 간지: ${m.pillar}`,`일간 기준 십성: ${m.tenGod}`,`절입: ${fmt(m.start)} 한국 시간`]),groups});
  });
+ for(let i=0;i<14;i++){
+  const chapter=chapters[i];
+  const extra=natalGroups(i,f,now);
+  chapter.groups=[{title:'장부에 적힌 근거',paragraphs:chapter.paragraphs},...extra];
+  chapter.paragraphs=chapter.groups.flatMap(g=>g.paragraphs);
+ }
  return {meta:{name,birthDate:s.birthDate,solarDate:s.solarDate,calendarType:s.calendarType,isLeapMonth:s.isLeapMonth,gender:s.gender||null,birthTime:s.birthTime||'미상',pillars:s.pillars,elementCounts:s.elements,calculationWarnings:s.warnings,weekday:weekdays[new Date(s.solarDate+'T00:00:00Z').getUTCDay()]+'요일',edition:'할매의 운명방 · 2027 개인별 전통 명리 해석',chapterCount:chapters.length,verified:false},chapters:chapters.map((c,i)=>({...c,basis:i<6?'원국의 전통 상징':i<12?'원국·십성의 상징':i===12?'대운 근사 계산':i===13?'2027 세운':'절기 기반 2027 월운'}))};
 }

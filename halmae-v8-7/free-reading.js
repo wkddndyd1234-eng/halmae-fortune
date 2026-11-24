@@ -16,10 +16,6 @@ const isLeapMonth=byId('isLeapMonth');
 calendarType.addEventListener('change',()=>{byId('leapField').hidden=calendarType.value!=='lunar';if(calendarType.value!=='lunar')isLeapMonth.value='false';});
 const offer = byId('offer');
 result.dataset.variant=readingVariant(result.dataset.variant);
-if(result.dataset.variant==='story'){
- const story=result.querySelector('.reading-story');
- story.append(story.querySelector('.reading-interlude'));
-}
 const error = byId('error');
 const name = byId('name');
 let draft = null;
@@ -96,7 +92,7 @@ form.addEventListener('submit',event=>{
 
  draft=input;
  const reading=readFreeInsights(saju.pillars[2],saju.elements,relationshipNotes[byId('relation').value],saju.pillars[1][1]);
- byId('greeting').textContent=input.name?input.name+'아, 이리 와 앉아 보렴.':'네 이야기를 들려주마.';
+ byId('greeting').textContent=input.name?input.name+', 이리 와 앉아 보렴.':'네 이야기를 들려주마.';
  byId('resultMeta').textContent=`${input.gender==='male'?'남성':'여성'} · ${input.birthDate} ${input.calendarType==='lunar'?(input.isLeapMonth?'음력 윤달':'음력 평달'):'양력'} · ${input.birthTime||'출생 시각 미상'}`;
  for (const [id,value] of Object.entries({
   resultHeading:reading.headline,compassDetail:reading.introduction,
@@ -106,6 +102,7 @@ form.addEventListener('submit',event=>{
  artwork.alt=reading.symbol+'의 상징, '+reading.headline;
  artwork.src='/art/'+reading.imageId+'.webp';
  const preview=ledgerPreview(saju);
+ byId('season-context').textContent=preview.context;
  byId('ledgerQuestion').textContent=preview.hook;
  byId('luck-preview').textContent=preview.luck;
  renderLedgerPreview(byId('reportSample'),saju);
@@ -117,7 +114,7 @@ form.addEventListener('submit',event=>{
  byId('calcNotice').hidden=!notices.length;
  renderReadingChart(byId('pillars'),byId('fiveElements'),saju);
  readingText=[byId('greeting').textContent,byId('resultMeta').textContent,
-  saju.pillars.map(pillar=>pillar??'미상').join(' · '),reading.headline,reading.introduction,reading.temperament,reading.work,reading.balance,reading.relationships,
+  saju.pillars.map(pillar=>pillar??'미상').join(' · '),reading.headline,reading.introduction,reading.temperament,preview.context,reading.work,reading.balance,reading.relationships,
   ...notices,'전통 사주 상징을 바탕으로 한 자기 성찰용 풀이입니다.'].join('\n\n');
  result.hidden=false;
  offer.hidden=false;
