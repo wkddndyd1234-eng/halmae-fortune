@@ -50,7 +50,7 @@ test('메일 복구는 주문 주소의 수신자만 사용하며 새 브라우�
     return provider.has(key)?Response.json(provider.get(key)):new Response(null,{status:404});
   });
 
-  const birth={channel:'toss-test',consent:true,birthDate:'2000-01-01'};
+  const birth={channel:'toss-test',consent:true,birthDate:'2000-01-01',gender:'female'};
   const email='buyer@example.test';
   const noConfig=await (await order(request({...birth,email,recoveryConsent:true}))).json();
   assert.equal(records.get(noConfig.orderId).recoveryEmailHash,undefined);

@@ -19,7 +19,6 @@ export function normalizeBirth(input){
  if(calendarType==='solar'&&(isLeapMonth===true||isLeapMonth==='true'))throw Error('양력에는 윤달을 선택할 수 없어요.');
  if(y<1900||y>2050)throw Error('생년월일 지원 연도를 확인해 주세요.');
  if(calendarType==='solar'&&!validGregorian(y,m,d))throw Error('존재하지 않는 날짜입니다.');
- if(calendarType==='solar'&&date>new Date(Date.now()+9*60*60*1000).toISOString().slice(0,10))throw Error('미래 생년월일은 입력할 수 없습니다.');
  const gender=input.gender??'';if(gender!==''&&!['male','female'].includes(gender))throw Error('성별을 확인해 주세요.');
  const time=String(input.birthTime||'');if(time&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(time))throw Error('출생 시각 형식이 올바르지 않습니다.');
  const leap=isLeapMonth===true||isLeapMonth==='true';
@@ -46,6 +45,8 @@ export function calculateSaju(input){
  const pillars=indices.map(pair=>pair?stems[pair[0]]+branches[pair[1]]:null);
  const counts={목:0,화:0,토:0,금:0,수:0};for(const pair of indices)if(pair){counts[elements[pair[0]]]++;counts[branchElements[pair[1]]]++}
  const nearTerm=[y-1,y,y+1].filter(yr=>yr>=1899&&yr<1899+preciseTermMinutes.length).some(yr=>preciseTermMinutes[yr-1899].some(v=>Math.abs(utc-v*60000)<48*3600000));
- const warnings=[];if(!hourKnown)warnings.push('출생 시각 미상: 시주 미계산');if(nearTerm)warnings.push('절기 경계 48시간 이내: 독립 대조 필요');if(hourKnown&&hour===23)warnings.push('23시 자시 일주 교체 관례에 따라 결과 차이 가능');
- return {...birth,pillars,dayStem:stems[dayIndex%10],dayElement:elements[dayIndex%10],dayBranch:branches[dayIndex%12],elements:counts,warnings,calculationBasis:'KST 고정 · 내장 절기표 · 자정 일주 교체 · 출생지 태양시 보정 없음',verified:false};
+ const kstDate=instant=>new Date(instant+9*3600000).toISOString().slice(0,10);
+ const dateBoundaryUncertain=!hourKnown&&Array.from({length:12},(_,i)=>term(y,i*2)).some(instant=>kstDate(instant)===birth.solarDate);
+ const warnings=[];if(dateBoundaryUncertain)warnings.push('출생 시각 미상과 절입일이 겹쳐 연주·월주는 정오 기준 참고값이에요.');if(!hourKnown)warnings.push('출생 시각 미상: 시주 미계산');if(nearTerm)warnings.push('절기 경계 48시간 이내: 독립 대조 필요');if(hourKnown&&hour===23)warnings.push('23시 자시 일주 교체 관례에 따라 결과 차이 가능');
+ return {...birth,pillars,dayStem:stems[dayIndex%10],dayElement:elements[dayIndex%10],dayBranch:branches[dayIndex%12],elements:counts,dateBoundaryUncertain,warnings,calculationBasis:'KST 고정 · 내장 절기표 · 자정 일주 교체 · 출생지 태양시 보정 없음',verified:false};
 }

@@ -1,4 +1,4 @@
-import {ledgerPreview,leastVisibleElements} from '../netlify/functions/ledger-preview.mjs';
+import {ledgerPreview} from '../netlify/functions/ledger-preview.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {calculateSaju,normalizeBirth,pillarElements} from '../netlify/functions/saju.mjs';
@@ -7,9 +7,9 @@ import {readFreeInsights} from '../free-insights.js';
 import {buildReport} from '../netlify/functions/report.mjs';
 
 test('무료 입력을 양력 날짜와 분 단위 시간으로 변환하고 선택 필드만 전달',()=>{
- const values={name:' 해윤 ',year:'2000',month:'2',day:'29',hour:'0',minute:'7',relation:'기혼'};
- assert.deepEqual(fromFreeForm(values),{name:'해윤',birthDate:'2000-02-29',birthTime:'00:07'});
- assert.deepEqual(fromFreeForm({...values,hour:''}),{name:'해윤',birthDate:'2000-02-29',birthTime:''});
+ const values={name:' 해윤 ',gender:'female',year:'2000',month:'2',day:'29',hour:'0',minute:'7',relation:'기혼'};
+ assert.deepEqual(fromFreeForm(values),{name:'해윤',birthDate:'2000-02-29',birthTime:'00:07',gender:'female',calendarType:'solar',isLeapMonth:false});
+ assert.deepEqual(fromFreeForm({...values,hour:''}),{name:'해윤',birthDate:'2000-02-29',birthTime:'',gender:'female',calendarType:'solar',isLeapMonth:false});
  assert.equal(fromFreeForm({...values,year:'2001'}),null);
  assert.equal(fromFreeForm({...values,hour:'24'}),null);
  assert.equal(fromFreeForm({...values,minute:'60'}),null);
@@ -22,7 +22,7 @@ test('한국 날짜 경계를 기준으로 클라이언트와 서버에서 같�
  assert.equal(todayInKorea(now-1),'2024-02-28');
  assert.equal(todayInKorea(now),'2024-02-29');
  t.mock.method(Date,'now',()=>now);
- const draft={name:'',birthDate:'2024-02-29',birthTime:''};
+ const draft={name:'',birthDate:'2024-02-29',birthTime:'',gender:'female'};
  assert.ok(validateBirthDraft(draft));
  assert.equal(normalizeBirth(draft).solarDate,draft.birthDate);
  assert.throws(()=>normalizeBirth({...draft,birthDate:'2024-03-01'}),/미래/);
@@ -38,8 +38,9 @@ test('탭 저장을 지우거나 사용할 수 없어도 주문 화면은 빈 �
  });
  Object.defineProperty(globalThis,'sessionStorage',{configurable:true,value:storage});
  assert.equal(readBirthDraft(),null);
- saveBirthDraft({name:'가상',birthDate:'2000-01-01',birthTime:'12:01'});
- assert.deepEqual(readBirthDraft(),{name:'가상',birthDate:'2000-01-01',birthTime:'12:01'});
+ const lunar={name:'가상',birthDate:'2023-02-01',birthTime:'01:30',gender:'female',calendarType:'lunar',isLeapMonth:true};
+ saveBirthDraft(lunar);
+ assert.deepEqual(readBirthDraft(),lunar);
  saveBirthDraft(null);
  assert.equal(readBirthDraft(),null);
  Object.defineProperty(globalThis,'sessionStorage',{configurable:true,get:()=>{throw Error('unavailable');}});
@@ -78,7 +79,7 @@ test('계산된 열 가지 일간은 각 상징과 생활 장면, 균형 질문�
 });
 
 test('01:30 승계 값과 미상 입력의 원국·오행이 유료 보고서와 일치한다',()=>{
- const source={name:'가상',year:'2000',month:'1',day:'1',hour:'1',minute:'30'};
+ const source={name:'가상',gender:'male',year:'2000',month:'1',day:'1',hour:'1',minute:'30'};
  for(const hour of ['1','','3']){
   const draft=fromFreeForm({...source,hour});
   const reading=calculateSaju(draft);
@@ -109,10 +110,10 @@ test('개인별 미리보기는 같은 입력으로 발급한 장부의 실제 �
   const saju=calculateSaju(input);
   const preview=ledgerPreview(saju);
   const report=buildReport(input);
-  assert.ok(report.chapters[5].paragraphs.some(paragraph=>paragraph.includes(preview.excerpt)));
+  assert.ok(report.chapters[13].paragraphs.some(paragraph=>paragraph.includes(preview.excerpt)));
   assert.ok(preview.hook.includes(saju.dayStem));
   assert.ok(preview.hook.includes(saju.dayBranch));
-  assert.ok(preview.hook.includes(leastVisibleElements(saju.elements).low.join('·')));
+  assert.match(preview.hook,/재물·일·인연/);
   assert.equal(report.chapters.length,26);
   return preview;
  });

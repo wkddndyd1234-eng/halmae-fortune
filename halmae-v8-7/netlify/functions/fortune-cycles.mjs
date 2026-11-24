@@ -13,6 +13,17 @@ const sexagenary=(n)=>stems[mod(n,10)]+branches[mod(n,12)];
 const pillarIndex=p=>Array.from({length:60},(_,i)=>i).find(i=>sexagenary(i)===p);
 const elementIndex=i=>Math.floor(mod(i,10)/2);
 const generating=[1,2,3,4,0];
+const dayMs=86_400_000;
+const meanYearMs=365.2425*dayMs;
+const monthBranches='寅卯辰巳午未申酉戌亥子丑';
+const seasons=['봄','여름','가을','겨울'];
+const chiefElements=['목','화','금','수'];
+
+export function seasonalContext(branch){
+ const index=monthBranches.indexOf(branch);
+ const seasonIndex=Math.floor(index/3);
+ return {season:seasons[seasonIndex],chiefElement:chiefElements[seasonIndex],transition:index%3===2};
+}
 export function tenGod(dayStem,otherStem){
  const a=stems.indexOf(dayStem),b=stems.indexOf(otherStem);
  if(a<0||b<0)return null;
@@ -44,7 +55,14 @@ export function branchRelations(pillars){
  return out;
 }
 export function fortuneCycles(input){
- const saju=calculateSaju(input);
+ return cyclesForSaju(calculateSaju(input));
+}
+
+export function annualReflection(saju,annual){
+ return `정미년의 丁과 네 일간 ${saju.dayStem}을 함께 보면 ${annual.tenGod}의 관계가 나와. 옛 명리에서는 이 서로 다른 글자가 만나는 모습을 전통 상징으로 읽는단다.`;
+}
+
+export function cyclesForSaju(saju){
  const [y,m,d]=saju.solarDate.split('-').map(Number);
  const [hour,minute]=saju.birthTime?saju.birthTime.split(':').map(Number):[12,0];
  const born=Date.UTC(y,m-1,d,hour-9,minute);
@@ -59,13 +77,19 @@ export function fortuneCycles(input){
   starts.push(t);
  }
  starts.sort((a,b)=>a-b);
- const boundary=forward===null?null:forward?starts.find(t=>t>born):starts.filter(t=>t<=born).at(-1);
+ const boundary=forward===null||!saju.birthTime?null:forward?starts.find(t=>t>=born):starts.filter(t=>t<=born).at(-1);
  const monthIndex=pillarIndex(saju.pillars[1]);
- const startAgeYears=boundary===null||boundary===undefined?null:Math.abs(boundary-born)/86400000/3;
- const decadePillars=startAgeYears===null?[]:Array.from({length:8},(_,i)=>({
-  order:i+1,startAge:Number((startAgeYears+i*10).toFixed(2)),
-  pillar:sexagenary(monthIndex+(forward?i+1:-i-1)),tenGod:tenGod(saju.dayStem,sexagenary(monthIndex+(forward?i+1:-i-1))[0])
- }));
+ const startAgeYears=boundary==null?null:Math.abs(boundary-born)/dayMs/3;
+ const decadePillars=startAgeYears===null?[]:Array.from({length:12},(_,i)=>{
+  const age=startAgeYears+i*10;
+  const pillar=sexagenary(monthIndex+(forward?i+1:-i-1));
+  return {order:i+1,startAge:Number(age.toFixed(2)),pillar,tenGod:tenGod(saju.dayStem,pillar[0]),
+   start:new Date(born+Math.round(age*meanYearMs)).toISOString(),
+   end:new Date(born+Math.round((age+10)*meanYearMs)).toISOString()};
+ });
+ const relevantLuck=(start,end,transit)=>decadePillars
+  .filter(cycle=>Date.parse(cycle.start)<end&&Date.parse(cycle.end)>start)
+  .map(cycle=>({...cycle,relations:pairRelations(cycle.pillar[1],transit[1])}));
  const yearPillar=sexagenary(mod(2027-1984,60));
  const monthly=Array.from({length:12},(_,i)=>{
   const start=term(2027,i*2);
@@ -75,16 +99,17 @@ export function fortuneCycles(input){
   const monthStem=mod((mod(solarYear-1984,60)%10%5)*2+2+monthOrder,10);
   const pillar=stems[monthStem]+branches[mod(monthOrder+2,12)];
   return {month:i+1,start:new Date(start).toISOString(),end:new Date(end).toISOString(),
-   pillar,tenGod:tenGod(saju.dayStem,pillar[0]),relations:transitRelations(saju.pillars,pillar),
+   pillar,tenGod:tenGod(saju.dayStem,pillar[0]),relations:transitRelations(saju.pillars,pillar),decades:relevantLuck(start,end,pillar),
    dayBranchClash:opposite(clashes,saju.dayBranch,pillar[1]),
    dayBranchCombine:opposite(combines,saju.dayBranch,pillar[1])};
  });
  return {saju,hiddenStems:saju.pillars.map(p=>p?hidden[p[1]]:null),
   hiddenTenGods:saju.pillars.map(p=>p?[...hidden[p[1]]].map(stem=>({stem,tenGod:tenGod(saju.dayStem,stem)})):[]),
   stemTenGods:saju.pillars.map((p,i)=>p&&i!==2?tenGod(saju.dayStem,p[0]):null),
-  relations:branchRelations(saju.pillars),
-  luck:{direction:forward===null?'미상':forward?'순행':'역행',startAgeYears,decades:decadePillars,
+  relations:branchRelations(saju.pillars),season:seasonalContext(saju.pillars[1][1]),
+  luck:{direction:forward===null||saju.dateBoundaryUncertain?'미상':forward?'순행':'역행',startAgeYears,boundary:boundary==null?null:new Date(boundary).toISOString(),decades:decadePillars,
+   unavailableReason:startAgeYears===null?(!saju.gender?'성별 기록이 없어요.':!saju.birthTime?'출생 시각이 없어 절입까지의 간격을 정할 수 없어요.':'필요한 절기표 자료가 없어요.'):null,
    caveat:'절입 3일을 1년으로 환산한 근사 대운 기산이며, 절기 경계·태양시·자시 관례와 학파별 계산 차이가 있습니다.'},
-  annual:{year:2027,pillar:yearPillar,tenGod:tenGod(saju.dayStem,yearPillar[0]),relations:transitRelations(saju.pillars,yearPillar),start:new Date(term(2027,2)).toISOString()},
+  annual:{year:2027,pillar:yearPillar,tenGod:tenGod(saju.dayStem,yearPillar[0]),relations:transitRelations(saju.pillars,yearPillar),start:new Date(term(2027,2)).toISOString(),end:new Date(term(2028,2)).toISOString(),decades:relevantLuck(term(2027,2),term(2028,2),yearPillar)},
   monthly,verified:false};
 }

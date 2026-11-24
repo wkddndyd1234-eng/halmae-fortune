@@ -1,3 +1,4 @@
+import {lunarMonthLength} from './lunar-conversion.mjs';
 import {ledgerPreview} from './ledger-preview.mjs';
 import {renderLedgerPreview} from './ledger-preview-view.js';
 import {renderReadingChart} from './reading-chart.js';
@@ -46,10 +47,20 @@ function updateDays() {
  const previous=day.value;
  day.replaceChildren(new Option('일',''));
  if (!year.value || !month.value) return;
- fill(day,numbers(1,calendarType.value==='lunar'?30:new Date(Date.UTC(Number(year.value),Number(month.value),0)).getUTCDate()),value=>value+'일');
+ let limit;
+ try{
+  limit=calendarType.value==='lunar'?lunarMonthLength(year.value,month.value,isLeapMonth.value==='true'):
+   new Date(Date.UTC(Number(year.value),Number(month.value),0)).getUTCDate();
+ }catch{
+  error.textContent='선택한 음력 월이나 윤달은 달력에 없어요.';
+  return;
+ }
+ error.textContent='';
+ fill(day,numbers(1,limit),value=>value+'일');
  if ([...day.options].some(option=>option.value===previous)) day.value=previous;
 }
 calendarType.addEventListener('change',updateDays);
+isLeapMonth.addEventListener('change',updateDays);
 year.addEventListener('change',updateDays);
 month.addEventListener('change',updateDays);
 hour.addEventListener('change',()=>{
@@ -94,7 +105,9 @@ form.addEventListener('submit',event=>{
  const artwork=byId('day-symbol-art');
  artwork.alt=reading.symbol+'의 상징, '+reading.headline;
  artwork.src='/art/'+reading.imageId+'.webp';
- byId('ledgerQuestion').textContent='이제 네 운명의 깊은 장부를 열 차례구나. 네 원국과 대운, 2027년 열두 달의 흐름을 한 권에 담아 두었단다.';
+ const preview=ledgerPreview(saju);
+ byId('ledgerQuestion').textContent=preview.hook;
+ byId('luck-preview').textContent=preview.luck;
  renderLedgerPreview(byId('reportSample'),saju);
  const notices = [];
  if (!input.birthTime) notices.push('태어난 시간을 모르니 시주는 비워 두었어요.');

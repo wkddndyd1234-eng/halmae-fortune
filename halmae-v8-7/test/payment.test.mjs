@@ -11,7 +11,7 @@ const request = (body, token, origin=preview,extraHeaders={}) => new Request(ori
   headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{}),...extraHeaders},
   body:body ? JSON.stringify(body):undefined,
 });
-const birth = {channel:'toss-test',birthDate:'2000-01-01',consent:true};
+const birth = {channel:'toss-test',birthDate:'2000-01-01',consent:true,gender:'male'};
 const paymentKey = 'local-payment-key';
 
 test('테스트 결제는 프리뷰, 명시적 테스트 모드, 테스트 키에서만 시작',async () => {
@@ -67,14 +67,15 @@ test('서버 승인과 현재 상태가 확인된 주문만 보고서를 발급�
   assert.deepEqual(await (await payment(request())).json(),{enabled:true,adminPreview:true});
   assert.deepEqual(await (await payment(request(null,null,'https://example.test'))).json(),{enabled:false});
   assert.equal((await order(request({...birth,consent:false}))).status,400);
-  assert.equal((await order(request({...birth,calendarType:'lunar'}))).status,400);
+  assert.equal((await order(request({...birth,calendarType:'lunar',isLeapMonth:true}))).status,400);
   const created = await order(request(birth));
   assert.equal(created.status,200);
   const o = await created.json();
   assert.equal(o.amount,39900);
   assert.equal(o.successUrl,preview+'/payment-result.html');
   assert.equal(orders.get(o.orderId).name,'손님');
-  assert.equal('gender' in orders.get(o.orderId),false);
+  assert.equal(orders.get(o.orderId).gender,'male');
+  assert.equal((await order(request({...birth,gender:''}))).status,400);
   assert.equal((await demo(request({orderId:o.orderId,code:process.env.DEMO_ACCESS_CODE}))).status,409);
   const payload = {orderId:o.orderId,paymentKey,amount:39900};
 

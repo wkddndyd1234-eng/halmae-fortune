@@ -34,7 +34,7 @@ test('양력 테스트 주문과 관리자 보고서 발급만 허용', async t 
   delete process.env.DEMO_ACCESS_CODE;
   delete process.env.REPORT_TOKEN_SECRET;
 
-  assert.equal((await createOrder(post({...birth,calendarType:'lunar'}))).status,400);
+  assert.equal((await createOrder(post({...birth,calendarType:'lunar',isLeapMonth:true}))).status,400);
   assert.equal((await createOrder(post({...birth,isLeapMonth:true}))).status,400);
   assert.equal(records.size,0);
 
@@ -67,11 +67,22 @@ test('양력 테스트 주문과 관리자 보고서 발급만 허용', async t 
   const book = await result.json();
   assert.equal(book.demo,true);
   assert.equal(book.meta.solarDate,birth.birthDate);
-  assert.ok(book.chapters.length);
+  assert.equal(book.chapters.length,26);
+  assert.equal(book.meta.weekday,'토요일');
+
+  const lunarOrder=await createOrder(post({...birth,birthDate:'2023-02-01',calendarType:'lunar',isLeapMonth:true}));
+  assert.equal(lunarOrder.status,200);
+  const lunarId=(await lunarOrder.json()).orderId;
+  const tokenResponse=await issueDemo(post({orderId:lunarId,code:demoCode}));
+  const lunarBook=await (await report((await tokenResponse.json()).token)).json();
+  assert.equal(lunarBook.meta.solarDate,'2023-03-22');
+  assert.equal(lunarBook.meta.isLeapMonth,true);
 
   records.set('old-demo',{...birth,birthDate:'2024-01-01',solarDate:'2024-02-10',
-    calendarType:'lunar',orderId:'old-demo',status:'demo'});
+    calendarType:'lunar',orderId:'old-demo',status:'demo',gender:undefined});
   const legacy = await report(sign({...payload,orderId:'old-demo',demo:true}));
   assert.equal(legacy.status,200);
-  assert.equal((await legacy.json()).meta.solarDate,'2024-02-10');
+  const older=await legacy.json();
+  assert.equal(older.meta.solarDate,'2024-02-10');
+  assert.match(older.chapters[12].lead,/성별 기록이 없어요/);
 });

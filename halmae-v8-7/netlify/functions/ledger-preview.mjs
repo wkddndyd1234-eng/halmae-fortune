@@ -1,3 +1,4 @@
+import {annualReflection,cyclesForSaju} from './fortune-cycles.mjs';
 const stems = [...'甲乙丙丁戊己庚辛壬癸'];
 const categories = [
  ['비견','겁재','자기 기준과 협력','혼자 정할 기준 하나와 도움을 요청할 기준 하나를 나눠 적기'],
@@ -32,10 +33,12 @@ export function leastVisibleElements(elements) {
 }
 
 export function ledgerPreview(saju) {
-  const {low}=leastVisibleElements(saju.elements);
-  const month=readStems(saju)[1];
+  const fortune=cyclesForSaju(saju);
+  const monthGod=fortune.stemTenGods[1];
+  const luck=fortune.luck.unavailableReason||`대운은 ${fortune.luck.direction}으로, 첫 기산은 약 ${fortune.luck.startAgeYears.toFixed(1)}세로 계산돼. 절입 기준의 근사값이야.`;
   return {
-    hook:`네 일간 ${saju.dayStem}과 일지 ${saju.dayBranch}를 함께 보는 일주 이야기, 그리고 겉에 적게 보인 ${low.join('·')}에서 고른 생활 질문을 장부에 담았단다.`,
-    excerpt:workReflection(month),
+    hook:`네 일주 ${saju.pillars[2]}와 태어난 절기의 ${monthGod}가 들려주는 이야기가 있단다. 재물·일·인연을 보고, 2027년의 열두 절기 구간도 차례로 살펴보렴.`,
+    excerpt:saju.dateBoundaryUncertain?'출생 시각을 모르는 절입일이라 이 구간의 개인별 풀이를 비워 두었단다. 정확한 시간을 다시 입력해 보렴.':annualReflection(saju,fortune.annual),
+    luck,
   };
 }

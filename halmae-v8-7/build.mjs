@@ -13,7 +13,7 @@ await mkdir(output);
 await Promise.all(publicFiles.map(file=>copyFile(new URL(file,import.meta.url),new URL(file,output))));
 
 // Serve the same calculation inputs and implementation used at checkout.
-await Promise.all(['saju.mjs','calendar-data.mjs','ledger-preview.mjs'].map(file=>
+await Promise.all(['saju.mjs','calendar-data.mjs','lunar-conversion.mjs','fortune-cycles.mjs','ledger-preview.mjs'].map(file=>
   copyFile(new URL('./netlify/functions/'+file,import.meta.url),new URL(file,output))));
 
 const artNames = ['gap','eul','byeong','jeong','mu','gi','gyeong','sin','im','gye'];

@@ -12,7 +12,9 @@ export function validateBirthDraft(input,today=todayInKorea()) {
   const name = input.name.trim();
   const {birthDate,birthTime} = input;
   const calendarType=input.calendarType??'solar';
-  const isLeapMonth=input.isLeapMonth===true||input.isLeapMonth==='true';
+  const leapOption=input.isLeapMonth??false;
+  if(![true,false,'true','false'].includes(leapOption))return null;
+  const isLeapMonth=leapOption===true||leapOption==='true';
   if(!['solar','lunar'].includes(calendarType)||(calendarType==='solar'&&isLeapMonth))return null;
   if (name.length>20 || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate) ||
       birthDate<'1900-01-01' || birthDate>'2050-12-31' || (calendarType==='solar'&&birthDate>today) ||

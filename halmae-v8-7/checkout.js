@@ -19,7 +19,21 @@ let busy = false;
 form.elements.birthDate.max = todayInKorea();
 const calendarType=form.elements.calendarType;
 const leapMonth=form.elements.isLeapMonth;
-function updateCalendar(){form.elements.birthDate.type=calendarType.value==='lunar'?'text':'date';form.elements.birthDate.placeholder='YYYY-MM-DD';document.querySelector('#checkout-leap').hidden=calendarType.value!=='lunar';if(calendarType.value!=='lunar')leapMonth.value='false';updatePreview();}
+function updateCalendar(){
+  const lunar=calendarType.value==='lunar';
+  const date=form.elements.birthDate;
+  date.type=lunar?'text':'date';
+  if(lunar){
+    date.placeholder='YYYY-MM-DD';
+    date.pattern='[0-9]{4}-[0-9]{2}-[0-9]{2}';
+  }else{
+    date.removeAttribute('placeholder');
+    date.removeAttribute('pattern');
+    leapMonth.value='false';
+  }
+  document.querySelector('#checkout-leap').hidden=!lunar;
+  updatePreview();
+}
 calendarType.addEventListener('change',updateCalendar);
 leapMonth.addEventListener('change',updatePreview);
 const draft = window.opener ? null : readBirthDraft();

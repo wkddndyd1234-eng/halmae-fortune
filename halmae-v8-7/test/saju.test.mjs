@@ -7,9 +7,9 @@ for(const [date,expected] of [['1900-01-01','甲戌'],['1992-01-21','丙申'],['
 test('양력 시각 미상은 시주 없음',()=>assert.equal(calculateSaju({birthDate:'1992-01-21'}).pillars[3],null));
 test('양력 시각 입력은 시주 계산',()=>assert.equal(calculateSaju({birthDate:'1992-01-21',birthTime:'02:00'}).pillars[3],'己丑'));
 test('유효하지 않은 양력 날짜 거절',()=>assert.throws(()=>normalizeBirth({birthDate:'2026-02-30'})));
-test('유효한 날짜라도 음력 입력 거절',()=>assert.throws(()=>normalizeBirth({birthDate:'2024-01-01',calendarType:'lunar'}),/양력 생년월일만/));
+test('음력 입력은 양력으로 변환',()=>assert.equal(normalizeBirth({birthDate:'2024-01-01',calendarType:'lunar'}).solarDate,'2024-02-10'));
 for(const isLeapMonth of [true,'true',1,'1']){
- test(`양력 요청의 윤달 표시 거절 (${typeof isLeapMonth} ${isLeapMonth})`,()=>assert.throws(()=>normalizeBirth({birthDate:'2024-01-01',calendarType:'solar',isLeapMonth}),/양력 생년월일만/));
+ test(`양력 요청의 윤달 표시 거절 (${typeof isLeapMonth} ${isLeapMonth})`,()=>assert.throws(()=>normalizeBirth({birthDate:'2024-01-01',calendarType:'solar',isLeapMonth}),/윤달/));
 }
 
 test('2024 입춘 경계 전후 1분은 연주와 월주만 변경',()=>{

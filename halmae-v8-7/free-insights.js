@@ -42,15 +42,15 @@ export function readFreeInsights(dayPillar,counts,relationshipNote='',monthBranc
   const useful = leading.map(element=>workOptions[element]);
   const work = leading.length===1 ? useful[0] : '이 중 요즘 네 일에 가까운 질문 하나를 골라 보렴. '+useful.join(' ');
   const season=({寅:'봄의 시작',卯:'깊은 봄',辰:'봄의 끝',巳:'여름의 시작',午:'한여름',未:'여름의 끝',申:'가을의 시작',酉:'깊은 가을',戌:'가을의 끝',亥:'겨울의 시작',子:'한겨울',丑:'겨울의 끝'})[monthBranch]||'태어난 계절';
-  const tension=stem==='丙'&&'亥子丑'.includes(monthBranch)?'그런데 얘야, 겨울의 태양은 한여름의 태양과 다르단다. 차가운 계절에 놓인 빛은 주변의 기운과 함께 읽어야 하지.':`그런데 얘야, ${image}도 ${season}에 놓이면 그 모습이 달라진단다. 같은 일간이라도 태어난 계절과 주변 글자에 따라 풀이가 달라지지.`;
+  const tension=stem==='丙'&&['亥','子','丑'].includes(monthBranch)?'그런데 얘야, 겨울의 태양은 한여름의 태양과 다르단다. 차가운 계절에 놓인 빛은 주변의 기운과 함께 읽어야 하지.':`그런데 얘야, ${image}도 ${season}에 놓이면 그 모습이 달라진단다. 같은 일간이라도 태어난 계절과 주변 글자에 따라 풀이가 달라지지.`;
   return {
     symbol:name,
     imageId:imageIds[stem],
     headline:`${image}`,
-    introduction:`어디 보자… 할매가 네 운명 장부를 펼쳐 보니 ${stem}${branch} 일주가 나오는구나. 네 안에는 ${image}의 상징이 있단다. 그 안에 담긴 이야기를 천천히 들려주마.`,
-    temperament:`${name}의 기운은 ${strength}으로 읽는단다. 이 힘은 언제나 같은 모습으로 드러나는 건 아니지만, 네가 살아가는 길에서 소중한 가능성으로 바라볼 수 있지.`,
-    balance:`${tension} 타고난 사주만으로 이야기가 끝나는 건 아니란다. 열 해마다 흐르는 대운과 2027년 절기별 기운까지 함께 살피면 또 다른 이야기가 펼쳐지지.`,
-    work:`네 장부에는 ${leading.join('·')} 기운이 각각 ${topCount}개로 가장 많이 드러나는구나. ${leading.join('·')}의 상징과 ${name}의 기운이 만나는 모습은 일과 재능을 읽는 단서란다. 다만 개수만으로 성공이나 강약을 정할 수는 없지.`,
+    introduction:`어디 보자… 할매가 펼친 장부에 ${image}의 상징이 있구나. 그 안에 담긴 이야기를 천천히 들려주마.`,
+    temperament:`할매는 ${name}에서 ‘${strength}’을 떠올려. ${scene}`,
+    balance:`${tension} ${balance}`,
+    work:`겉에 보이는 오행은 ${leading.join('·')}이 가장 많고 각각 ${topCount}개란다. ${work} 개수로 성공이나 강약을 정하지는 않아.`,
     relationships:`가까운 인연을 읽는 자리에는 ${branch}가 있구나. ${branchQuestions[branch]}${relationshipNote?' '+relationshipNote:''}`,
   };
 }

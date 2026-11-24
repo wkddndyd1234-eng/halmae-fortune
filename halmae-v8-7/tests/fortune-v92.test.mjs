@@ -48,3 +48,33 @@ test('26 chapters across representative inputs',()=>{
  }
  }
 });
+
+test('2027 절입 13개는 별도 천문 계산과 60초 이내',()=>{
+ // astronomy-engine 2.1.19 SearchSunLongitude, 285°부터 30°씩 증가.
+ const reference=['2027-01-05T14:10:07Z','2027-02-04T01:46:24Z','2027-03-05T19:39:28Z',
+  '2027-04-05T00:17:09Z','2027-05-05T17:24:38Z','2027-06-05T21:25:22Z','2027-07-07T07:36:49Z',
+  '2027-08-07T17:26:25Z','2027-09-07T20:28:02Z','2027-10-08T12:16:48Z','2027-11-07T15:38:35Z',
+  '2027-12-07T08:37:51Z','2028-01-05T19:54:45Z'];
+ const {monthly,annual}=fortuneCycles(base);
+ assert.equal(annual.start,monthly[1].start);
+ const boundaries=[...monthly.map(month=>month.start),monthly.at(-1).end];
+ boundaries.forEach((time,i)=>assert.ok(Math.abs(Date.parse(time)-Date.parse(reference[i]))<=60_000));
+});
+
+test('대운 기산은 비교한 절입과 부합하고 누락된 시각은 임의로 채우지 않는다',()=>{
+ const f=fortuneCycles(base);
+ const reference=Date.parse('1992-01-06T02:08:39.726Z');
+ const born=Date.parse('1992-01-20T16:30:00Z');
+ assert.ok(Math.abs(f.luck.startAgeYears-(born-reference)/86_400_000/3)<1/4320);
+ assert.equal(f.luck.decades[0].pillar,'庚子');
+ assert.ok(f.monthly.some(month=>month.decades.length));
+ assert.equal(fortuneCycles({...base,birthTime:''}).luck.startAgeYears,null);
+ assert.ok(fortuneCycles({...base,birthTime:''}).monthly.every(month=>month.decades.length===0));
+ assert.equal(fortuneCycles({birthDate:'2024-02-04',birthTime:'17:27',gender:'male'}).luck.startAgeYears,0);
+});
+
+test('정규화되지 않는 양력은 음력으로 조용히 넘어가지 않는다',()=>{
+ assert.throws(()=>solarToLunar('2024-02-30'));
+ assert.throws(()=>solarToLunar('2024-2-09'));
+ assert.throws(()=>lunarToSolar({birthDate:'2023-02-01',isLeapMonth:'false'}));
+});
