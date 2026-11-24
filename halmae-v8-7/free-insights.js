@@ -33,7 +33,7 @@ const branchQuestions = {
  亥:'대답을 재촉하기보다 다음에 다시 얘기할 시간을 잡아 보렴.',
 };
 
-export function readFreeInsights(dayPillar,counts,relationshipNote='') {
+export function readFreeInsights(dayPillar,counts,relationshipNote='',monthBranch='') {
   const [stem,branch] = dayPillar;
   const [name,image,strength,scene,balance] = stemImages[stem];
   const elements = Object.entries(counts);
@@ -41,14 +41,16 @@ export function readFreeInsights(dayPillar,counts,relationshipNote='') {
   const leading = elements.filter(([,count])=>count===topCount).map(([element])=>element);
   const useful = leading.map(element=>workOptions[element]);
   const work = leading.length===1 ? useful[0] : '이 중 요즘 네 일에 가까운 질문 하나를 골라 보렴. '+useful.join(' ');
+  const season=({寅:'봄의 시작',卯:'깊은 봄',辰:'봄의 끝',巳:'여름의 시작',午:'한여름',未:'여름의 끝',申:'가을의 시작',酉:'깊은 가을',戌:'가을의 끝',亥:'겨울의 시작',子:'한겨울',丑:'겨울의 끝'})[monthBranch]||'태어난 계절';
+  const tension=stem==='丙'&&'亥子丑'.includes(monthBranch)?'그런데 얘야, 겨울의 태양은 한여름의 태양과 다르단다. 차가운 계절에 놓인 빛은 주변의 기운과 함께 읽어야 하지.':`그런데 얘야, ${image}도 ${season}에 놓이면 그 모습이 달라진단다. 같은 일간이라도 태어난 계절과 주변 글자에 따라 풀이가 달라지지.`;
   return {
     symbol:name,
     imageId:imageIds[stem],
     headline:`${image}`,
-    introduction:`첫째 마당 · 할매가 네 타고난 글자를 펼쳐 보니 ${stem}${branch} 일주가 나오는구나. ${image}의 모습이 떠오른다. 이것은 네 성격을 단정하는 말이 아니라, 네 삶을 비춰 볼 오래된 상징이란다. 잠깐 앉아 이 그림이 마음에 닿는지 들어 보렴.`,
-    temperament:`둘째 마당 · ${stem}의 상징에는 ‘${strength}’이라는 이야기가 담겨 있지. ${scene} 네 경험과 다르면 억지로 맞출 필요는 없단다.`,
-    balance:`넷째 마당 · 여기까지 듣고 나니 네 앞의 갈림길이 궁금해지는구나. ${balance} 2027년 열두 달의 절기 흐름과 대운은 별도의 계산이 필요하니, 이 짧은 풀이에서 결과를 지어내지는 않으마.`,
-    work:`셋째 마당 · 네 사주에서 겉으로 드러난 오행을 세면 ${leading.join('·')}이 각각 ${topCount}회로 가장 많구나. 이 숫자가 재능이나 성공을 보장하지는 않아. 다만 일과 선택을 돌아보는 질문으로 ${work}`,
-    relationships:`셋째 마당의 인연 이야기 · 일지 ${branch}의 상징을 빌려 말해 보자꾸나. ${branchQuestions[branch]}${relationshipNote?' '+relationshipNote:''}`,
+    introduction:`어디 보자… 할매가 네 운명 장부를 펼쳐 보니 ${stem}${branch} 일주가 나오는구나. 네 안에는 ${image}의 상징이 있단다. 그 안에 담긴 이야기를 천천히 들려주마.`,
+    temperament:`${name}의 기운은 ${strength}으로 읽는단다. 이 힘은 언제나 같은 모습으로 드러나는 건 아니지만, 네가 살아가는 길에서 소중한 가능성으로 바라볼 수 있지.`,
+    balance:`${tension} 타고난 사주만으로 이야기가 끝나는 건 아니란다. 열 해마다 흐르는 대운과 2027년 절기별 기운까지 함께 살피면 또 다른 이야기가 펼쳐지지.`,
+    work:`네 장부에는 ${leading.join('·')} 기운이 각각 ${topCount}개로 가장 많이 드러나는구나. ${leading.join('·')}의 상징과 ${name}의 기운이 만나는 모습은 일과 재능을 읽는 단서란다. 다만 개수만으로 성공이나 강약을 정할 수는 없지.`,
+    relationships:`가까운 인연을 읽는 자리에는 ${branch}가 있구나. ${branchQuestions[branch]}${relationshipNote?' '+relationshipNote:''}`,
   };
 }
