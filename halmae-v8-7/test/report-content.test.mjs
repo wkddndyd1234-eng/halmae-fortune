@@ -26,8 +26,9 @@ test('성별과 시각이 없는 기존 주문은 열리며 대운 기산은 보
  const book=buildReport({name:'가상',birthDate:'2000-07-01'});
  assert.equal(book.meta.pillars.at(-1),null);
  assert.equal(book.meta.chapterCount,26);
- assert.match(book.chapters[12].lead,/성별/);
+ assert.match(book.meta.calculationNotes.join(' '),/성별/);
+ assert.equal(book.chapters[12].bullets.length,0);
  const boundary=buildReport({name:'가상',birthDate:'2024-02-04',gender:'female'});
- assert.equal(boundary.chapters[14].lead,'개인 해석 보류');
- assert.match(boundary.chapters[13].paragraphs.join(' '),/정확한 시간을 다시 입력/);
+ assert.equal(boundary.chapters[14].groups.length,6);
+ assert.match(boundary.meta.calculationNotes.join(' '),/정오 기준 참고값/);
 });

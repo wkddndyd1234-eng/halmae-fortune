@@ -48,8 +48,8 @@ export function ledgerPreview(saju) {
     `너는 ${fortune.season.season}의 ${saju.pillars[1][1]}월에 태어났구나. 이 절기에서는 ${fortune.season.chiefElement}의 이야기를 먼저 보고, 겉글자에서는 ${visible} 표시가 가장 자주 보여. 월간의 ${monthGod}과 함께 살피면 계절의 배경과 평소 네가 쓰는 힘을 따로 생각해 볼 수 있단다. ${relation?`두 자리의 ${relation.type}(${relation.branches})을 사람과 일을 맞춰 가는 방식에 빗대어 보렴.`:'두 지지를 비교한 표에서는 직접 드러나는 합충형해가 없구나. 일상에서 아래 질문을 떠올려 봐.'}`;
   return {
     context,
-    hook:`네 일주 ${saju.pillars[2]}와 태어난 절기의 ${monthGod}가 들려주는 이야기가 있단다. 재물·일·인연을 보고, 2027년의 열두 절기 구간도 차례로 살펴보렴.`,
-    excerpt:saju.dateBoundaryUncertain?'출생 시각을 모르는 절입일이라 이 구간의 개인별 풀이를 비워 두었단다. 정확한 시간을 다시 입력해 보렴.':annualReflection(saju,fortune.annual),
+    hook:saju.dateBoundaryUncertain?'네 일주에 정미년의 등불을 비춰 보자꾸나. 재물·직업·사업·인연과 2027년 열두 절기의 이야기를 차례로 담아 두었단다.':`네 일주 ${saju.pillars[2]}와 태어난 절기의 ${monthGod}가 들려주는 이야기가 있단다. 재물·일·인연을 보고, 2027년의 열두 절기 구간도 차례로 살펴보렴.`,
+    excerpt:annualReflection(saju,fortune.annual),
     luck,
   };
 }

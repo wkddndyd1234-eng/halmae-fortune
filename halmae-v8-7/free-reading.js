@@ -2,7 +2,7 @@ import {lunarMonthLength} from './lunar-conversion.mjs';
 import {ledgerPreview} from './ledger-preview.mjs';
 import {renderLedgerPreview} from './ledger-preview-view.js';
 import {renderReadingChart} from './reading-chart.js';
-import {calculateSaju} from './saju.mjs';
+import {calculateSaju,pillarElements} from './saju.mjs';
 import {fromFreeForm,saveBirthDraft,todayInKorea} from './birth-handoff.js';
 import {readFreeInsights} from './free-insights.js';
 import {readingVariant,recordConversion} from './purchase.js';
@@ -91,7 +91,13 @@ form.addEventListener('submit',event=>{
  catch (e) { error.textContent=e.message||'생년월일과 출생 시각을 다시 확인해 주세요.'; return; }
 
  draft=input;
- const reading=readFreeInsights(saju.pillars[2],saju.elements,relationshipNotes[byId('relation').value],saju.pillars[1][1]);
+ const chart=saju.dateBoundaryUncertain?{
+  ...saju,
+  pillars:[null,null,saju.pillars[2],null],
+  elements:Object.fromEntries(Object.keys(saju.elements).map(element=>
+   [element,pillarElements(saju.pillars[2]).filter(value=>value===element).length])),
+ }:saju;
+ const reading=readFreeInsights(chart.pillars[2],chart.elements,relationshipNotes[byId('relation').value],chart.pillars[1]?.[1]);
  byId('greeting').textContent=input.name?input.name+', 이리 와 앉아 보렴.':'네 이야기를 들려주마.';
  byId('resultMeta').textContent=`${input.gender==='male'?'남성':'여성'} · ${input.birthDate} ${input.calendarType==='lunar'?(input.isLeapMonth?'음력 윤달':'음력 평달'):'양력'} · ${input.birthTime||'출생 시각 미상'}`;
  for (const [id,value] of Object.entries({
@@ -112,9 +118,9 @@ form.addEventListener('submit',event=>{
  if (input.birthTime.startsWith('23:')) notices.push('밤 11시대는 하루의 경계를 잡는 방식에 따라 일주와 시주가 달라질 수 있어요.');
  byId('calcNotice').textContent=notices.join(' ');
  byId('calcNotice').hidden=!notices.length;
- renderReadingChart(byId('pillars'),byId('fiveElements'),saju);
+ renderReadingChart(byId('pillars'),byId('fiveElements'),chart);
  readingText=[byId('greeting').textContent,byId('resultMeta').textContent,
-  saju.pillars.map(pillar=>pillar??'미상').join(' · '),reading.headline,reading.introduction,reading.temperament,preview.context,reading.work,reading.balance,reading.relationships,
+  chart.pillars.map(pillar=>pillar??'미상').join(' · '),reading.headline,reading.introduction,reading.temperament,preview.context,reading.work,reading.balance,reading.relationships,
   ...notices,'전통 사주 상징을 바탕으로 한 자기 성찰용 풀이입니다.'].join('\n\n');
  result.hidden=false;
  offer.hidden=false;

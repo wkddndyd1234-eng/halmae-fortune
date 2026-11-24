@@ -1,4 +1,4 @@
-import {branchPortraits,chapterEditorial,monthEditorial,monthScenes,rolePortraits,stemPortraits} from './premium-copy.mjs';
+import {businessScenes,branchPortraits,chapterEditorial,monthEditorial,monthScenes,rolePortraits,stemPortraits} from './premium-copy.mjs';
 
 const places={년:'오래 이어진 환경',월:'평소 움직이는 사회적 자리',일:'자신과 가까운 관계',시:'오래 품는 지향'};
 const relationReading={
@@ -75,42 +75,66 @@ export function natalGroups(index,f,now){
  }
  if(index===12){
   const active=f.luck.decades.find(cycle=>Date.parse(cycle.start)<=now&&now<Date.parse(cycle.end));
-  groups.push(group('현재의 근사 대운',
+  groups.push(group(active?'현재의 근사 대운':'오래 타는 불의 이야기',
    active?`현재 표에서 발을 디딘 곳은 ${active.pillar}(${active.tenGod}), 약 ${active.startAge}세부터 이어지는 구간이란다. ${rolePortraits[active.tenGod][0]} 예전에 맡던 일과 지금도 계속 가져갈 몫을 함께 생각해 보렴.`:
-    '현재 진행 중인 근사 대운을 이 표에서 확인할 수 없구나. 출생 시각이나 자료가 없거나 아직 첫 구간이 시작되기 전일 수 있어. 다른 간지를 빈자리에 넣지 않고 확인된 범위까지만 읽을게.'));
+    `열 해를 가만히 돌아보면 매일 피우던 작은 불이 나중에는 길을 밝히기도 하지. ${stemPortraits[s.dayStem]} 지난 여러 해 중에 먼저 놓아 준 일 하나와 시간이 지나 더 소중해진 일 하나를 골라 보렴. 두 가지가 같은 날에 생기지 않아도 네 이야기 안에서는 이어질 수 있단다.`));
  }
- if(index===13&&!s.dateBoundaryUncertain) groups.push(group('정미년과 대운이 포개지는 자리',
+ if(index===13) groups.push(group(f.annual.decades.length?'정미년과 대운이 포개지는 자리':'정미년 그늘 아래',
   `해의 천간 丁은 네 일간에 ${f.annual.tenGod} 이야기를 건네. ${rolePortraits[f.annual.tenGod][0]} 한 해에 적용할 한 가지와 길게 두고 지켜볼 한 가지를 따로 적어 두렴.`,
-  ...(f.annual.decades.length?f.annual.decades.map(describeDecade):['겹치는 대운 구간을 표시할 수 없으니, 정미년과 원국을 비교한 단서까지만 놓아 두렴.'])));
+  ...(f.annual.decades.length?f.annual.decades.map(describeDecade):['한 해는 긴 두루마리에서 손에 닿는 한 쪽이란다. 정미의 작은 불은 가까운 것이 보이게 하고 여름 끝의 흙은 서둘러 거두지 않아도 되는 몫을 품지. 네가 이미 오래 해 온 일 중 누군가에게 보여 줄 때가 된 것과 한 철 더 뿌리를 내릴 것을 골라 보렴. 두 몫이 다 소중해도 같은 날에 내어 줄 필요는 없단다.'])));
  return groups;
 }
 
-export function monthlyGroups(f,month,index,calendar){
+export function monthlyGroups(f,month,index){
  const s=f.saju;
  const [heading,season,money,work,love,caution]=monthEditorial[index];
  const [overallScene,moneyScene,workScene,loveScene,cautionScene]=monthScenes[index];
  const [role,moneyRole,workRole,loveRole]=rolePortraits[month.tenGod];
  const dayRelations=month.relations.filter(item=>item.position==='일');
- const workMeeting=month.relations.filter(item=>item.position==='월');
+ const relations=s.dateBoundaryUncertain?dayRelations:month.relations;
+ const workMeeting=relations.filter(item=>item.position==='월');
  const monthRole=f.stemTenGods[1];
  const workReading=workMeeting.length?
   `태어난 달의 자리와 이 절기를 비교한 표에서는 ${workMeeting.map(({type})=>type).join('·')}이 보여. ${relationReading[workMeeting[0].type]} ${workScene}`:
-  monthRole===month.tenGod?
+  !s.dateBoundaryUncertain&&monthRole===month.tenGod?
    `태어난 달과 이 절기의 천간에는 ${monthRole}이라는 같은 이름이 붙어. 이미 맡아 봐서 익숙한 일과 이번에 새로 책임져야 하는 일을 구분해. ${workScene}`:
    workScene;
  return [
-  group('총운',...calendar,`${heading}를 펼쳐 보렴. ${season}`,
+  group('총운',`${heading}를 펼쳐 보렴. ${season}`,
    `달의 천간 ${month.pillar[0]}과 네 일간 ${s.dayStem}을 대조하면 ${month.tenGod} 관계가 나와. ${role} ${overallScene}`),
-  group('재물',`재물 쪽에서 ${month.tenGod}의 상징을 읽을 때는 ‘${money}’부터 찾아 보렴. ${moneyRole}`,moneyScene),
-  group('일과 사업',`이 달 일과 사업의 첫 화두는 ‘${work}’란다. ${workRole}`,workReading),
-  group('애정',`애정에서는 ‘${love}’를 떠올려 보렴. ${loveRole}`,
+  group('재물운',`재물 쪽에서 ${month.tenGod}의 상징을 읽을 때는 ‘${money}’부터 찾아 보렴. ${moneyRole}`,moneyScene),
+  group('직업운',`일터에서 할매가 네게 건네고 싶은 화두는 ‘${work}’란다. ${workRole}`,workReading),
+  group('사업운',businessScenes[index]),
+  group('애정운',`애정에서는 ‘${love}’를 떠올려 보렴. ${loveRole}`,
    dayRelations.length?`네 일지 ${s.dayBranch}와 달의 지지 ${month.pillar[1]} 사이에서 ${dayRelations.map(item=>item.type).join('·')}을 확인했구나. ${dayRelations.map(({type})=>relationReading[type]).join(' ')} ${loveScene}`:
     `네 일지 ${s.dayBranch}와 달의 지지 ${month.pillar[1]}에서 직접 확인되는 합충형해는 없어. ${loveScene}`),
   group('주의할 점',`‘${caution}’을 조심해서 살펴봐. ${cautionScene}`,
-   month.relations.length?
-    `이번 달 ${month.pillar[1]}과 원국을 둘씩 대조한 결과는 ${month.relations.map(({position,natal,type})=>position+'지 '+natal+'의 '+type).join(' · ')}이란다. 각 관계가 어느 자리에서 보이는지 구별해. ${relationReading[month.relations[0].type]}`:
-    `${heading}에선 네 원국 지지와 ${month.pillar[1]} 사이에 바로 표시할 합충형해가 없구나.`,
+   relations.length?
+    `이번 달 ${month.pillar[1]}과 장부에 펼친 자리를 대조하면 ${relations.map(({position,natal,type})=>position+'지 '+natal+'의 '+type).join(' · ')}이란다. 각 관계가 어느 자리에서 보이는지 구별해. ${relationReading[relations[0].type]}`:
+    `${heading}에선 살펴본 지지와 ${month.pillar[1]} 사이에 바로 표시할 합충형해가 없구나.`,
    ...month.decades.filter(cycle=>cycle.relations.length).map(cycle=>
     `${heading}의 ${month.pillar[1]}과 대운 ${cycle.pillar[1]} 사이에는 ${cycle.relations.join('·')}이 보이는구나. ${relationReading[cycle.relations[0]]}`)),
  ];
+}
+
+// On a solar-term boundary, only the day pillar anchors natal interpretation.
+export function boundaryNatalGroups(index,f){
+ const {dayStem,dayBranch,dayElement,pillars}=f.saju;
+ const {stem,tenGod}=f.hiddenTenGods[2][0];
+ const [heading,...editorial]=chapterEditorial[index];
+ const stories=[
+  `등잔 하나를 켜고 네가 태어난 날의 자리를 보자. 일주 ${pillars[2]}에는 ${dayStem}의 형상이 ${branchPortraits[dayBranch]}에 내려앉아 있구나. 같은 마당을 보아도 안쪽에서 본 모습과 문밖에서 본 풍경은 다르지. 이 장부의 첫 장에는 그중에서도 네가 손으로 만져 볼 수 있는 하루의 이야기를 두었단다. 어릴 적부터 지켜 온 사소한 일을 하나 떠올려 봐. 그 작은 장면부터 한 줄씩 읽으면 된단다.`,
+  stemPortraits[dayStem],
+  `일간의 ${dayElement} 표식을 장부에 놓고, 곁에는 ${branchPortraits[dayBranch]}의 그림을 두렴. 오행 이야기는 다섯 가지 손길을 빌려 삶을 돌아보는 방식이야. 누구나 무언가를 시작하는 날과 잘라내는 날이 있고, 쉬어 갈 때와 마음을 나눌 때도 있지. 오늘 네가 스스로 돕고 싶은 일에는 어떤 손길을 먼저 빌리고 싶은지 살펴봐. 하나를 잘 쓰는 법을 배우는 것과 다섯 손길을 골고루 갖추려 애쓰는 것은 사뭇 다르단다.`,
+  `겉에는 ${dayStem}의 빛이 있고 일지 안에는 ${stem}, 그 둘을 놓으면 ${tenGod}의 이야기가 나온단다. ${rolePortraits[tenGod][0]} 어떤 일을 스스로 맡아 마음이 가벼웠던 날과, 같은 일을 맡고도 기운이 빠졌던 날을 하나씩 골라 보렴. 네가 좋아하는 기술도 약속한 범위, 곁에 있던 사람, 고를 수 있었던 시간이 다르면 다르게 쓰일 수 있어.`,
+  `일주 ${pillars[2]}의 두 글자를 가까이 놓아 보렴. ${dayStem}의 그림이 ${branchPortraits[dayBranch]}에 닿으면 자신을 지키는 법과 먼저 다가가는 법을 함께 생각하게 되지. ${rolePortraits[tenGod][3]} 네가 말할 자리가 충분했던 만남과 상대의 말을 잘 들었던 만남이 꼭 같은 날일 필요는 없어. 둘 다 기억해 두면 가까운 사람을 만날 때 네가 원하는 거리를 좀 더 다정하게 설명할 수 있단다.`,
+  `일지 ${dayBranch} 안을 펼치면 ${f.hiddenTenGods[2].map(item=>item.stem+'('+item.tenGod+')').join(' · ')}의 표식이 있단다. 지장간은 마루 밑에 따로 둔 도구처럼 옛사람들이 그 자리 안에도 여러 이야기가 담긴다고 본 흔적이야. 글 하나를 골라 오늘 실제로 쓴 힘에 빗대어 보고, 손에 들지 않은 도구는 제자리에 두어도 좋아. 관계를 한 번에 맞춰 보려 애쓰기보다 어느 일이 이미 네 손에 익었는지 살펴보렴.`,
+  `일지의 ${tenGod} 상징을 살림에 놓아 보자. ${rolePortraits[tenGod][1]} 지갑에 남은 돈을 보는 날에는 그동안 받아 온 도움도 함께 생각해. 도움에 고마워하는 마음은 귀하지만 내일도 받을 수 있다고 여겨 이번 달 계약까지 정할 필요는 없어. 값을 치르기로 한 일은 기한을 따로 적고, 부탁에 드는 품은 실제로 셀 수 있는 단위로 바꿔 보렴.`,
+  `일지 속 ${tenGod}의 이야기를 네 손으로 해 본 일에 새겨 보렴. ${rolePortraits[tenGod][2]} 일터에서 누군가 칭찬한 재능을 작은 거래에도 그대로 쓰려 한다면, 결과를 받을 사람이 누구인지와 다시 같은 품질을 낼 수 있는지를 먼저 살펴봐. 자리 하나를 옮기고 싶다면 떠날 곳보다 가려는 곳에서 하루를 어떻게 보낼지도 그려 보렴.`,
+  `가까운 사람의 말은 같은 목소리로 들려도 온도가 다를 때가 있지. 일지 안의 ${tenGod}에는 ${rolePrompt[tenGod]} 보는 비유가 있어. 상대가 웃어넘긴 이야기라도 네 마음에는 오래 남을 수 있단다. 만약 두 사람이 계속 같은 곳에서 막힌다면, 마지막 말이 무엇이었는지보다 처음에 서로 무엇을 기대했는지 얘기해 보렴.`,
+  `함께 사는 이야기는 두 사람이 각각 들고 온 작은 그릇을 같은 찬장에 놓는 데서 시작하지. ${pillars[2]}의 자리에서 떠올린 기질을 일상의 약속에 가져가 보렴. ${rolePrompt[tenGod]} 보고, 오늘 지킬 수 있는 일을 먼저 합의해. 어느 한쪽이 늘 챙기던 일을 잠깐 바꿔 보면 기꺼이 돌보는 일과 습관처럼 떠맡은 일이 구별되기도 해.`,
+  `인연의 문턱에서는 도움이 먼저 찾아오기도 하고 내가 먼저 손을 내밀기도 하지. ${dayStem}의 상징을 빌려, 사람들이 네게 맡긴 일과 네가 듣고 싶었던 말을 각각 떠올려 보렴. 말없이 놓고 간 따뜻한 차처럼 당장 보답이 필요 없는 도움도 있어. 오래 이어 가고 싶은 인연이라면 고맙던 순간과 앞으로 함께할 수 있는 몫을 가만히 나눠 말해도 좋단다.`,
+  `마당의 빛이 기울면 어떤 일을 다음 날로 옮겨도 된단다. ${dayElement}의 상징을 빌려 하루에 언제 힘을 내고 언제 손을 쉬게 하는지 보렴. 긴 하루가 끝난 뒤 네가 편안했던 자리에는 무엇이 있었니? 일정을 모두 취소할 필요 없이 짧더라도 스스로 고른 여유를 남길 수 있어. 몸에 불편이 계속되면 이 이야기보다 실제 증상을 살필 수 있는 사람에게 먼저 물으렴.`,
+ ];
+ return [group(heading,...editorial),group('할매가 건네는 이야기',stories[index],...(index>=6?[domainPrompts[index-6]]:[]))];
 }

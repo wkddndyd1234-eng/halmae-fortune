@@ -59,10 +59,10 @@ export function fortuneCycles(input){
 }
 
 export function annualReflection(saju,annual){
- const meeting=annual.relations.find(item=>item.position==='일')??annual.relations[0];
+ const meeting=annual.relations.find(item=>item.position==='일')??(saju.dateBoundaryUncertain?null:annual.relations[0]);
  const question=meeting?
   `정미의 未와 네 ${meeting.position}지 ${meeting.natal} 사이엔 ${meeting.type}도 보여. 그 자리에 얽힌 약속을 오래 지켜야 할 몫과 다시 상의할 몫으로 나눠 보는 거야.`:
-  '정미의 未와 원국 지지를 두 글자씩 대조한 표에는 바로 드러나는 합충형해가 없어. 올해를 한 사건으로 묶기보다 지금 맡은 역할에서 계속할 몫을 하나 골라 보렴.';
+  '정미의 未는 여름 끝자락의 흙을 떠올리게 한단다. 한꺼번에 거두려 하지 말고, 지금 맡은 일 가운데 조금 더 시간을 주고 싶은 몫을 골라 보렴.';
  return `정미년의 丁과 네 일간 ${saju.dayStem}의 관계를 살피면 ${annual.tenGod}의 관계가 나와. ${question} 장부 속 상징은 네가 실제로 지킬 수 있는 약속을 돌아보는 데 써 보렴.`;
 }
 

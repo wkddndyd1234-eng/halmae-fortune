@@ -54,7 +54,8 @@ export function renderReadingChart(pillarsContainer,elementsContainer,saju) {
    });
   } else glyphs.textContent='미상';
   const body=pair ? pillarMeanings[index]+` ${pillar[0]}은 ${pair[0]}, ${pillar[1]}은 ${pair[1]}이에요.` :
-   '출생 시간을 입력하지 않아 시주와 그 두 글자의 오행을 빼고 읽었어요.';
+   index===3?'출생 시간을 입력하지 않아 시주와 그 두 글자의 오행을 빼고 읽었어요.':
+   '출생 시각을 모르는 절입일이므로 이 기둥은 일주 풀이에 사용하지 않았어요.';
   const {button,panel}=disclosure('pillar',index,[node('span','chart-pillar-label',pillarLabels[index]),glyphs],pillarLabels[index],body);
   button.style.setProperty('--card-order',index*2);
   panel.style.setProperty('--detail-order',index<2?3:7);

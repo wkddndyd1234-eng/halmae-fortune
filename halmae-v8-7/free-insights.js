@@ -42,7 +42,7 @@ export function readFreeInsights(dayPillar,counts,relationshipNote='',monthBranc
   const useful = leading.map(element=>workOptions[element]);
   const work = leading.length===1 ? useful[0] : '이 중 요즘 네 일에 가까운 질문 하나를 골라 보렴. '+useful.join(' ');
   const season=({寅:'봄의 시작',卯:'깊은 봄',辰:'봄의 끝',巳:'여름의 시작',午:'한여름',未:'여름의 끝',申:'가을의 시작',酉:'깊은 가을',戌:'가을의 끝',亥:'겨울의 시작',子:'한겨울',丑:'겨울의 끝'})[monthBranch]||'태어난 계절';
-  const tension=stem==='丙'&&['亥','子','丑'].includes(monthBranch)?'그런데 얘야, 겨울의 태양은 한여름의 태양과 다르단다. 차가운 계절에 놓인 빛은 주변의 기운과 함께 읽어야 하지.':`그런데 얘야, ${image}도 ${season}에 놓이면 그 모습이 달라진단다. 같은 일간이라도 태어난 계절과 주변 글자에 따라 풀이가 달라지지.`;
+  const tension=!monthBranch?'네 일주에서 볼 수 있는 작은 장면부터 함께 떠올려 보자꾸나.':stem==='丙'&&['亥','子','丑'].includes(monthBranch)?'그런데 얘야, 겨울의 태양은 한여름의 태양과 다르단다. 차가운 계절에 놓인 빛은 주변의 기운과 함께 읽어야 하지.':`그런데 얘야, ${image}도 ${season}에 놓이면 그 모습이 달라진단다. 같은 일간이라도 태어난 계절과 주변 글자에 따라 풀이가 달라지지.`;
   return {
     symbol:name,
     imageId:imageIds[stem],

@@ -51,6 +51,7 @@ async function readReport(){
  byId('cover-name').textContent=report.meta.name+'님의 인생 장부';
  byId('cover-date').textContent=report.meta.solarDate+' 양력 · '+report.meta.weekday;
  report.chapters.forEach((chapter,index)=>renderChapter(chapter,index,report.chapters.length));
+ for(const note of report.meta.calculationNotes??[]) byId('calculation-notes').append(element('li','',note));
  byId('status').textContent=report.demo?'관리자 테스트 발급 · 실제 결제 없음':'카드 결제 테스트 · 승인 시각부터 365일 웹 열람';
  byId('book').hidden=false;
  if(!report.demo) import('/purchase.js').then(({recordConversion})=>recordConversion('test_report_view')).catch(()=>{});

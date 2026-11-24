@@ -84,5 +84,5 @@ test('양력 테스트 주문과 관리자 보고서 발급만 허용', async t 
   assert.equal(legacy.status,200);
   const older=await legacy.json();
   assert.equal(older.meta.solarDate,'2024-02-10');
-  assert.match(older.chapters[12].lead,/성별 기록이 없어요/);
+  assert.match(older.meta.calculationNotes.join(' '),/성별 기록이 없어요/);
 });
