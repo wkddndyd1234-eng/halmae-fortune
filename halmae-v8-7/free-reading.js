@@ -46,9 +46,10 @@ function updateDays() {
  const previous=day.value;
  day.replaceChildren(new Option('일',''));
  if (!year.value || !month.value) return;
- fill(day,numbers(1,new Date(Date.UTC(Number(year.value),Number(month.value),0)).getUTCDate()),value=>value+'일');
+ fill(day,numbers(1,calendarType.value==='lunar'?30:new Date(Date.UTC(Number(year.value),Number(month.value),0)).getUTCDate()),value=>value+'일');
  if ([...day.options].some(option=>option.value===previous)) day.value=previous;
 }
+calendarType.addEventListener('change',updateDays);
 year.addEventListener('change',updateDays);
 month.addEventListener('change',updateDays);
 hour.addEventListener('change',()=>{
@@ -83,8 +84,8 @@ form.addEventListener('submit',event=>{
  catch (e) { error.textContent=e.message||'생년월일과 출생 시각을 다시 확인해 주세요.'; return; }
 
  draft=input;
- const reading=readFreeInsights(saju.pillars[2],saju.elements,relationshipNotes[byId('relation').value]);
- byId('greeting').textContent=input.name?input.name+'님, 네 이야기를 들려주마.':'네 이야기를 들려주마.';
+ const reading=readFreeInsights(saju.pillars[2],saju.elements,relationshipNotes[byId('relation').value],saju.pillars[1][1]);
+ byId('greeting').textContent=input.name?input.name+'아, 이리 와 앉아 보렴.':'네 이야기를 들려주마.';
  byId('resultMeta').textContent=`${input.gender==='male'?'남성':'여성'} · ${input.birthDate} ${input.calendarType==='lunar'?(input.isLeapMonth?'음력 윤달':'음력 평달'):'양력'} · ${input.birthTime||'출생 시각 미상'}`;
  for (const [id,value] of Object.entries({
   resultHeading:reading.headline,compassDetail:reading.introduction,
@@ -93,7 +94,7 @@ form.addEventListener('submit',event=>{
  const artwork=byId('day-symbol-art');
  artwork.alt=reading.symbol+'의 상징, '+reading.headline;
  artwork.src='/art/'+reading.imageId+'.webp';
- byId('ledgerQuestion').textContent=ledgerPreview(saju).hook;
+ byId('ledgerQuestion').textContent='이제 네 운명의 깊은 장부를 열 차례구나. 네 원국과 대운, 2027년 열두 달의 흐름을 한 권에 담아 두었단다.';
  renderLedgerPreview(byId('reportSample'),saju);
  const notices = [];
  if (!input.birthTime) notices.push('태어난 시간을 모르니 시주는 비워 두었어요.');
