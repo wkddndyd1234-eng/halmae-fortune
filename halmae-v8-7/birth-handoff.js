@@ -14,7 +14,7 @@ export function validateBirthDraft(input,today=todayInKorea()) {
   const isLeapMonth=input.isLeapMonth===true||input.isLeapMonth==='true';
   if(!['solar','lunar'].includes(calendarType)||(calendarType==='solar'&&isLeapMonth))return null;
   if (name.length>20 || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate) ||
-      birthDate<'1900-01-01' || birthDate>today ||
+      birthDate<'1900-01-01' || birthDate>'2050-12-31' || (calendarType==='solar'&&birthDate>today) ||
       (birthTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(birthTime))) return null;
   const instant = new Date(birthDate+'T00:00:00Z');
   if (!Number.isFinite(instant.getTime()) || instant.toISOString().slice(0,10)!==birthDate) return null;
