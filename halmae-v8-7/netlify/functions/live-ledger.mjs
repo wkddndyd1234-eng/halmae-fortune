@@ -1,5 +1,6 @@
 import {createHash,timingSafeEqual} from 'node:crypto';
 import {supportedPaymentMethod} from './toss.mjs';
+import {financeStore} from './shared.mjs';
 import {PRICE} from './payment-config.mjs';
 
 const statusValues=new Set(['READY','IN_PROGRESS','WAITING_FOR_DEPOSIT','DONE','CANCELED','PARTIAL_CANCELED','ABORTED','EXPIRED']);
@@ -23,13 +24,15 @@ export async function saveLiveSnapshot(config,store,order,payment){
  };
  const hash=createHash('sha256').update(JSON.stringify(record)).digest('hex');
  if(isCancelled(payment)){
-  await store.setJSON('revoked/'+order.orderId,{status:payment.status},{onlyIfNew:true});
+  await financeStore().setJSON('revoked/'+order.orderId,{status:payment.status},{onlyIfNew:true});
  }
- await store.setJSON('finance/'+order.orderId+'/'+hash,{...record,observedAt:new Date().toISOString()},{onlyIfNew:true});
+ await financeStore().setJSON('finance/'+order.orderId+'/'+hash,{...record,observedAt:new Date().toISOString()},{onlyIfNew:true});
  return true;
 }
 
-export const liveRevoked=(store,order)=>store.get('revoked/'+order.orderId,{type:'json'});
+export const liveRevoked=async(store,order)=>
+ await financeStore().get('revoked/'+order.orderId,{type:'json'}) ??
+ await store.get('revoked/'+order.orderId,{type:'json'});
 
 export function matchesCredential(input,configured){
  if(typeof input!=='string' || typeof configured!=='string' || configured.length<32) return false;

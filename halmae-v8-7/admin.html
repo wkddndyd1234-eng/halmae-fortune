@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
+ <title>운영 관리 · 할매의 운명방</title>
+ <link rel="icon" href="/art/favicon.png"><link rel="stylesheet" href="/admin.css">
+</head>
+<body><main>
+ <header><p class="brand">할매의 운명방</p><h1>운영 관리</h1><p id="mode"></p></header>
+ <p id="status" role="status" aria-live="polite"></p>
+ <form id="login">
+  <label>운영자 비밀번호 <input name="password" type="password" required maxlength="256" autocomplete="current-password"></label>
+  <button>로그인</button>
+ </form>
+ <section id="console" hidden>
+  <div class="actions"><button id="refresh" type="button">새로고침</button><button id="export" type="button">거래 CSV 저장</button><button id="logout" type="button">로그아웃</button></div>
+  <section class="panel">
+   <h2>주문 조회와 고객 지원</h2>
+   <form id="lookup"><label>주문 번호<input name="orderId" required maxlength="39" autocomplete="off"></label><button>조회</button></form>
+   <p id="order-result"></p>
+   <form id="support" hidden>
+    <label>작업<select name="action">
+     <option value="resend">복구 메일 요청</option><option value="repair-issuance">보고서 생성 재확인</option>
+     <option value="reconcile">토스 상태 재대조</option><option value="withdraw-recovery">복구 동의 철회</option>
+     <option value="erase">고객정보 삭제</option><option value="refund">승인된 전액 환불</option>
+    </select></label>
+    <label id="email-field">구매자가 확인한 등록 이메일<input name="email" type="email" maxlength="254" autocomplete="off"></label>
+    <label id="reason-field" hidden>환불 사유<input name="reason" maxlength="200" autocomplete="off"></label>
+    <label id="confirm-field" hidden>확인용 주문 번호 재입력<input name="confirmation" maxlength="39" autocomplete="off"></label>
+    <button>선택한 작업 실행</button>
+   </form>
+   <p class="hint">주문 번호를 모르면 카드 승인 내역이나 최초 주문 기록의 번호를 먼저 확인해 주세요. 복구 링크는 등록 주소로 전송합니다.</p>
+  </section>
+  <section class="panel"><h2>매출과 환불</h2><div id="sales"></div></section>
+  <section class="panel"><h2>복구와 점검</h2><p id="retention"></p><button id="retry-retention" type="button">삭제 작업 다시 실행</button><div id="issues"></div></section>
+  <section class="panel"><h2>정산 대조</h2>
+   <form id="compare"><label>거래 자료 붙여넣기 <small>첫 줄은 orderId,balanceAmount,transactionKey이고 최대 500건입니다.</small>
+   <textarea name="csv" rows="4" maxlength="80000" required></textarea></label><button>대조하기</button></form>
+   <div id="mismatches"></div>
+  </section>
+  <section class="panel"><h2>주문 목록</h2><div id="orders"></div></section>
+ </section>
+</main><script type="module" src="/admin.js"></script></body></html>

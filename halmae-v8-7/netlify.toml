@@ -26,3 +26,10 @@
   [headers.values]
     Cache-Control = "no-store"
     Referrer-Policy = "no-referrer"
+
+[[headers]]
+  for = "/admin.html"
+  [headers.values]
+    Cache-Control = "no-store"
+    Referrer-Policy = "no-referrer"
+    Content-Security-Policy = "default-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"

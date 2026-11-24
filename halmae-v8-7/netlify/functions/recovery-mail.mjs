@@ -1,5 +1,5 @@
 import {recoveryScope} from './payment-config.mjs';
-import {randomBytes} from 'node:crypto';
+import {createHmac,randomBytes} from 'node:crypto';
 import {sign} from './shared.mjs';
 
 const lifetime = 15*60_000;
@@ -24,7 +24,7 @@ export function mailConfig(config) {
 export async function sendRecovery(config,order,email,rateKey,now=Date.now()) {
   const expires = Math.min(order.purchaseExpiresAt,now+lifetime);
   if (expires<=now) return;
-  const token = sign({orderId:order.orderId,scope:recoveryScope(config),exp:expires,nonce:randomBytes(16).toString('hex')},config.tokenSecret);
+  const token = sign({orderId:order.orderId,scope:recoveryScope(config),exp:expires,nonce:config.mode==='live'?createHmac('sha256',config.tokenSecret).update(rateKey).digest('hex'):randomBytes(16).toString('hex')},config.tokenSecret);
   const url = config.origin+'/recovery.html#'+token;
   const response = await fetch('https://api.resend.com/emails',{
     method:'POST',

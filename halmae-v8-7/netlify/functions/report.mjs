@@ -1,5 +1,6 @@
+import {materializeReport} from '../lib/report-delivery.mjs';
 import {buildFortuneReport} from './fortune-report.mjs';
-import {orders,json,verify,error} from './shared.mjs';
+import {orders,json,verifyProvider,error} from './shared.mjs';
 import {paymentConfig} from './payment-config.mjs';
 import {eligibleOrder,paidStatus,reportScope,verifiedPurchase} from './entitlement.mjs';
 export const buildReport = buildFortuneReport;
@@ -7,7 +8,7 @@ export default async req => {
  if (req.method !== 'GET') return json({error:'Method not allowed'},405);
  try {
   const provider=paymentConfig(req);
-  const claim = verify((req.headers.get('authorization') ?? '').replace(/^Bearer /,''),provider?.tokenSecret);
+  const claim = verifyProvider((req.headers.get('authorization') ?? '').replace(/^Bearer /,''),provider);
   const demo = provider?.mode!=='live' && claim?.scope === 'report' && claim.demo === true;
   const config = claim?.scope === reportScope(provider) ? provider : null;
   if (!demo && !config) return json({error:'유효한 보고서 접근 권한이 없습니다.'},403);
@@ -27,6 +28,7 @@ export default async req => {
     return json({error:'완료된 카드 결제를 확인하지 못했습니다.'},403);
    }
   }
-  return json({...buildReport(o),demo,...(!demo?{purchaseExpiresAt:purchase.purchaseExpiresAt,...(config.mode==='live'?{paymentMode:'live'}:{})}:{})});
+  const result=config?.mode==='live'?await materializeReport(store,purchase):buildReport(o);
+  return json({...result,demo,...(!demo?{purchaseExpiresAt:purchase.purchaseExpiresAt,...(config.mode==='live'?{paymentMode:'live'}:{})}:{})});
  } catch (e) { return error(e); }
 };

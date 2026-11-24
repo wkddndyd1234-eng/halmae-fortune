@@ -32,10 +32,10 @@ export function paymentConfig(req) {
         (LIVE_REPORT_TOKEN_SECRET?.length??0)<32 || LIVE_REPORT_TOKEN_SECRET===REPORT_TOKEN_SECRET) return null;
     const legal={terms:legalUrl(LIVE_TERMS_URL),privacy:legalUrl(LIVE_PRIVACY_URL),refund:legalUrl(LIVE_REFUND_URL)};
     const salesEnabled=PAYMENT_LIVE_SALES_ENABLED==='true' && Object.values(legal).every(Boolean) &&
-      (PAYMENT_LIVE_WEBHOOK_KEY?.length??0)>=32 && (PAYMENT_LIVE_OPERATOR_TOKEN?.length??0)>=32 &&
+      (process.env.PAYMENT_WEBHOOK_PUBLIC==='true' || (PAYMENT_LIVE_WEBHOOK_KEY?.length??0)>=32) && (PAYMENT_LIVE_OPERATOR_TOKEN?.length??0)>=32 &&
       PAYMENT_LIVE_WEBHOOK_KEY!==PAYMENT_LIVE_OPERATOR_TOKEN;
     return {origin,mode:'live',salesEnabled,legal,
-      clientKey:TOSS_LIVE_CLIENT_KEY,secretKey:TOSS_LIVE_SECRET_KEY,tokenSecret:LIVE_REPORT_TOKEN_SECRET,merchantId:TOSS_LIVE_MERCHANT_ID};
+      clientKey:TOSS_LIVE_CLIENT_KEY,secretKey:TOSS_LIVE_SECRET_KEY,tokenSecret:LIVE_REPORT_TOKEN_SECRET,identitySecret:process.env.LIVE_IDENTITY_SECRET||LIVE_REPORT_TOKEN_SECRET,merchantId:TOSS_LIVE_MERCHANT_ID};
   }
   if (PAYMENT_MODE !== 'test' || !isPreview(req) ||
       !/^test_(?:gck|ck)_[A-Za-z0-9_]+$/.test(TOSS_TEST_CLIENT_KEY ?? '') ||

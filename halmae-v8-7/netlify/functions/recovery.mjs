@@ -1,4 +1,4 @@
-import {error,json,orders,parse,verify} from './shared.mjs';
+import {error,json,orders,parse,verifyProvider} from './shared.mjs';
 import {paymentConfig,recoveryScope} from './payment-config.mjs';
 import {eligibleOrder,fingerprint,orderPattern,reportLink,verifiedPurchase} from './entitlement.mjs';
 import {mailConfig,recoveryEmail,sendRecovery} from './recovery-mail.mjs';
@@ -17,13 +17,14 @@ export default async req => {
     const input = await parse(req);
     const exchange = input?.action === 'exchange';
     if (!exchange && input?.action !== 'request') return json({error:'복구 요청을 확인해 주세요.'},400);
-    const claim = exchange ? verify(input.token,config?.tokenSecret) : null;
+    const claim = exchange ? verifyProvider(input.token,config) : null;
     const orderId = exchange ? claim?.orderId : input.orderId;
     if (typeof orderId !== 'string' || !orderPattern.test(orderId) ||
         (exchange && claim?.scope !== recoveryScope(config))) return exchange ? denied() : accepted();
     const store = orders(config);
     const order = await store.get(orderId,{type:'json'});
-    if (!eligibleOrder(order,orderId,config) || !(order.recoveryEmailHash || order.recoveryEmail)) {
+    if (!eligibleOrder(order,orderId,config) || !(order.recoveryEmailHash || order.recoveryEmail) ||
+        config.mode==='live' && await store.get('optout/'+orderId,{type:'json'})) {
       return exchange ? denied() : accepted();
     }
     if (!exchange) {
@@ -43,7 +44,23 @@ export default async req => {
           // Before an email is attempted, a later approval or retry may recover this order.
           if (!purchase) await store.delete(rateKey);
         }
-        if (purchase) await sendRecovery(mail,purchase,email,rateKey);
+        if (purchase){
+          const at=Date.now();
+          if(config.mode!=='live') await sendRecovery(mail,purchase,email,rateKey);
+          else {
+            const marker='recovery/delivery/'+orderId;
+            for(let attempt=1;attempt<=2;attempt++){
+              if(await store.get('optout/'+orderId,{type:'json'})) break;
+              try {
+                await sendRecovery(mail,purchase,email,rateKey,at);
+                await store.setJSON(marker,{state:'sent',attempt,at});
+                break;
+              }catch{
+                await store.setJSON(marker,{state:'retry-needed',attempt,at});
+              }
+            }
+          }
+        }
       } catch { /* Return the same public response for unmatched, expired and failed requests. */ }
       return accepted();
     }

@@ -1,14 +1,16 @@
 import {paidStatus,eligibleOrder,orderPattern,recordApproval} from './entitlement.mjs';
 import {matchesCredential,matchesLivePayment,saveLiveSnapshot,liveRevoked} from './live-ledger.mjs';
 import {paymentConfig} from './payment-config.mjs';
-import {json,orders,parse} from './shared.mjs';
+import {adminStore,json,orders,parse} from './shared.mjs';
+import {rateAllowed} from '../lib/admin-auth.mjs';
 import {approvedPayment,findPayment} from './toss.mjs';
 
 export default async req=>{
  if(req.method!=='POST') return json({error:'Method not allowed'},405);
  const config=paymentConfig(req);
  // The card event is only a trigger. All financial data comes from the authenticated order lookup.
- if(config?.mode!=='live' || !matchesCredential(new URL(req.url).searchParams.get('key'),process.env.PAYMENT_LIVE_WEBHOOK_KEY)){
+ const publicMode=process.env.PAYMENT_WEBHOOK_PUBLIC==='true';
+ if(config?.mode!=='live' || !publicMode && !matchesCredential(new URL(req.url).searchParams.get('key'),process.env.PAYMENT_LIVE_WEBHOOK_KEY)){
   return json({error:'Webhook unavailable'},403);
  }
  const event=await parse(req);
@@ -20,6 +22,9 @@ export default async req=>{
   const store=orders(config);
   const order=await store.get(orderId,{type:'json'});
   if(!eligibleOrder(order,orderId,config)) return json({received:true});
+  if(publicMode && !await rateAllowed(adminStore('live'),'webhook/'+orderId,6)){
+   return json({error:'Payment synchronization pending'},503);
+  }
   const payment=await findPayment(config,orderId);
   if(!matchesLivePayment(config,order,payment) || payment.paymentKey!==paymentKey){
    return json({error:'Payment verification pending'},503);

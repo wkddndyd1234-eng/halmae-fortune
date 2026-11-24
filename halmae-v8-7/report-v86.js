@@ -45,7 +45,13 @@ function renderChapter(chapter,index,total){
 
 async function readReport(){
  if(!token) throw Error('보고서 접근 토큰이 없습니다.');
- const response=await fetch('/.netlify/functions/report',{headers:{Authorization:'Bearer '+token},cache:'no-store'});
+ let response;
+ for(let attempt=0;attempt<3;attempt++){
+  try { response=await fetch('/.netlify/functions/report',{headers:{Authorization:'Bearer '+token},cache:'no-store'});
+  }catch(error){if(attempt===2) throw error;}
+  if(response && response.status<500) break;
+  if(attempt<2) await new Promise(resolve=>setTimeout(resolve,500*(attempt+1)));
+ }
  const report=await response.json();
  if(!response.ok) throw Error(report.error||'열람 실패');
  byId('cover-name').textContent=report.meta.name+'님의 인생 장부';

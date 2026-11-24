@@ -15,6 +15,12 @@ export default async req=>{
     (action==='refund' && (typeof reason!=='string' || !reason.trim() || reason.length>200))){
   return json({error:'Invalid operations request'},400);
  }
+ return executeOperation(config,{action,orderId,reason});
+};
+
+export async function executeOperation(config,{action,orderId,reason}){
+ if(action==='refund' && (typeof reason!=='string'||!reason.trim()||reason.length>200)) return json({error:'환불 사유를 확인해 주세요.'},400);
+ if(action==='refund' && process.env.PAYMENT_REFUNDS_APPROVED!=='true') return json({error:'운영 환불 승인이 필요합니다.'},403);
  try{
   const store=orders(config);
   const order=await store.get(orderId,{type:'json'});
@@ -36,4 +42,4 @@ export default async req=>{
  }catch{
   return json({error:'Operations confirmation pending'},503);
  }
-};
+}

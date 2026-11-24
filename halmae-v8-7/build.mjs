@@ -2,7 +2,7 @@ import {copyFile,mkdir,readFile,rm,writeFile} from 'node:fs/promises';
 
 const output = new URL('./dist/',import.meta.url);
 const publicFiles = [
-  'index.html','checkout.html','payment-result.html','report.html',
+  'admin.html','admin.js','admin.css','index.html','checkout.html','payment-result.html','report.html',
   'privacy.html','refund.html','terms.html','recovery.html',
   'checkout.js','payment-result.js','recovery.js','purchase.js','report-v86.js','birth-handoff.js','free-insights.js','free-reading.js','reading-chart.js','ledger-preview-view.js',
   'v85.css','v86.css','v88.css','v90.css','v91.css','premium-report.css','release.css',

@@ -41,7 +41,7 @@ test('운영 판매 승인·호스트·키·정책·운영 인증 정보가 모�
 
 function configure(){
  Object.assign(process.env,{
-  PAYMENT_MODE:'live',PAYMENT_RUNTIME_TIER:'production',SITE_ID:'fixture-site',PAYMENT_LIVE_SITE_ID:'fixture-site',TOSS_LIVE_MERCHANT_ID:'merchant-fixture',URL:origin,PAYMENT_LIVE_ORIGIN:origin,
+  PAYMENT_REFUNDS_APPROVED:'true',PAYMENT_MODE:'live',PAYMENT_RUNTIME_TIER:'production',SITE_ID:'fixture-site',PAYMENT_LIVE_SITE_ID:'fixture-site',TOSS_LIVE_MERCHANT_ID:'merchant-fixture',URL:origin,PAYMENT_LIVE_ORIGIN:origin,
   PAYMENT_LIVE_APPROVED:'true',PAYMENT_LIVE_SALES_ENABLED:'true',
   TOSS_LIVE_CLIENT_KEY:'live_ck_dummy',TOSS_LIVE_SECRET_KEY:'live_sk_dummy',
   LIVE_RECOVERY_RESEND_API_KEY:'mock-live-mail',LIVE_RECOVERY_FROM_EMAIL:'sender@example.test',
@@ -61,7 +61,7 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
   const endpoint=new URL(url);
   if(endpoint.hostname==='blob.example.test'){
    const key=decodeURIComponent(endpoint.pathname);
-   assert.ok(key.includes('halmae-live-orders'),key);
+   assert.match(key,/halmae-live-(orders|finance)/);
    const verb=options.method;
    if(verb==='put'){
     if(new Headers(options.headers).get('if-none-match')==='*' && records.has(key)) return new Response(null,{status:412});
@@ -144,6 +144,10 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  assert.equal((await webhook(request({...event,data:{...event.data,paymentKey:'different'}},{url:hookUrl}))).status,503);
  const refund={action:'refund',orderId:first.orderId,reason:'고객 요청'};
  assert.equal((await operations(request(refund))).status,403);
+ delete process.env.PAYMENT_REFUNDS_APPROVED;
+ assert.equal((await operations(request(refund,{token:operator}))).status,403);
+ assert.equal(refunds.length,0);
+ process.env.PAYMENT_REFUNDS_APPROVED='true';
  assert.equal((await operations(request(refund,{token:operator}))).status,200);
  assert.equal((await operations(request(refund,{token:operator}))).status,200);
  assert.equal(refunds.length,1);
