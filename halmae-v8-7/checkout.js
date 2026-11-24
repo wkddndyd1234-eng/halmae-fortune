@@ -1,7 +1,7 @@
 import {calculateSaju} from './saju.mjs';
 import {renderLedgerPreview} from './ledger-preview-view.js';
 import {readBirthDraft,saveBirthDraft,todayInKorea} from './birth-handoff.js';
-import {recordConversion,post,checkoutKey,forgetCheckout,clearPurchaseStorage,rememberOrder} from '/purchase.js';
+import {recordConversion,post,checkoutKey,forgetCheckout,clearPurchaseStorage,rememberOrder,checkoutAttempt,forgetCheckoutAttempt} from '/purchase.js';
 
 const form = document.querySelector('#form');
 const msg = document.querySelector('#msg');
@@ -15,6 +15,7 @@ const clearStorage = document.querySelector('#clear-storage');
 const endpoint = '/.netlify/functions/';
 let adminOrderId;
 let busy = false;
+let live = false;
 
 form.elements.birthDate.max = todayInKorea();
 const calendarType=form.elements.calendarType;
@@ -61,6 +62,7 @@ updatePreview();
 
 resetBirth.addEventListener('click',()=>{
   saveBirthDraft(null);
+  forgetCheckoutAttempt();
   for (const field of ['name','birthDate','birthTime','gender']) form.elements[field].value = '';
   prefill.hidden = true;
   calendarType.value='solar';updateCalendar();
@@ -88,22 +90,34 @@ clearStorage.addEventListener('click',async()=>{
 });
 fetch(endpoint+'payment',{cache:'no-store'})
   .then(response => response.ok ? response.json() : {enabled:false})
-  .then(({enabled,recoveryEnabled,adminPreview}) => {
+  .then(({enabled,recoveryEnabled,adminPreview,paymentMode,legal}) => {
+    live=paymentMode==='live';
+    if(live && enabled){
+      for(const [id,url] of Object.entries(legal)) document.querySelector('a[href="/'+id+'.html"]').href=url;
+      document.querySelector('#consent-copy').textContent='을 읽었고 보고서 발급을 위한 정보 처리에 동의합니다.';
+      buy.textContent='39,900원 결제하기';
+    }
+    if(live){
+      document.querySelector('#recent-preview').hidden=false;
+      document.querySelector('#recent-preview').textContent='주문 확인 및 보고서 다시 보기';
+      document.querySelector('#recover').textContent='이메일로 보고서 복구';
+      clearStorage.textContent='브라우저의 열람 정보 지우기';
+    }
     if (adminPreview) {
       adminPanel.hidden = false;
       admin.disabled = false;
     }
-    if (enabled && recoveryEnabled) {
+    if ((enabled || live) && recoveryEnabled) {
       document.querySelector('#recovery-options').hidden = false;
       document.querySelector('#recover').hidden = false;
     }
     if (enabled) {
       buy.hidden = false;
       buy.disabled = false;
-      document.querySelector('#test-guide').hidden = false;
+      document.querySelector('#test-guide').hidden = live;
       document.querySelector('#recent-preview').hidden = false;
       clearStorage.hidden = false;
-      document.querySelector('#availability').textContent = '토스 테스트 결제 · 실제 청구 없음';
+      document.querySelector('#availability').textContent = live?'토스페이먼츠 카드 결제':'토스 테스트 결제 · 실제 청구 없음';
     }
   }).catch(() => {
     document.querySelector('#availability').textContent = '결제 가능 여부를 확인하지 못했어요. 잠시 후 새로고침해 주세요.';
@@ -137,12 +151,13 @@ form.addEventListener('submit', async event => {
   busy = true;
   buy.disabled = admin.disabled = clearStorage.disabled = resetBirth.disabled = true;
   next.hidden = true;
-  msg.textContent = '테스트 주문을 준비하고 있습니다…';
+  msg.textContent = live?'주문을 준비하고 있습니다…':'테스트 주문을 준비하고 있습니다…';
   try {
     const data = Object.fromEntries(new FormData(form));
     const order = await post('order',{
       name:data.name,birthDate:data.birthDate,birthTime:data.birthTime,gender:data.gender,calendarType:data.calendarType,isLeapMonth:data.isLeapMonth==='true',
-      consent:form.elements.consent.checked,channel:customer?'toss-test':'admin-demo',
+      consent:form.elements.consent.checked,channel:customer?(live?'toss-live':'toss-test'):'admin-demo',
+      ...(customer&&live?{checkoutAttempt:checkoutAttempt()}:{}),
       ...(customer && form.elements.recoveryConsent.checked ?
         {email:data.email,recoveryConsent:true} : {}),
     });
@@ -158,9 +173,13 @@ form.addEventListener('submit', async event => {
     recordConversion('test_order_created');
     forgetCheckout();
     rememberOrder(order.orderId);
-    msg.textContent = '테스트 주문 번호: '+order.orderId+' · 결제창을 엽니다.';
+    if(order.paymentAlreadyApproved){
+      location.href='/payment-result.html?restore=1';
+      return;
+    }
+    msg.textContent = (live?'주문 번호: ':'테스트 주문 번호: ')+order.orderId+' · 결제창을 엽니다.';
     try {
-      sessionStorage.setItem(checkoutKey,JSON.stringify({orderId:order.orderId,token:order.checkoutToken}));
+      sessionStorage.setItem(checkoutKey,JSON.stringify({orderId:order.orderId,token:order.checkoutToken,paymentMode:order.paymentMode}));
     } catch { /* The server can also use the browser credential set at checkout. */ }
     const TossPayments = await loadToss();
     const payment = TossPayments(order.clientKey).payment({customerKey:TossPayments.ANONYMOUS});
@@ -170,9 +189,10 @@ form.addEventListener('submit', async event => {
       orderName:order.orderName,successUrl:order.successUrl,failUrl:order.failUrl,
     });
   } catch (error) {
+    if(error.restartCheckout) forgetCheckoutAttempt();
     const cancelled = ['USER_CANCEL','PAY_PROCESS_CANCELED'].includes(error.code);
     if (customer) recordConversion(cancelled?'test_payment_cancel':'test_payment_failure');
-    msg.textContent = cancelled ? '테스트 결제를 취소했습니다.' : error.message;
+    msg.textContent = cancelled ? (live?'결제를 취소했습니다.':'테스트 결제를 취소했습니다.') : error.message;
   } finally {
     busy = false;
     buy.disabled = buy.hidden;

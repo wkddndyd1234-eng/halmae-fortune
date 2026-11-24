@@ -1,16 +1,19 @@
 import {createHmac,randomBytes} from 'node:crypto';
 import {secret,sign} from './shared.mjs';
 import {DAY,PRICE} from './payment-config.mjs';
+import {liveRevoked,saveLiveSnapshot} from './live-ledger.mjs';
 import {approvedPayment,findPayment} from './toss.mjs';
 
 export const orderPattern = /^HM-[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 export const PURCHASE_DURATION = 365*DAY;
 export const REPORT_SCOPE = 'toss-test-report-v2';
+export const reportScope=config=>config?.mode==='live'?'toss-live-report-v1':REPORT_SCOPE;
+export const paidStatus=config=>config?.mode==='live'?'live-paid':'test-paid';
 const browserCookie = '__Host-halmae-preview';
 const browserPattern = /^[a-f0-9]{64}$/;
 
-export function fingerprint(purpose,value) {
-  return createHmac('sha256',secret()).update(purpose+'\0'+value).digest('hex');
+export function fingerprint(purpose,value,config) {
+  return createHmac('sha256',config?.tokenSecret??secret()).update(purpose+'\0'+value).digest('hex');
 }
 
 export function browserKey(req) {
@@ -19,8 +22,8 @@ export function browserKey(req) {
   return browserPattern.test(value ?? '') ? value : null;
 }
 
-export function browserCredential(req) {
-  return browserKey(req) ?? randomBytes(32).toString('hex');
+export function browserCredential(req,fallback) {
+  return browserKey(req) ?? fallback ?? randomBytes(32).toString('hex');
 }
 
 export function browserHeader(value) {
@@ -28,9 +31,9 @@ export function browserHeader(value) {
   return `${browserCookie}=${value ?? ''}; Max-Age=${maxAge}; Path=/; Secure; HttpOnly; SameSite=Strict`;
 }
 
-export function eligibleOrder(order,id) {
-  return order?.orderId === id && order.channel === 'toss-test' && order.amount === PRICE &&
-    ['pending','test-paid'].includes(order.status);
+export function eligibleOrder(order,id,config) {
+  return order?.orderId === id && order.channel === (config?.mode==='live'?'toss-live':'toss-test') && order.amount === PRICE &&
+    ['pending',paidStatus(config)].includes(order.status);
 }
 
 export function storedExpiry(order) {
@@ -38,30 +41,33 @@ export function storedExpiry(order) {
   return Date.parse(order.approvedAt)+PURCHASE_DURATION;
 }
 
-export async function recordApproval(store,order,payment,now=Date.now()) {
+export async function recordApproval(store,order,payment,now=Date.now(),config) {
   const approvedAt = Date.parse(payment.approvedAt);
   const expiry = approvedAt+PURCHASE_DURATION;
   if (!Number.isFinite(expiry) || expiry<=now || approvedAt>now+5*60_000 ||
       (order.approvedAt && Date.parse(order.approvedAt)!==approvedAt) ||
       (order.purchaseExpiresAt !== undefined && order.purchaseExpiresAt!==expiry)) return null;
-  if (order.status === 'test-paid' && order.purchaseExpiresAt === expiry && !order.recoveryEmail) return order;
+  if (order.status === paidStatus(config) && order.purchaseExpiresAt === expiry && !order.recoveryEmail) return order;
   const {recoveryEmail,...fields} = order;
-  const updated = {...fields,status:'test-paid',paymentKey:payment.paymentKey,approvedAt:payment.approvedAt,purchaseExpiresAt:expiry};
-  if (recoveryEmail && !fields.recoveryEmailHash) updated.recoveryEmailHash = fingerprint('email',recoveryEmail);
+  const updated = {...fields,status:paidStatus(config),paymentKey:payment.paymentKey,approvedAt:payment.approvedAt,purchaseExpiresAt:expiry};
+  if (recoveryEmail && !fields.recoveryEmailHash) updated.recoveryEmailHash = fingerprint('email',recoveryEmail,config);
   await store.setJSON(order.orderId,updated);
   return updated;
 }
 
 export async function verifiedPurchase(config,store,order) {
-  if (storedExpiry(order)<=Date.now()) return null;
+  if (!eligibleOrder(order,order.orderId,config) || storedExpiry(order)<=Date.now()) return null;
   const payment = await findPayment(config,order.orderId);
-  if (!approvedPayment(payment,order.orderId,order.paymentKey ?? payment?.paymentKey)) return null;
-  return recordApproval(store,order,payment);
+  if(config.mode==='live'){
+    if(!await saveLiveSnapshot(config,store,order,payment) || await liveRevoked(store,order)) return null;
+  }
+  if (!approvedPayment(payment,order.orderId,order.paymentKey ?? payment?.paymentKey,config)) return null;
+  return recordApproval(store,order,payment,Date.now(),config);
 }
 
-export function reportLink(order,now=Date.now()) {
+export function reportLink(order,now=Date.now(),config) {
   const expiresAt = Math.min(order.purchaseExpiresAt,Math.floor(now/300_000)*300_000+30*60_000);
   if (expiresAt<=now) return null;
-  return {orderId:order.orderId,token:sign({orderId:order.orderId,scope:REPORT_SCOPE,exp:expiresAt}),
-    expiresAt,purchaseExpiresAt:order.purchaseExpiresAt};
+  return {orderId:order.orderId,token:sign({orderId:order.orderId,scope:reportScope(config),exp:expiresAt},config?.tokenSecret),
+    expiresAt,purchaseExpiresAt:order.purchaseExpiresAt,...(config?.mode==='live'?{paymentMode:'live'}:{})};
 }

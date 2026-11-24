@@ -1,5 +1,5 @@
 import {error,json,orders,parse,verify} from './shared.mjs';
-import {paymentConfig} from './payment-config.mjs';
+import {paymentConfig,recoveryScope} from './payment-config.mjs';
 import {eligibleOrder,fingerprint,orderPattern,reportLink,verifiedPurchase} from './entitlement.mjs';
 import {mailConfig,recoveryEmail,sendRecovery} from './recovery-mail.mjs';
 
@@ -10,26 +10,26 @@ const interval = 15*60_000;
 export default async req => {
   const config = paymentConfig(req);
   const mail = mailConfig(config);
-  if (req.method === 'GET') return json({enabled:Boolean(mail)});
+  if (req.method === 'GET') return json({enabled:Boolean(mail),...(config?.mode==='live'?{paymentMode:'live'}:{})});
   if (req.method !== 'POST') return json({error:'Method not allowed'},405);
   if (!mail) return json({error:'이메일 복구는 현재 제공되지 않습니다.'},503);
   try {
     const input = await parse(req);
     const exchange = input?.action === 'exchange';
     if (!exchange && input?.action !== 'request') return json({error:'복구 요청을 확인해 주세요.'},400);
-    const claim = exchange ? verify(input.token) : null;
+    const claim = exchange ? verify(input.token,config?.tokenSecret) : null;
     const orderId = exchange ? claim?.orderId : input.orderId;
     if (typeof orderId !== 'string' || !orderPattern.test(orderId) ||
-        (exchange && claim?.scope !== 'toss-test-recovery-v2')) return exchange ? denied() : accepted();
-    const store = orders();
+        (exchange && claim?.scope !== recoveryScope(config))) return exchange ? denied() : accepted();
+    const store = orders(config);
     const order = await store.get(orderId,{type:'json'});
-    if (!eligibleOrder(order,orderId) || !(order.recoveryEmailHash || order.recoveryEmail)) {
+    if (!eligibleOrder(order,orderId,config) || !(order.recoveryEmailHash || order.recoveryEmail)) {
       return exchange ? denied() : accepted();
     }
     if (!exchange) {
       const email = recoveryEmail(input.email);
-      const expected = order.recoveryEmailHash ?? fingerprint('email',order.recoveryEmail);
-      if (!email || fingerprint('email',email) !== expected) return accepted();
+      const expected = order.recoveryEmailHash ?? fingerprint('email',order.recoveryEmail,config);
+      if (!email || fingerprint('email',email,config) !== expected) return accepted();
       try {
         const now = Date.now();
         const windowEnd = (Math.floor(now/interval)+1)*interval;
@@ -49,9 +49,9 @@ export default async req => {
     }
     const purchase = await verifiedPurchase(config,store,order);
     if (!purchase || claim.exp<=Date.now()) return denied();
-    const marker = 'recovery/used/'+fingerprint('consumed',input.token);
+    const marker = 'recovery/used/'+fingerprint('consumed',input.token,config);
     const consumed = await store.setJSON(marker,{expiresAt:claim.exp},{onlyIfNew:true});
-    const link = consumed.modified && reportLink(purchase);
+    const link = consumed.modified && reportLink(purchase,Date.now(),config);
     return link ? json(link) : denied();
   } catch(e) {
     return error(e);

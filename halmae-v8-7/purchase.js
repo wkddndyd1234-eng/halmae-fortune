@@ -56,7 +56,11 @@ export async function post(name, body, token) {
   let result;
   try { result = await response.json(); }
   catch { throw Error('연결이 잠시 끊겼어요. 잠시 후 다시 시도해 주세요.'); }
-  if (!response.ok) throw Error(result.error || '요청을 처리하지 못했습니다.');
+  if (!response.ok) {
+    const error=Error(result.error || '요청을 처리하지 못했습니다.');
+    error.restartCheckout=result.restartCheckout===true;
+    throw error;
+  }
   return result;
 }
 
@@ -85,7 +89,25 @@ export function forgetReport() {
 export function clearPurchaseStorage() {
   saveBirthDraft(null);
   forgetCheckout();
+  forgetCheckoutAttempt();
   forgetReport();
   removeSessionKeys([conversionKey,variantKey,...[...variants].map(variant=>conversionKey+':'+variant)]);
   try { localStorage.removeItem(orderKey); } catch { /* Storage is inaccessible. */ }
+}
+
+// One attempt per tab survives payment return and retry without retaining form values.
+const attemptStorageKey='halmae-live-checkout-attempt';
+let memoryAttempt;
+export function checkoutAttempt(){
+  if(memoryAttempt) return memoryAttempt;
+  try { memoryAttempt=sessionStorage.getItem(attemptStorageKey); } catch { /* Use memory. */ }
+  if(!memoryAttempt){
+    memoryAttempt=crypto.randomUUID();
+    try { sessionStorage.setItem(attemptStorageKey,memoryAttempt); } catch { /* Use memory. */ }
+  }
+  return memoryAttempt;
+}
+export function forgetCheckoutAttempt(){
+  memoryAttempt=undefined;
+  removeSessionKeys([attemptStorageKey]);
 }

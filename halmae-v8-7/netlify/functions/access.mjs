@@ -19,11 +19,11 @@ export default async req => {
     const orderId = input?.orderId;
     const denied = () => json({error:'이 브라우저에서 유효한 구매를 확인하지 못했습니다. 동의한 이메일이 있다면 복구를 이용해 주세요.'},403);
     if (!key || !orderPattern.test(typeof orderId === 'string'?orderId:'')) return denied();
-    const store = orders();
+    const store = orders(config);
     const order = await store.get(orderId,{type:'json'});
-    if (!eligibleOrder(order,orderId) || order.browserHash !== fingerprint('browser',key)) return denied();
+    if (!eligibleOrder(order,orderId,config) || order.browserHash !== fingerprint('browser',key,config)) return denied();
     const purchase = await verifiedPurchase(config,store,order);
-    const link = purchase && reportLink(purchase);
+    const link = purchase && reportLink(purchase,Date.now(),config);
     return link ? json(link) : denied();
   } catch(e) {
     return error(e);

@@ -11,12 +11,38 @@ export function isPreview(req) {
   return previewOrigins.has(new URL(req.url).origin);
 }
 
+function legalUrl(value){
+  try {
+    const url=new URL(value);
+    return url.protocol==='https:'&&!url.username&&!url.password?url.href:null;
+  } catch { return null; }
+}
+
 export function paymentConfig(req) {
   const {PAYMENT_MODE, TOSS_TEST_CLIENT_KEY, TOSS_TEST_SECRET_KEY, REPORT_TOKEN_SECRET} = process.env;
   const origin = new URL(req.url).origin;
+  if (PAYMENT_MODE === 'live') {
+    const {PAYMENT_LIVE_ORIGIN,TOSS_LIVE_CLIENT_KEY,TOSS_LIVE_SECRET_KEY,LIVE_REPORT_TOKEN_SECRET,
+      PAYMENT_LIVE_APPROVED,PAYMENT_LIVE_SALES_ENABLED,PAYMENT_RUNTIME_TIER,URL,SITE_ID,PAYMENT_LIVE_SITE_ID,TOSS_LIVE_MERCHANT_ID,
+      PAYMENT_LIVE_WEBHOOK_KEY,PAYMENT_LIVE_OPERATOR_TOKEN,LIVE_TERMS_URL,LIVE_PRIVACY_URL,LIVE_REFUND_URL}=process.env;
+    if (isPreview(req) || PAYMENT_RUNTIME_TIER!=='production' || !SITE_ID || SITE_ID!==PAYMENT_LIVE_SITE_ID || URL?.replace(/\/$/,'')!==origin ||
+        PAYMENT_LIVE_ORIGIN!==origin || !origin.startsWith('https://') ||
+        PAYMENT_LIVE_APPROVED!=='true' || !TOSS_LIVE_MERCHANT_ID || !/^live_(?:gck|ck)_[A-Za-z0-9_]+$/.test(TOSS_LIVE_CLIENT_KEY??'') ||
+        !/^live_(?:gsk|sk)_[A-Za-z0-9_]+$/.test(TOSS_LIVE_SECRET_KEY??'') ||
+        (LIVE_REPORT_TOKEN_SECRET?.length??0)<32 || LIVE_REPORT_TOKEN_SECRET===REPORT_TOKEN_SECRET) return null;
+    const legal={terms:legalUrl(LIVE_TERMS_URL),privacy:legalUrl(LIVE_PRIVACY_URL),refund:legalUrl(LIVE_REFUND_URL)};
+    const salesEnabled=PAYMENT_LIVE_SALES_ENABLED==='true' && Object.values(legal).every(Boolean) &&
+      (PAYMENT_LIVE_WEBHOOK_KEY?.length??0)>=32 && (PAYMENT_LIVE_OPERATOR_TOKEN?.length??0)>=32 &&
+      PAYMENT_LIVE_WEBHOOK_KEY!==PAYMENT_LIVE_OPERATOR_TOKEN;
+    return {origin,mode:'live',salesEnabled,legal,
+      clientKey:TOSS_LIVE_CLIENT_KEY,secretKey:TOSS_LIVE_SECRET_KEY,tokenSecret:LIVE_REPORT_TOKEN_SECRET,merchantId:TOSS_LIVE_MERCHANT_ID};
+  }
   if (PAYMENT_MODE !== 'test' || !isPreview(req) ||
       !/^test_(?:gck|ck)_[A-Za-z0-9_]+$/.test(TOSS_TEST_CLIENT_KEY ?? '') ||
       !/^test_(?:gsk|sk)_[A-Za-z0-9_]+$/.test(TOSS_TEST_SECRET_KEY ?? '') ||
       (REPORT_TOKEN_SECRET?.length ?? 0) < 32) return null;
-  return {origin, clientKey: TOSS_TEST_CLIENT_KEY, secretKey: TOSS_TEST_SECRET_KEY};
+  return {origin, mode:'test', salesEnabled:true, clientKey: TOSS_TEST_CLIENT_KEY, secretKey: TOSS_TEST_SECRET_KEY};
 }
+
+export const checkoutScope=config=>config.mode==='live'?'toss-live-checkout':'toss-test-checkout';
+export const recoveryScope=config=>config.mode==='live'?'toss-live-recovery-v1':'toss-test-recovery-v2';

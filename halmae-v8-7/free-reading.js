@@ -132,19 +132,22 @@ byId('editBirth').addEventListener('click',()=>{
  name.focus({preventScroll:true});
  form.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
 });
-let offerStatusRequested=false;
+fetch('/.netlify/functions/payment',{cache:'no-store'})
+ .then(response=>response.ok?response.json():{})
+ .then(({enabled,paymentMode,legal})=>{
+  if(enabled===true){
+   byId('offerAvailability').textContent=paymentMode==='live'?'토스페이먼츠 카드 결제':'토스 테스트 결제 · 실제 청구 없음';
+   if(paymentMode==='live'){
+    document.querySelector('.deploy-preview-ribbon').hidden=true;
+    for(const [name,url] of Object.entries(legal)) document.querySelector('a[href="/'+name+'.html"]').href=url;
+   }
+  }
+  if(enabled===false) byId('offerAvailability').textContent='현재 결제를 받을 수 없어요.';
+ }).catch(()=>{});
 for(const [id,event] of [['conversionMid','ledger_preview_mid'],['conversionNext','ledger_preview_end']]){
  byId(id).addEventListener('click',()=>{
   recordConversion(event);
   focusHeading('offerHeading');
-  if(offerStatusRequested) return;
-  offerStatusRequested=true;
-  fetch('/.netlify/functions/payment',{cache:'no-store'}).then(response=>response.ok?response.json():{})
-   .then(({enabled})=>{
-    if(enabled===true) byId('offerAvailability').textContent='토스 테스트 결제 · 실제 청구 없음';
-    if(enabled===false) byId('offerAvailability').textContent='현재 결제를 받을 수 없어요.';
-   }).catch(()=>{});
-
  });
 }
 byId('returnReading').addEventListener('click',()=>focusHeading('resultHeading'));

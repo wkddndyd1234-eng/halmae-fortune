@@ -1,5 +1,5 @@
 import {saveBirthDraft} from './birth-handoff.js';
-import {checkoutKey,callbackKey,post,recordConversion,reportKey,rememberReport,forgetCheckout,forgetReport,recentOrder} from '/purchase.js';
+import {checkoutKey,callbackKey,post,recordConversion,reportKey,rememberReport,forgetCheckout,forgetReport,recentOrder,forgetCheckoutAttempt} from '/purchase.js';
 
 const status = document.querySelector('#status');
 const retry = document.querySelector('#retry');
@@ -33,11 +33,13 @@ fetch('/.netlify/functions/recovery',{cache:'no-store'}).then(r=>r.json()).then(
   document.querySelector('#recover').hidden = !enabled;
 }).catch(()=>{});
 
-function showReport({token,orderId,purchaseExpiresAt},{fresh=false}={}) {
+function showReport({token,orderId,purchaseExpiresAt,paymentMode},{fresh=false}={}) {
+  const live=paymentMode==='live';
+  if(live) document.querySelector('h1').textContent='결제 결과';
   const order = document.querySelector('#order-number');
   order.hidden = !orderId;
   if (orderId) {
-    order.textContent = '테스트 주문 번호: '+orderId;
+    order.textContent = (live?'주문 번호: ':'테스트 주문 번호: ')+orderId;
     renew.elements.orderId.value = orderId;
   }
   const expiry = document.querySelector('#purchase-expiry');
@@ -51,16 +53,26 @@ function showReport({token,orderId,purchaseExpiresAt},{fresh=false}={}) {
   const ledger = document.querySelector('#opened-ledger');
   ledger.hidden = link.hidden = false;
   if (fresh) ledger.classList.add('ledger-unseal');
-  status.textContent = '테스트 결제가 완료됐어요. 지금 보고서를 열 수 있어요. 실제로 청구된 금액은 없어요.';
+  status.textContent = live?'결제가 완료됐어요. 지금 보고서를 열 수 있어요.':'테스트 결제가 완료됐어요. 지금 보고서를 열 수 있어요. 실제로 청구된 금액은 없어요.';
 }
 
 const checkout = read(checkoutKey);
 const saved = read(reportKey);
 let pending = read(callbackKey);
-if (failure) {
+if(checkout?.paymentMode==='live') document.querySelector('h1').textContent='결제 결과';
+if(params.get('restore')==='1' && recentOrder()){
+  try{
+    const result=await post('access',{orderId:recentOrder()});
+    rememberReport(result);
+    saveBirthDraft(null);
+    forgetCheckoutAttempt();
+    showReport(result);
+  }catch(error){status.textContent=error.message;}
+} else if (failure) {
   forgetCheckout();
   const cancelled = ['USER_CANCEL','PAY_PROCESS_CANCELED'].includes(params.get('code'));
-  status.textContent = cancelled ? '테스트 결제를 취소했습니다.' : '테스트 결제가 완료되지 않았습니다. 주문 화면에서 다시 시도해 주세요.';
+  const label=checkout?.paymentMode==='live'?'결제':'테스트 결제';
+  status.textContent = cancelled ? label+'를 취소했습니다.' : label+'가 완료되지 않았습니다. 주문 화면에서 다시 시도해 주세요.';
   recordConversion(cancelled?'test_payment_cancel':'test_payment_failure');
 } else {
   if (callback.orderId && callback.paymentKey && (!checkout || callback.orderId === checkout.orderId)) {
@@ -86,6 +98,7 @@ async function confirm() {
     const result = await post('payment',pending,checkout?.token);
     rememberReport(result);
     saveBirthDraft(null);
+    forgetCheckoutAttempt();
     forgetCheckout();
     recordConversion('test_payment_success');
     showReport(result,{fresh:true});

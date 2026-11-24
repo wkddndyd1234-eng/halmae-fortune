@@ -19,26 +19,37 @@ async function toss(config, path, options = {}) {
   throw Error('테스트 결제 상태 조회 실패');
 }
 
-export function approvedPayment(payment, orderId, paymentKey) {
+export const supportedPaymentMethod=(config,method)=>method==='카드' || (config?.mode==='live' && method==='간편결제');
+
+export function approvedPayment(payment, orderId, paymentKey,config) {
   return typeof paymentKey === 'string' && validKey.test(paymentKey) && payment?.orderId === orderId && payment.paymentKey === paymentKey &&
     payment.status === 'DONE' && payment.currency === 'KRW' &&
     payment.totalAmount === PRICE && payment.balanceAmount === PRICE &&
-    payment.method === '카드' && Number.isFinite(Date.parse(payment.approvedAt));
+    supportedPaymentMethod(config,payment.method) && Number.isFinite(Date.parse(payment.approvedAt));
 }
 
 export async function findPayment(config, orderId) {
   return toss(config, '/orders/' + encodeURIComponent(orderId));
 }
 
+export function cancelPayment(config,paymentKey,reason,requestId) {
+  if (!validKey.test(paymentKey??'')) throw Error('Invalid provider payment key');
+  return toss(config,'/'+encodeURIComponent(paymentKey)+'/cancel',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Idempotency-Key':requestId},
+    body:JSON.stringify({cancelReason:reason}),
+  });
+}
+
 export async function confirmPayment(config, orderId, paymentKey) {
   if (typeof paymentKey !== 'string' || !validKey.test(paymentKey)) return null;
   // A retry first checks Toss for an already approved payment for this order.
   const current = await findPayment(config, orderId);
-  if (approvedPayment(current, orderId, paymentKey)) return current;
+  if (approvedPayment(current, orderId, paymentKey,config)) return current;
   if (current && (current.paymentKey !== paymentKey ||
       !['READY','IN_PROGRESS'].includes(current.status))) return null;
 
-  const idempotencyKey = createHash('sha256').update(JSON.stringify([orderId,paymentKey])).digest('hex');
+  const idempotencyKey = createHash('sha256').update(JSON.stringify(config.mode==='live'?[orderId]:[orderId,paymentKey])).digest('hex');
   const confirmed = await toss(config, '/confirm', {
     method: 'POST',
     headers: {'Content-Type':'application/json', 'Idempotency-Key':idempotencyKey},

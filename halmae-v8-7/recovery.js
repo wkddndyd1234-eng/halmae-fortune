@@ -11,12 +11,13 @@ window.addEventListener('hashchange',()=>{
 
 try {
   const response = await fetch('/.netlify/functions/recovery',{cache:'no-store'});
-  const {enabled} = response.ok ? await response.json() : {};
+  const {enabled,paymentMode} = response.ok ? await response.json() : {};
   if (enabled) {
+    if(paymentMode==='live') document.querySelector('h1').textContent='보고서 복구';
     form.hidden = Boolean(token);
     exchange.hidden = !token;
-    status.textContent = token ? '테스트 결제 상태를 확인한 후 보고서를 열 수 있습니다.' :
-      '이메일을 등록한 테스트 주문은 승인 시각부터 365일 동안 다른 기기에서도 복구할 수 있습니다.';
+    status.textContent = token ? '결제 상태를 확인한 후 보고서를 열 수 있습니다.' :
+      '이메일을 등록한 주문은 승인 시각부터 365일 동안 다른 기기에서도 복구할 수 있습니다.';
   } else {
     status.textContent = '이 프리뷰에서는 이메일 복구가 제공되지 않습니다.';
   }

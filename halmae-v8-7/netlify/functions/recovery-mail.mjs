@@ -1,3 +1,4 @@
+import {recoveryScope} from './payment-config.mjs';
 import {randomBytes} from 'node:crypto';
 import {sign} from './shared.mjs';
 
@@ -13,15 +14,17 @@ export function recoveryEmail(value) {
 
 export function mailConfig(config) {
   const {RECOVERY_RESEND_API_KEY,RECOVERY_FROM_EMAIL} = process.env;
-  const from = recoveryEmail(RECOVERY_FROM_EMAIL);
-  if (!config || !RECOVERY_RESEND_API_KEY || !from) return null;
-  return {origin:config.origin,from,key:RECOVERY_RESEND_API_KEY};
+  const live=config?.mode==='live';
+  const from = recoveryEmail(live?process.env.LIVE_RECOVERY_FROM_EMAIL:RECOVERY_FROM_EMAIL);
+  const key=live?process.env.LIVE_RECOVERY_RESEND_API_KEY:RECOVERY_RESEND_API_KEY;
+  if (!config || !key || !from) return null;
+  return {origin:config.origin,from,key,mode:config.mode,tokenSecret:config.tokenSecret};
 }
 
 export async function sendRecovery(config,order,email,rateKey,now=Date.now()) {
   const expires = Math.min(order.purchaseExpiresAt,now+lifetime);
   if (expires<=now) return;
-  const token = sign({orderId:order.orderId,scope:'toss-test-recovery-v2',exp:expires,nonce:randomBytes(16).toString('hex')});
+  const token = sign({orderId:order.orderId,scope:recoveryScope(config),exp:expires,nonce:randomBytes(16).toString('hex')},config.tokenSecret);
   const url = config.origin+'/recovery.html#'+token;
   const response = await fetch('https://api.resend.com/emails',{
     method:'POST',
@@ -31,8 +34,8 @@ export async function sendRecovery(config,order,email,rateKey,now=Date.now()) {
       'Idempotency-Key':rateKey,
     },
     body:JSON.stringify({
-      from:config.from,to:[email],subject:'할매의 운명방 테스트 보고서 복구',
-      text:'테스트 주문 번호 '+order.orderId+'\n\n아래 링크에서 보고서를 복구할 수 있습니다. 링크는 최대 15분 동안 한 번만 유효합니다. 요청한 적이 없으면 이 메일을 무시해 주세요.\n'+url,
+      from:config.from,to:[email],subject:'할매의 운명방 보고서 복구',
+      text:'주문 번호 '+order.orderId+'\n\n아래 링크에서 보고서를 복구할 수 있습니다. 링크는 최대 15분 동안 한 번만 유효합니다. 요청한 적이 없으면 이 메일을 무시해 주세요.\n'+url,
     }),
     signal:AbortSignal.timeout(4000),redirect:'error',
   });
