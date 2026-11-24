@@ -1,3 +1,4 @@
+import {isIP} from 'node:net';
 export const PRICE = 39900;
 export const ORDER_NAME = '할매의 깊은 장부';
 export const DAY = 24 * 60 * 60 * 1000;
@@ -31,10 +32,13 @@ export function paymentConfig(req) {
         !/^live_(?:gsk|sk)_[A-Za-z0-9_]+$/.test(TOSS_LIVE_SECRET_KEY??'') ||
         (LIVE_REPORT_TOKEN_SECRET?.length??0)<32 || LIVE_REPORT_TOKEN_SECRET===REPORT_TOKEN_SECRET) return null;
     const legal={terms:legalUrl(LIVE_TERMS_URL),privacy:legalUrl(LIVE_PRIVACY_URL),refund:legalUrl(LIVE_REFUND_URL)};
-    const salesEnabled=PAYMENT_LIVE_SALES_ENABLED==='true' && Object.values(legal).every(Boolean) &&
-      (process.env.PAYMENT_WEBHOOK_PUBLIC==='true' || (PAYMENT_LIVE_WEBHOOK_KEY?.length??0)>=32) && (PAYMENT_LIVE_OPERATOR_TOKEN?.length??0)>=32 &&
+    const policyVersion=process.env.LIVE_POLICY_VERSION;
+    const salesEnabled=process.env.LIVE_POLICY_APPROVED==='true' && /^[a-zA-Z0-9._-]{1,50}$/.test(policyVersion??'') &&PAYMENT_LIVE_SALES_ENABLED==='true' && Object.values(legal).every(Boolean) &&
+      (process.env.PAYMENT_WEBHOOK_PUBLIC==='true'
+        ? (process.env.PAYMENT_WEBHOOK_ALLOWED_IPS??'').split(',').every(ip=>Boolean(isIP(ip.trim())))
+        : (PAYMENT_LIVE_WEBHOOK_KEY?.length??0)>=32) && (PAYMENT_LIVE_OPERATOR_TOKEN?.length??0)>=32 &&
       PAYMENT_LIVE_WEBHOOK_KEY!==PAYMENT_LIVE_OPERATOR_TOKEN;
-    return {origin,mode:'live',salesEnabled,legal,
+    return {origin,mode:'live',salesEnabled,legal,policyVersion,
       clientKey:TOSS_LIVE_CLIENT_KEY,secretKey:TOSS_LIVE_SECRET_KEY,tokenSecret:LIVE_REPORT_TOKEN_SECRET,identitySecret:process.env.LIVE_IDENTITY_SECRET||LIVE_REPORT_TOKEN_SECRET,merchantId:TOSS_LIVE_MERCHANT_ID};
   }
   if (PAYMENT_MODE !== 'test' || !isPreview(req) ||

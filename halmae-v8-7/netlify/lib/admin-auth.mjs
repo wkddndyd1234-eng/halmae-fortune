@@ -1,5 +1,6 @@
 import {createHash,randomBytes,scrypt,timingSafeEqual} from 'node:crypto';
 import {promisify} from 'node:util';
+import {allowedOperatorIp} from './ops-access.mjs';
 import {adminStore} from '../functions/shared.mjs';
 import {paymentConfig} from '../functions/payment-config.mjs';
 
@@ -9,12 +10,15 @@ const random=()=>randomBytes(32).toString('hex');
 const lifetime=1800;
 const cookieName='__Host-halmae-operator';
 
-export function adminConfig(req){
+export function adminConfig(req,context){
  const provider=paymentConfig(req);
  if(!provider || process.env.OPS_ADMIN_ENABLED!=='true') return null;
+ const ip=context?.ip??'preview';
+ const mfa=provider.mode==='live'?process.env.OPS_LIVE_TOTP_SECRET_HEX:null;
+ if(provider.mode==='live' && (!allowedOperatorIp(ip)||!/^(?:[a-f0-9]{2}){20,64}$/i.test(mfa??''))) return null;
  const hash=process.env[provider.mode==='live'?'OPS_LIVE_PASSWORD_HASH':'OPS_PREVIEW_PASSWORD_HASH'];
  if(!/^[a-f0-9]{32}:[a-f0-9]{128}$/.test(hash??'') || hash===process.env.OPS_LIVE_PASSWORD_HASH && hash===process.env.OPS_PREVIEW_PASSWORD_HASH) return null;
- return {provider,hash,store:adminStore(provider.mode)};
+ return {provider,hash,ip,mfa,store:adminStore(provider.mode)};
 }
 
 export async function passwordMatches(input,hash){
@@ -31,7 +35,7 @@ export function cookie(value=''){
 export async function createSession(config){
  const id=random();
  const key='session/'+sha(id);
- const session={csrf:random(),expiresAt:Date.now()+lifetime*1000,passwordVersion:sha(config.hash)};
+ const session={csrf:random(),expiresAt:Date.now()+lifetime*1000,passwordVersion:sha(config.hash+config.mfa),ip:config.ip};
  await config.store.setJSON(key,session,{onlyIfNew:true});
  return {id,session};
 }
@@ -42,7 +46,7 @@ export async function sessionFor(req,config){
  if(!/^[a-f0-9]{64}$/.test(id??'')) return null;
  const key='session/'+sha(id);
  const session=await config.store.get(key,{type:'json'});
- return session?.expiresAt>Date.now() && session.passwordVersion===sha(config.hash)?{key,...session}:null;
+ return session?.expiresAt>Date.now() && session.ip===config.ip && session.passwordVersion===sha(config.hash+config.mfa)?{key,...session}:null;
 }
 
 // Fixed windows reserve individual slots atomically, including concurrent invocations.

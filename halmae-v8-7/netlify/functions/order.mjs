@@ -21,6 +21,9 @@ export default async req => {
     return json({error:'현재 결제를 시작할 수 없습니다.'},503);
   }
   if (channel==='admin-demo' && process.env.PAYMENT_MODE==='live') return json({error:'관리자 발급은 프리뷰에서만 사용할 수 있습니다.'},403);
+  if(config?.mode==='live' && (x.policyVersion!==config.policyVersion || x.immediateDelivery!==true)){
+    return json({error:'최신 구매 안내를 확인하고 즉시 제공을 요청해 주세요.'},400);
+  }
   const attempt=typeof x.checkoutAttempt==='string'&&/^[a-f0-9-]{36}$/.test(x.checkoutAttempt)?x.checkoutAttempt:null;
   if (config?.mode==='live' && !attempt) return json({error:'주문 화면에서 다시 시도해 주세요.'},400);
   if (x.consent !== true) return json({error:'정보 처리에 동의해 주세요.'},400);
@@ -51,11 +54,13 @@ export default async req => {
     delete purchaseFields.recoveryEmailHash;
     const inputHash=fingerprint('checkout-input',JSON.stringify(purchaseFields),config);
     order.inputHash=inputHash;
+    order.policyAcceptance={version:config.policyVersion,acceptedAt:new Date(createdAt).toISOString(),
+      immediateDelivery:true,termsAccepted:true};
     const inserted=await store.setJSON(orderId,order,{onlyIfNew:true});
     if(!inserted.modified){
       reused=true;
       order=await store.get(orderId,{type:'json'});
-      if(!order || order.inputHash!==inputHash){
+      if(!order || order.inputHash!==inputHash || order.policyAcceptance?.version!==config.policyVersion){
         return json({error:'기존 주문 정보를 확인하거나 새 주문을 시작해 주세요.'},409);
       }
     }

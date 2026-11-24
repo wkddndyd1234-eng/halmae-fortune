@@ -18,7 +18,7 @@ const request=(body,{url=origin,token,cookie}={})=>new Request(url,{
  method:body?'POST':'GET',headers:{...(token?{Authorization:'Bearer '+token}:{}),...(cookie?{Cookie:cookie}:{})},
  ...(body?{body:JSON.stringify(body)}:{}),
 });
-const birth={channel:'toss-live',gender:'male',birthDate:'1988-10-08',consent:true,
+const birth={channel:'toss-live',policyVersion:'2026.11-fixture',immediateDelivery:true,gender:'male',birthDate:'1988-10-08',consent:true,
  email:'buyer@example.test',recoveryConsent:true,checkoutAttempt:'12345678-abcd-4123-9123-0123456789ab'};
 
 test('운영 판매 승인·호스트·키·정책·운영 인증 정보가 모두 필요하다',async()=>{
@@ -27,7 +27,7 @@ test('운영 판매 승인·호스트·키·정책·운영 인증 정보가 모�
   ['PAYMENT_RUNTIME_TIER','deploy-preview'],['PAYMENT_LIVE_SITE_ID','wrong-site'],['URL',testOrigin],['PAYMENT_LIVE_APPROVED','false'],
   ['PAYMENT_LIVE_SALES_ENABLED','false'],['TOSS_LIVE_SECRET_KEY','test_sk_dummy'],
   ['LIVE_REPORT_TOKEN_SECRET','short'],['LIVE_PRIVACY_URL','javascript:alert(0)'],
-  ['PAYMENT_LIVE_WEBHOOK_KEY',operator],
+  ['PAYMENT_LIVE_WEBHOOK_KEY',operator],['LIVE_POLICY_APPROVED','false'],
  ]){
   const original=process.env[key];
   process.env[key]=value;
@@ -41,7 +41,7 @@ test('운영 판매 승인·호스트·키·정책·운영 인증 정보가 모�
 
 function configure(){
  Object.assign(process.env,{
-  PAYMENT_REFUNDS_APPROVED:'true',PAYMENT_MODE:'live',PAYMENT_RUNTIME_TIER:'production',SITE_ID:'fixture-site',PAYMENT_LIVE_SITE_ID:'fixture-site',TOSS_LIVE_MERCHANT_ID:'merchant-fixture',URL:origin,PAYMENT_LIVE_ORIGIN:origin,
+  OPS_LIVE_ALLOWED_IPS:'192.0.2.7',PAYMENT_REFUNDS_APPROVED:'true',LIVE_POLICY_APPROVED:'true',LIVE_POLICY_VERSION:'2026.11-fixture',PAYMENT_MODE:'live',PAYMENT_RUNTIME_TIER:'production',SITE_ID:'fixture-site',PAYMENT_LIVE_SITE_ID:'fixture-site',TOSS_LIVE_MERCHANT_ID:'merchant-fixture',URL:origin,PAYMENT_LIVE_ORIGIN:origin,
   PAYMENT_LIVE_APPROVED:'true',PAYMENT_LIVE_SALES_ENABLED:'true',
   TOSS_LIVE_CLIENT_KEY:'live_ck_dummy',TOSS_LIVE_SECRET_KEY:'live_sk_dummy',
   LIVE_RECOVERY_RESEND_API_KEY:'mock-live-mail',LIVE_RECOVERY_FROM_EMAIL:'sender@example.test',
@@ -61,8 +61,9 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
   const endpoint=new URL(url);
   if(endpoint.hostname==='blob.example.test'){
    const key=decodeURIComponent(endpoint.pathname);
-   assert.match(key,/halmae-live-(orders|finance)/);
+   assert.match(key,/halmae-(live-(orders|finance)|admin-live)/);
    const verb=options.method;
+   if(verb==='delete'){records.delete(key);return new Response(null,{status:200});}
    if(verb==='put'){
     if(new Headers(options.headers).get('if-none-match')==='*' && records.has(key)) return new Response(null,{status:412});
     records.set(key,JSON.parse(options.body));return new Response(null,{status:200});
@@ -92,6 +93,8 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
   }
   return provider?Response.json(provider):new Response(null,{status:404});
  });
+ assert.equal((await order(request({...birth,immediateDelivery:false}))).status,400);
+ assert.equal((await order(request({...birth,policyVersion:'old-version'}))).status,400);
  const attempts=await Promise.all([order(request(birth)),order(request(birth))]);
  assert.ok(attempts.every(response=>response.ok));
  const cookie=attempts[0].headers.get('set-cookie').split(';')[0];
@@ -145,17 +148,24 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  const refund={action:'refund',orderId:first.orderId,reason:'고객 요청'};
  assert.equal((await operations(request(refund))).status,403);
  delete process.env.PAYMENT_REFUNDS_APPROVED;
- assert.equal((await operations(request(refund,{token:operator}))).status,403);
+ assert.equal((await operations(request(refund,{token:operator}),{ip:'192.0.2.7'})).status,403);
  assert.equal(refunds.length,0);
  process.env.PAYMENT_REFUNDS_APPROVED='true';
- assert.equal((await operations(request(refund,{token:operator}))).status,200);
- assert.equal((await operations(request(refund,{token:operator}))).status,200);
+ assert.equal((await operations(request(refund,{token:operator}),{ip:'192.0.2.7'})).status,200);
+ assert.equal((await operations(request(refund,{token:operator}),{ip:'192.0.2.7'})).status,200);
  assert.equal(refunds.length,1);
  assert.equal((await webhook(request(event,{url:hookUrl}))).status,200);
+ process.env.PAYMENT_WEBHOOK_PUBLIC='true';
+ process.env.PAYMENT_WEBHOOK_ALLOWED_IPS='192.0.2.12';
+ assert.equal((await webhook(request(event),{ip:'192.0.2.111'})).status,403);
+ assert.equal((await webhook(request(event,{url:hookUrl}),{ip:'192.0.2.12'})).status,400);
+ assert.equal((await webhook(request(event),{ip:'192.0.2.12'})).status,200);
+ delete process.env.PAYMENT_WEBHOOK_PUBLIC;
  assert.equal((await report(request(null,{token:paid.token}))).status,403);
  assert.equal((await access(request({orderId:first.orderId},{cookie}))).status,403);
  const finance=[...records].filter(([key])=>key.includes('/finance/')).map(([,value])=>value);
  assert.deepEqual(finance.map(row=>row.status),['DONE','CANCELED']);
+ assert.equal(finance[0].policyAcceptance.version,birth.policyVersion);
  assert.equal(finance.at(-1).transactionKey,'cancel-transaction');
  assert.doesNotMatch(JSON.stringify(finance),/1988-10-08|고객 요청/);
 });

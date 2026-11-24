@@ -16,7 +16,7 @@ export async function saveLiveSnapshot(config,store,order,payment){
  if(!matchesLivePayment(config,order,payment)) return false;
  const record={
   orderId:order.orderId,merchantId:payment.mId,paymentKey:payment.paymentKey,status:payment.status,currency:payment.currency,method:payment.method,
-  amount:payment.totalAmount,balanceAmount:payment.balanceAmount,approvedAt:payment.approvedAt??null,
+  amount:payment.totalAmount,balanceAmount:payment.balanceAmount,approvedAt:payment.approvedAt??null,policyAcceptance:order.policyAcceptance??null,
   transactionKey:payment.lastTransactionKey??null,
   cancellations:(Array.isArray(payment.cancels)?payment.cancels:[]).map(item=>({
    transactionKey:item.transactionKey,cancelAmount:item.cancelAmount,canceledAt:item.canceledAt,cancelStatus:item.cancelStatus,

@@ -3,6 +3,7 @@ import {DAY,paymentConfig} from './payment-config.mjs';
 import {orderPattern,storedExpiry} from './entitlement.mjs';
 import {findPayment} from './toss.mjs';
 import {matchesLivePayment,saveLiveSnapshot} from './live-ledger.mjs';
+import {purgeArchive} from '../lib/legal-records.mjs';
 import {notifyRetention} from '../lib/retention-alert.mjs';
 import {eraseCustomerOrder} from '../lib/live-privacy.mjs';
 
@@ -43,6 +44,11 @@ export async function sweepLive(provider,customer,ops,now=Date.now()){
     if(entry?.expiresAt+DAY<=now) await store.delete(key);
    }
   }
+ }
+ if(process.env.LIVE_FINANCE_PURGE_APPROVED==='true'){
+  const result=await purgeArchive(financeStore(),now);
+  counts.archivedRecordsDeleted=result.deleted;
+  counts.failed+=result.failed;
  }
  await ops.setJSON('retention/latest',{...counts,at:now});
  return counts;

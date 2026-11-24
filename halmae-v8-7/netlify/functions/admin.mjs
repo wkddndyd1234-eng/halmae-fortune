@@ -1,23 +1,25 @@
+import {consumeTotp} from '../lib/ops-access.mjs';
 import {adminConfig,audit,cookie,createSession,passwordMatches,rateAllowed,sessionFor} from '../lib/admin-auth.mjs';
-import {compareSettlements,dashboard,safeOrder} from '../lib/admin-ledger.mjs';
+import {compareFullRange,compareSettlements,dashboard,safeOrder,scan} from '../lib/admin-ledger.mjs';
 import {orderPattern,verifiedPurchase} from './entitlement.mjs';
 import {matchesCredential} from './live-ledger.mjs';
 import {executeOperation} from './payment-operations.mjs';
 import recovery from './recovery.mjs';
-import {json,orders,parse} from './shared.mjs';
+import {financeStore,json,orders,parse} from './shared.mjs';
+import {migrateFinance,putLegalIndex} from '../lib/legal-records.mjs';
 import {eraseCustomerOrder} from '../lib/live-privacy.mjs';
 
 const denied=()=>json({error:'인증 또는 요청 정보를 확인해 주세요.'},403);
-export default async req=>{
+export default async (req,context)=>{
  let config;
  try{
-  config=adminConfig(req);
+  config=adminConfig(req,context);
   if(!config) return json({error:'운영 화면이 비활성화되어 있습니다.'},503);
   const {provider,store}=config;
   if(req.method==='GET'){
    const session=await sessionFor(req,config);
    return session?json({csrf:session.csrf,mode:provider.mode,
-    refundsEnabled:provider.mode==='live'&&process.env.PAYMENT_REFUNDS_APPROVED==='true'}):denied();
+    refundsEnabled:provider.mode==='live'&&process.env.PAYMENT_REFUNDS_APPROVED==='true'}):json({loginRequired:true,mfaRequired:Boolean(config.mfa)},403);
   }
   if(req.method!=='POST') return json({error:'Method not allowed'},405);
   if(req.headers.get('origin')!==provider.origin ||
@@ -26,10 +28,10 @@ export default async req=>{
   if(!input||typeof input!=='object') return denied();
   const {action,orderId}=input;
   if(action==='login'){
-   if(!await rateAllowed(store,'login',8,15*60_000)){
+   if(!await rateAllowed(store,'login/'+config.ip,8,15*60_000)){
     return json({error:'로그인 시도 제한에 도달했습니다. 잠시 후 다시 시도해 주세요.'},429);
    }
-   if(!await passwordMatches(input.password,config.hash)){
+   if(!await passwordMatches(input.password,config.hash) || config.mfa && !await consumeTotp(store,config.mfa,input.code)){
     await audit(store,'login','denied');
     return denied();
    }
@@ -51,12 +53,43 @@ export default async req=>{
    response.headers.set('Set-Cookie',cookie());
    return response;
   }
-  if(action==='dashboard'||action==='compare'){
+  if(action==='dashboard'){
    const data=await dashboard(provider);
-   if(action==='dashboard') return json({...data,retention:await store.get('retention/latest',{type:'json'})});
+   const hooks=await scan(store,'webhook/issue/',150);
+   for(const {key} of hooks.records){
+    data.issues.push({orderId:key.split('/').at(-1),issuance:'웹훅 재대조 필요'});
+   }
+   return json({...data,retention:await store.get('retention/latest',{type:'json'})});
+  }
+  if(action==='compare'){
    if(!Array.isArray(input.rows)||input.rows.length>500) return json({error:'최대 500개 거래를 입력해 주세요.'},400);
-   try {return json({issues:compareSettlements(data.finance,input.rows),truncated:data.truncated});}
-   catch {return json({error:'대조 데이터 형식을 확인해 주세요.'},400);}
+   try{
+    if(input.scope){
+     if(provider.mode!=='live') return denied();
+     return json({issues:await compareFullRange(provider,input.rows,input.scope),truncated:false});
+    }
+    const data=await dashboard(provider);
+    return json({issues:compareSettlements(data.finance,input.rows),truncated:data.truncated});
+   }catch{return json({error:'대조 자료 형식과 저장소 상태를 확인해 주세요.'},400);}
+  }
+  if(['migrate-finance','legal-index','legal-hold'].includes(action)){
+   if(provider.mode!=='live') return denied();
+   await audit(store,action,'requested');
+   const archive=financeStore();
+   if(action==='migrate-finance'){
+    const result=await migrateFinance(orders(provider),archive);
+    await audit(store,action,result.mismatch?'needs-review':'ok');
+    return json(result);
+   }
+   if(action==='legal-index'){
+    if(!await putLegalIndex(archive,input)) return json({error:'기록 유형, 참조 번호와 종료일을 확인해 주세요.'},400);
+   }else{
+    if(!/^[A-Za-z0-9_-]{1,80}$/.test(input.reference??'')||typeof input.hold!=='boolean') return denied();
+    if(input.hold) await archive.setJSON('hold/'+input.reference,{at:new Date().toISOString()});
+    else await archive.delete('hold/'+input.reference);
+   }
+   await audit(store,action,'ok');
+   return json({ok:true});
   }
   if(action==='retry-retention'){
    if(provider.mode!=='live'||process.env.LIVE_RETENTION_ENABLED!=='true') return denied();
@@ -79,6 +112,7 @@ export default async req=>{
    if(provider.mode!=='live'||action==='refund'&&input.confirmation!==orderId) return denied();
    await audit(store,action,'requested',orderId);
    const result=await executeOperation(provider,{action,orderId,reason:input.reason});
+   if(result.ok && action==='reconcile') await store.delete('webhook/issue/'+orderId);
    await audit(store,action,result.ok?'ok':'needs-review',orderId);
    return result;
   }

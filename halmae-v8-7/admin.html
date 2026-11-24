@@ -11,6 +11,7 @@
  <p id="status" role="status" aria-live="polite"></p>
  <form id="login">
   <label>운영자 비밀번호 <input name="password" type="password" required maxlength="256" autocomplete="current-password"></label>
+  <label id="mfa-field" hidden>인증 앱 코드 <input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code"></label>
   <button>로그인</button>
  </form>
  <section id="console" hidden>
@@ -35,9 +36,19 @@
   <section class="panel"><h2>매출과 환불</h2><div id="sales"></div></section>
   <section class="panel"><h2>복구와 점검</h2><p id="retention"></p><button id="retry-retention" type="button">삭제 작업 다시 실행</button><div id="issues"></div></section>
   <section class="panel"><h2>정산 대조</h2>
-   <form id="compare"><label>거래 자료 붙여넣기 <small>첫 줄은 orderId,balanceAmount,transactionKey이고 최대 500건입니다.</small>
+   <p class="hint">한국 시간 기준 승인일 범위의 전체 비교 파일을 준비한 경우에만 시작일과 종료일을 입력하세요.</p>
+   <button id="migrate" type="button" hidden>기존 금융 기록 검증·복사</button>
+   <form id="compare"><label>전체 비교 시작일 <input name="from" type="date"></label><label>전체 비교 종료일 <input name="to" type="date"></label><label>거래 자료 붙여넣기 <small>첫 줄은 orderId,balanceAmount,transactionKey이고 최대 500건입니다.</small>
    <textarea name="csv" rows="4" maxlength="80000" required></textarea></label><button>대조하기</button></form>
    <div id="mismatches"></div>
+  </section>
+  <section class="panel" id="legal-tools" hidden><h2>법정 보존 기록</h2>
+   <form id="legal-index"><label>기록 종류<select name="kind"><option value="contract">계약·철회</option><option value="dispute">불만·분쟁</option><option value="advertising">표시·광고</option></select></label>
+   <label>내부 참조 번호<input name="reference" required maxlength="80" pattern="[A-Za-z0-9_-]+"></label>
+   <label>기록 기준일<input name="closedOn" type="date" required></label><button>보존 일정 등록</button></form>
+   <form id="legal-hold"><label>보존 예외 참조 번호<input name="reference" required maxlength="80" pattern="[A-Za-z0-9_-]+"></label>
+   <label>보존 상태<select name="hold"><option value="yes">자동 파기 보류</option><option value="no">보류 해제</option></select></label><button>보존 상태 적용</button></form>
+   <p class="hint">이 화면에는 참조 번호와 보존 날짜만 등록합니다. 관련 원문은 승인된 제한 저장소에서 별도로 관리하세요.</p>
   </section>
   <section class="panel"><h2>주문 목록</h2><div id="orders"></div></section>
  </section>

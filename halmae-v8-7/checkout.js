@@ -16,6 +16,7 @@ const endpoint = '/.netlify/functions/';
 let adminOrderId;
 let busy = false;
 let live = false;
+let approvedPolicyVersion;
 
 form.elements.birthDate.max = todayInKorea();
 const calendarType=form.elements.calendarType;
@@ -90,9 +91,13 @@ clearStorage.addEventListener('click',async()=>{
 });
 fetch(endpoint+'payment',{cache:'no-store'})
   .then(response => response.ok ? response.json() : {enabled:false})
-  .then(({enabled,recoveryEnabled,adminPreview,paymentMode,legal}) => {
+  .then(({enabled,recoveryEnabled,adminPreview,paymentMode,legal,policyVersion}) => {
     live=paymentMode==='live';
     if(live && enabled){
+      approvedPolicyVersion=policyVersion;
+      document.querySelector('#immediate-delivery').hidden=false;
+      form.elements.immediateDelivery.disabled=false;
+      form.elements.immediateDelivery.required=true;
       for(const [id,url] of Object.entries(legal)) document.querySelector('a[href="/'+id+'.html"]').href=url;
       document.querySelector('#consent-copy').textContent='을 읽었고 보고서 발급을 위한 정보 처리에 동의합니다.';
       buy.textContent='39,900원 결제하기';
@@ -157,7 +162,7 @@ form.addEventListener('submit', async event => {
     const order = await post('order',{
       name:data.name,birthDate:data.birthDate,birthTime:data.birthTime,gender:data.gender,calendarType:data.calendarType,isLeapMonth:data.isLeapMonth==='true',
       consent:form.elements.consent.checked,channel:customer?(live?'toss-live':'toss-test'):'admin-demo',
-      ...(customer&&live?{checkoutAttempt:checkoutAttempt()}:{}),
+      ...(customer&&live?{checkoutAttempt:checkoutAttempt(),policyVersion:approvedPolicyVersion,immediateDelivery:form.elements.immediateDelivery.checked}:{}),
       ...(customer && form.elements.recoveryConsent.checked ?
         {email:data.email,recoveryConsent:true} : {}),
     });

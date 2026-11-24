@@ -14,6 +14,11 @@ async function api(body){
  const response=await fetch(endpoint,body?{method:'POST',headers:{'Content-Type':'application/json',
   ...(session?{'X-CSRF-Token':session.csrf}:{})},body:JSON.stringify(body),cache:'no-store'}:{cache:'no-store'});
  const result=await response.json();
+ if(result.loginRequired){
+  byId('mfa-field').hidden=!result.mfaRequired;
+  login.elements.code.required=result.mfaRequired;
+  throw Error('로그인이 필요합니다.');
+ }
  if(!response.ok) throw Error(result.error);
  return result;
 }
@@ -45,6 +50,8 @@ async function start(){
   byId('support').elements.action.querySelector('[value="'+action+'"]').disabled=session.mode!=='live';
  }
  byId('retry-retention').hidden=session.mode!=='live';
+ byId('migrate').hidden=session.mode!=='live';
+ byId('legal-tools').hidden=session.mode!=='live';
  await refresh();
 }
 async function run(control,work){
@@ -58,8 +65,9 @@ login.addEventListener('submit',event=>{
  event.preventDefault();
  run(event.submitter,async()=>{
   const password=login.elements.password.value;
+  const code=login.elements.code.value;
   login.reset();
-  await api({action:'login',password});
+  await api({action:'login',password,code});
   await start();
  });
 });
@@ -110,20 +118,39 @@ byId('retry-retention').addEventListener('click',event=>run(event.currentTarget,
  status.textContent='삭제 '+result.erased+'건 · 재시도 필요 '+result.failed+'건';
  await refresh();
 }));
+byId('migrate').addEventListener('click',event=>run(event.currentTarget,async()=>{
+ const result=await api({action:'migrate-finance'});
+ status.textContent='복사 '+result.copied+'건 · 기존 '+result.alreadyPresent+'건 · 불일치 '+result.mismatch+'건';
+}));
 byId('compare').addEventListener('submit',event=>{
  event.preventDefault();
  run(event.submitter,async()=>{
-  const [header,...lines]=event.currentTarget.elements.csv.value.trim().split(/\r?\n/);
+  const {csv,from,to}=event.currentTarget.elements;
+  if(Boolean(from.value)!==Boolean(to.value)) throw Error('시작일과 종료일을 모두 입력해 주세요.');
+  const [header,...lines]=csv.value.trim().split(/\r?\n/);
   if(header!=='orderId,balanceAmount,transactionKey') throw Error('CSV 첫 줄을 확인해 주세요.');
   const rows=lines.map(line=>{
    const [orderId,balance,transactionKey,...rest]=line.split(',');
    if(rest.length || !/^\d+$/.test(balance??'') || !transactionKey) throw Error('CSV 거래 줄의 형식을 확인해 주세요.');
    return {orderId,balanceAmount:Number(balance),transactionKey};
   });
-  const result=await api({action:'compare',rows});
+  const result=await api({action:'compare',rows,...(from.value?{scope:{from:from.value,to:to.value}}:{})});
   fill('mismatches',result.issues.map(row=>[row.orderId,row.issue]),'입력한 거래에서 불일치를 찾지 못했습니다.');
  });
 });
+for(const action of ['legal-index','legal-hold']){
+ byId(action).addEventListener('submit',event=>{
+  event.preventDefault();
+  const form=event.currentTarget;
+  const data=Object.fromEntries(new FormData(form));
+  if(action==='legal-hold') data.hold=data.hold==='yes';
+  run(event.submitter,async()=>{
+   await api({action,...data});
+   status.textContent='보존 설정을 적용했습니다.';
+   form.reset();
+  });
+ });
+}
 byId('export').addEventListener('click',event=>run(event.currentTarget,async()=>{
  if(!data||data.truncated) throw Error('자료를 모두 불러온 뒤 저장해 주세요.');
  const columns=['orderId','status','amount','balanceAmount','approvedAt','transactionKey'];

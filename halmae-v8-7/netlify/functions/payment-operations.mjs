@@ -1,3 +1,4 @@
+import {allowedOperatorIp} from '../lib/ops-access.mjs';
 import {createHash} from 'node:crypto';
 import {eligibleOrder,orderPattern,recordApproval} from './entitlement.mjs';
 import {matchesCredential,isCancelled,liveRevoked,matchesLivePayment,saveLiveSnapshot} from './live-ledger.mjs';
@@ -5,10 +6,10 @@ import {paymentConfig} from './payment-config.mjs';
 import {json,orders,parse} from './shared.mjs';
 import {approvedPayment,cancelPayment,findPayment} from './toss.mjs';
 
-export default async req=>{
+export default async (req,context)=>{
  if(req.method!=='POST') return json({error:'Method not allowed'},405);
  const config=paymentConfig(req);
- if(config?.mode!=='live' || !matchesCredential(req.headers.get('authorization')?.replace(/^Bearer /,''),
+ if(config?.mode!=='live' || !allowedOperatorIp(context?.ip) || !matchesCredential(req.headers.get('authorization')?.replace(/^Bearer /,''),
     process.env.PAYMENT_LIVE_OPERATOR_TOKEN)) return json({error:'Operations unavailable'},403);
  const {action,orderId,reason}=await parse(req)??{};
  if(!['reconcile','refund'].includes(action) || typeof orderId!=='string' || !orderPattern.test(orderId) ||
