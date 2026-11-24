@@ -31,12 +31,15 @@ const hidden={
 const clashes={子:'午',丑:'未',寅:'申',卯:'酉',辰:'戌',巳:'亥'};
 const combines={子:'丑',寅:'亥',卯:'戌',辰:'酉',巳:'申',午:'未'};
 const opposite=(map,a,b)=>map[a]===b||map[b]===a;
+const harms={子:'未',丑:'午',寅:'巳',卯:'辰',申:'亥',酉:'戌'};
+const punishments=['子卯','寅巳','巳申','申寅','丑戌','戌未','未丑'];
+export function pairRelations(a,b){return [opposite(clashes,a,b)?'충':null,opposite(combines,a,b)?'육합':null,opposite(harms,a,b)?'해':null,punishments.some(p=>p===a+b||p===b+a)||(a===b&&'辰午酉亥'.includes(a))?'형':null].filter(Boolean);}
+const transitRelations=(pillars,p)=>pillars.flatMap((n,i)=>n?pairRelations(n[1],p[1]).map(type=>({position:['년','월','일','시'][i],natal:n[1],transit:p[1],type})):[]);
 export function branchRelations(pillars){
  const entries=pillars.map((p,i)=>p?{position:['년','월','일','시'][i],branch:p[1]}:null).filter(Boolean),out=[];
  for(let i=0;i<entries.length;i++)for(let j=i+1;j<entries.length;j++){
   const a=entries[i],b=entries[j];
-  if(opposite(clashes,a.branch,b.branch))out.push({type:'충',a:a.position,b:b.position,branches:a.branch+b.branch});
-  if(opposite(combines,a.branch,b.branch))out.push({type:'육합',a:a.position,b:b.position,branches:a.branch+b.branch});
+  for(const type of pairRelations(a.branch,b.branch))out.push({type,a:a.position,b:b.position,branches:a.branch+b.branch});
  }
  return out;
 }
@@ -61,7 +64,7 @@ export function fortuneCycles(input){
  const startAgeYears=boundary===null||boundary===undefined?null:Math.abs(boundary-born)/86400000/3;
  const decadePillars=startAgeYears===null?[]:Array.from({length:8},(_,i)=>({
   order:i+1,startAge:Number((startAgeYears+i*10).toFixed(2)),
-  pillar:sexagenary(monthIndex+(forward?i+1:-i-1))
+  pillar:sexagenary(monthIndex+(forward?i+1:-i-1)),tenGod:tenGod(saju.dayStem,sexagenary(monthIndex+(forward?i+1:-i-1))[0])
  }));
  const yearPillar=sexagenary(mod(2027-1984,60));
  const monthly=Array.from({length:12},(_,i)=>{
@@ -72,15 +75,16 @@ export function fortuneCycles(input){
   const monthStem=mod((mod(solarYear-1984,60)%10%5)*2+2+monthOrder,10);
   const pillar=stems[monthStem]+branches[mod(monthOrder+2,12)];
   return {month:i+1,start:new Date(start).toISOString(),end:new Date(end).toISOString(),
-   pillar,tenGod:tenGod(saju.dayStem,pillar[0]),
+   pillar,tenGod:tenGod(saju.dayStem,pillar[0]),relations:transitRelations(saju.pillars,pillar),
    dayBranchClash:opposite(clashes,saju.dayBranch,pillar[1]),
    dayBranchCombine:opposite(combines,saju.dayBranch,pillar[1])};
  });
  return {saju,hiddenStems:saju.pillars.map(p=>p?hidden[p[1]]:null),
+  hiddenTenGods:saju.pillars.map(p=>p?[...hidden[p[1]]].map(stem=>({stem,tenGod:tenGod(saju.dayStem,stem)})):[]),
   stemTenGods:saju.pillars.map((p,i)=>p&&i!==2?tenGod(saju.dayStem,p[0]):null),
   relations:branchRelations(saju.pillars),
   luck:{direction:forward===null?'미상':forward?'순행':'역행',startAgeYears,decades:decadePillars,
    caveat:'절입 3일을 1년으로 환산한 근사 대운 기산이며, 절기 경계·태양시·자시 관례와 학파별 계산 차이가 있습니다.'},
-  annual:{year:2027,pillar:yearPillar,tenGod:tenGod(saju.dayStem,yearPillar[0])},
+  annual:{year:2027,pillar:yearPillar,tenGod:tenGod(saju.dayStem,yearPillar[0]),relations:transitRelations(saju.pillars,yearPillar),start:new Date(term(2027,2)).toISOString()},
   monthly,verified:false};
 }
