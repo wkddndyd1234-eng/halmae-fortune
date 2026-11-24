@@ -1,9 +1,7 @@
 import {buildFortuneReport} from './fortune-report.mjs';
-import {addChapterInterpretations,readStems} from './interpretation.mjs';
 import {orders,json,verify,error} from './shared.mjs';
 import {paymentConfig} from './payment-config.mjs';
 import {eligibleOrder,REPORT_SCOPE,verifiedPurchase} from './entitlement.mjs';
-import {calculateSaju} from './saju.mjs';
 const weekdays=['일','월','화','수','목','금','토'];
 const seasonData=[
  {name:'겨울의 깊은 결',months:[12,1,2],symbol:'머무름과 응축',strength:'오래 관찰하고 필요한 것을 남기는 태도',caution:'준비가 길어져 첫걸음을 늦추는 습관',question:'충분히 준비했다는 신호를 무엇으로 정할까?'},
