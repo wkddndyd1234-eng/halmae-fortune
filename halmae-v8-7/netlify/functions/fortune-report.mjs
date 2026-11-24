@@ -64,7 +64,7 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
   ...(f.annual.decades.length?[luckText(f.annual.decades)]:[]),
  ]));
  f.monthly.forEach((m,i)=>{
-  const relation=m.dayBranchClash?'일지와 충하는 변화의 상징':m.dayBranchCombine?'일지와 육합하는 연결의 상징':'일지와 직접적인 충·육합이 없는 흐름';
+  const relation=m.dayBranchClash?'일지의 충이 건네는 변화 이야기':m.dayBranchCombine?'일지의 육합이 건네는 인연 이야기':'이달의 절기와 네 일간이 만나는 자리';
   const groups=monthlyGroups(f,m,i);
   chapters.push({...section('2027 · '+String(i+1).padStart(2,'0')+'월',`${i+1}월 · ${m.pillar}의 문`,`${m.tenGod} · ${relation}`,groups.flatMap(g=>g.paragraphs),
    [`월운 간지: ${m.pillar}`,`일간 기준 십성: ${m.tenGod}`,`절기 구간: ${fmt(m.start)}부터 ${fmt(m.end)} 직전까지 · 한국 시간`]),groups});

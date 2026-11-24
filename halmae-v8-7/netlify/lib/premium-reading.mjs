@@ -101,13 +101,13 @@ export function monthlyGroups(f,month,index){
    workScene;
  return [
   group('총운',`${heading}를 펼쳐 보렴. ${season}`,
-   `달의 천간 ${month.pillar[0]}과 네 일간 ${s.dayStem}을 대조하면 ${month.tenGod} 관계가 나와. ${role} ${overallScene}`),
+   `이달의 ${month.pillar[0]} 곁에 네 일간 ${s.dayStem}을 놓으면, 할매 장부에선 ${month.tenGod}의 이야기가 열린단다. ${role} ${overallScene}`),
   group('재물운',`재물 쪽에서 ${month.tenGod}의 상징을 읽을 때는 ‘${money}’부터 찾아 보렴. ${moneyRole}`,moneyScene),
   group('직업운',`일터에서 할매가 네게 건네고 싶은 화두는 ‘${work}’란다. ${workRole}`,workReading),
   group('사업운',businessScenes[index]),
   group('애정운',`애정에서는 ‘${love}’를 떠올려 보렴. ${loveRole}`,
    dayRelations.length?`네 일지 ${s.dayBranch}와 달의 지지 ${month.pillar[1]} 사이에서 ${dayRelations.map(item=>item.type).join('·')}을 확인했구나. ${dayRelations.map(({type})=>relationReading[type]).join(' ')} ${loveScene}`:
-    `네 일지 ${s.dayBranch}와 달의 지지 ${month.pillar[1]}에서 직접 확인되는 합충형해는 없어. ${loveScene}`),
+    `이달의 ${month.pillar[1]}과 일지 ${s.dayBranch} 사이에 특별히 얽힌 글자는 없구나. 이 대목은 절기의 그림을 따라 천천히 읽어 보렴. ${loveScene}`),
   group('주의할 점',`‘${caution}’을 조심해서 살펴봐. ${cautionScene}`,
    relations.length?
     `이번 달 ${month.pillar[1]}과 장부에 펼친 자리를 대조하면 ${relations.map(({position,natal,type})=>position+'지 '+natal+'의 '+type).join(' · ')}이란다. 각 관계가 어느 자리에서 보이는지 구별해. ${relationReading[relations[0].type]}`:

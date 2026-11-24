@@ -50,7 +50,7 @@ export function readFreeInsights(dayPillar,counts,relationshipNote='',monthBranc
     introduction:`어디 보자… 할매가 펼친 장부에 ${image}의 상징이 있구나. 그 안에 담긴 이야기를 천천히 들려주마.`,
     temperament:`할매는 ${name}에서 ‘${strength}’을 떠올려. ${scene}`,
     balance:`${tension} ${balance}`,
-    work:`겉에 보이는 오행은 ${leading.join('·')}이 가장 많고 각각 ${topCount}개란다. ${work} 개수로 성공이나 강약을 정하지는 않아.`,
-    relationships:`가까운 인연을 읽는 자리에는 ${branch}가 있구나. ${branchQuestions[branch]}${relationshipNote?' '+relationshipNote:''}`,
+    work:`겉글자에서 가장 자주 보이는 기운은 ${leading.join('·')} 쪽이란다. 그 이름으로 세어 보면 ${leading.length===1?'모두':'각각'} ${topCount}글자야. ${work} 개수로 성공이나 강약을 정하지는 않아.`,
+    relationships:`가까운 인연을 읽는 자리의 글자는 ${branch}란다. ${branchQuestions[branch]}${relationshipNote?' '+relationshipNote:''}`,
   };
 }

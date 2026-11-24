@@ -38,6 +38,7 @@ test('메일 복구는 주문 주소의 수신자만 사용하며 새 브라우�
         if (new Headers(opts.headers).get('if-none-match')==='*' && records.has(key)) return new Response(null,{status:412});
         records.set(key,JSON.parse(opts.body)); return new Response(null,{status:200});
       }
+      if(opts.method==='delete'){records.delete(key);return new Response(null,{status:200});}
       return records.has(key)?Response.json(records.get(key)):new Response(null,{status:404});
     }
     if(hostname==='api.resend.com'){
@@ -75,6 +76,11 @@ test('메일 복구는 주문 주소의 수신자만 사용하며 새 브라우�
   assert.equal(mails.length,0);
   assert.equal((await recoveryRequest(email,notOptedIn.orderId)).status,202);
   assert.equal(mails.length,0);
+
+  // An early recovery request can arrive before Toss finalizes approval.
+  assert.equal((await recoveryRequest(email)).status,202);
+  assert.equal(mails.length,0);
+  assert.equal(records.size,3);
 
   const paid={orderId,paymentKey:'key-local',status:'DONE',currency:'KRW',method:'카드',
     totalAmount:39900,balanceAmount:39900,approvedAt:new Date(Date.now()-364*DAY).toISOString()};

@@ -63,7 +63,7 @@ export function annualReflection(saju,annual){
  const question=meeting?
   `정미의 未와 네 ${meeting.position}지 ${meeting.natal} 사이엔 ${meeting.type}도 보여. 그 자리에 얽힌 약속을 오래 지켜야 할 몫과 다시 상의할 몫으로 나눠 보는 거야.`:
   '정미의 未는 여름 끝자락의 흙을 떠올리게 한단다. 한꺼번에 거두려 하지 말고, 지금 맡은 일 가운데 조금 더 시간을 주고 싶은 몫을 골라 보렴.';
- return `정미년의 丁과 네 일간 ${saju.dayStem}의 관계를 살피면 ${annual.tenGod}의 관계가 나와. ${question} 장부 속 상징은 네가 실제로 지킬 수 있는 약속을 돌아보는 데 써 보렴.`;
+ return `정미년의 등불 丁을 네 일간 ${saju.dayStem} 곁에 놓아 보렴. 옛 장부에서는 두 글자의 만남을 ${annual.tenGod}의 상징으로 읽는단다. ${question} 장부 속 상징은 네가 실제로 지킬 수 있는 약속을 돌아보는 데 써 보렴.`;
 }
 
 export function cyclesForSaju(saju){

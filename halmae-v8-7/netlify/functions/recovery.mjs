@@ -36,7 +36,13 @@ export default async req => {
         const rateKey = 'recovery/rate/'+orderId+'/'+windowEnd;
         const limit = await store.setJSON(rateKey,{expiresAt:windowEnd},{onlyIfNew:true});
         if (!limit.modified) return accepted();
-        const purchase = await verifiedPurchase(config,store,order);
+        let purchase;
+        try {
+          purchase = await verifiedPurchase(config,store,order);
+        } finally {
+          // Before an email is attempted, a later approval or retry may recover this order.
+          if (!purchase) await store.delete(rateKey);
+        }
         if (purchase) await sendRecovery(mail,purchase,email,rateKey);
       } catch { /* Return the same public response for unmatched, expired and failed requests. */ }
       return accepted();

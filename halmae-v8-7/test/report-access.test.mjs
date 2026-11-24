@@ -8,7 +8,8 @@ import {sign} from '../netlify/functions/shared.mjs';
 const birth = {name:'테스트', consent:true, birthDate:'2000-01-01', gender:'female'};
 const demoCode = 'local-demo-code';
 const reportSecret = 'local-test-signing-secret-32-characters';
-const post = body => new Request('https://example.test', {
+const preview='https://test-v87--halmae-fortune-v87-preview.netlify.app';
+const post = (body,url=preview) => new Request(url, {
   method:'POST',
   headers:{'Content-Type':'application/json'},
   body:JSON.stringify(body),
@@ -46,6 +47,7 @@ test('양력 테스트 주문과 관리자 보고서 발급만 허용', async t 
   assert.equal((await issueDemo(post({orderId,code:demoCode}))).status,503);
 
   process.env.DEMO_ACCESS_CODE = demoCode;
+  assert.equal((await issueDemo(post({orderId,code:demoCode},'https://example.test'))).status,403);
   assert.equal((await issueDemo(post({orderId,code:'wrong-code'}))).status,403);
   assert.equal((await issueDemo(post({orderId,code:demoCode}))).status,500);
   assert.equal(records.get(orderId).status,'pending');

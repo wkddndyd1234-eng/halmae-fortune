@@ -1,3 +1,4 @@
+import {saveBirthDraft} from './birth-handoff.js';
 import {checkoutKey,callbackKey,post,recordConversion,reportKey,rememberReport,forgetCheckout,forgetReport,recentOrder} from '/purchase.js';
 
 const status = document.querySelector('#status');
@@ -84,6 +85,7 @@ async function confirm() {
   try {
     const result = await post('payment',pending,checkout?.token);
     rememberReport(result);
+    saveBirthDraft(null);
     forgetCheckout();
     recordConversion('test_payment_success');
     showReport(result,{fresh:true});

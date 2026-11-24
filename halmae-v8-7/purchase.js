@@ -53,7 +53,9 @@ export async function post(name, body, token) {
   const response = await fetch('/.netlify/functions/'+name,{
     method:'POST',headers,body:JSON.stringify(body),
   });
-  const result = await response.json();
+  let result;
+  try { result = await response.json(); }
+  catch { throw Error('연결이 잠시 끊겼어요. 잠시 후 다시 시도해 주세요.'); }
   if (!response.ok) throw Error(result.error || '요청을 처리하지 못했습니다.');
   return result;
 }

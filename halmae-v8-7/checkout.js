@@ -105,7 +105,9 @@ fetch(endpoint+'payment',{cache:'no-store'})
       clearStorage.hidden = false;
       document.querySelector('#availability').textContent = '토스 테스트 결제 · 실제 청구 없음';
     }
-  }).catch(() => {});
+  }).catch(() => {
+    document.querySelector('#availability').textContent = '결제 가능 여부를 확인하지 못했어요. 잠시 후 새로고침해 주세요.';
+  });
 
 form.elements.recoveryConsent.addEventListener('change',()=>{
   const {email,recoveryConsent} = form.elements;
@@ -144,14 +146,15 @@ form.addEventListener('submit', async event => {
       ...(customer && form.elements.recoveryConsent.checked ?
         {email:data.email,recoveryConsent:true} : {}),
     });
-    saveBirthDraft(null);
-    prefill.hidden = true;
     if (!customer) {
+      saveBirthDraft(null);
+      prefill.hidden = true;
       adminOrderId = order.orderId;
       next.hidden = false;
       msg.textContent = '관리자 테스트 주문을 준비했습니다.';
       return;
     }
+    saveBirthDraft({name:data.name,birthDate:data.birthDate,birthTime:data.birthTime,gender:data.gender,calendarType:data.calendarType,isLeapMonth:data.isLeapMonth==='true'});
     recordConversion('test_order_created');
     forgetCheckout();
     rememberOrder(order.orderId);
