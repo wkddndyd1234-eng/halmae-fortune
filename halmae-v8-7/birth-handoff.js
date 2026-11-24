@@ -1,3 +1,4 @@
+import {lunarToSolar} from './lunar-conversion.mjs';
 const key = 'halmae-free-birth';
 const pad = value => String(value).padStart(2,'0');
 
@@ -16,8 +17,9 @@ export function validateBirthDraft(input,today=todayInKorea()) {
   if (name.length>20 || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate) ||
       birthDate<'1900-01-01' || birthDate>'2050-12-31' || (calendarType==='solar'&&birthDate>today) ||
       (birthTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(birthTime))) return null;
+  if(calendarType==='lunar'){try{if(lunarToSolar({birthDate,isLeapMonth}).solarDate>today)return null;}catch{return null;}}
   const instant = new Date(birthDate+'T00:00:00Z');
-  if (!Number.isFinite(instant.getTime()) || instant.toISOString().slice(0,10)!==birthDate) return null;
+  if (calendarType==='solar'&&(!Number.isFinite(instant.getTime()) || instant.toISOString().slice(0,10)!==birthDate)) return null;
   return {name,birthDate,birthTime,gender:input.gender,calendarType,isLeapMonth};
 }
 
