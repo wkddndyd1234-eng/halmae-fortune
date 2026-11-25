@@ -129,7 +129,7 @@ test('서버 승인과 현재 상태가 확인된 주문만 보고서를 발급�
   assert.equal(reading.chapters.length,26);
   assert.equal('token' in reading,false);
   assert.equal((await report(request(null,access.token,'https://example.test'))).status,403);
-  for (const mismatch of [{status:'CANCELED'},{balanceAmount:29900},{currency:'USD'},
+  for (const mismatch of [{status:'CANCELED'},{status:'PARTIAL_CANCELED',balanceAmount:29900},{balanceAmount:29900},{currency:'USD'},
      {totalAmount:1},{method:'가상계좌'},{orderId:'other'},{paymentKey:'other'}]) {
     tossPayment = {...nextApproval,...mismatch};
     assert.equal((await report(request(null,access.token))).status,403);

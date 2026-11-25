@@ -82,5 +82,5 @@ export function reportLink(order,now=Date.now(),config) {
   const expiresAt = Math.min(order.purchaseExpiresAt,Math.floor(now/300_000)*300_000+30*60_000);
   if (expiresAt<=now) return null;
   return {orderId:order.orderId,token:sign({orderId:order.orderId,scope:reportScope(config),exp:expiresAt},config?.tokenSecret),
-    expiresAt,purchaseExpiresAt:order.purchaseExpiresAt,...(config?.mode==='live'?{paymentMode:'live'}:{})};
+    expiresAt,purchaseExpiresAt:order.purchaseExpiresAt,...(order.contractTerms?{contractAvailable:true}:{}),...(config?.mode==='live'?{paymentMode:'live'}:{})};
 }

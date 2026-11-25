@@ -6,6 +6,7 @@ import {findPayment} from './toss.mjs';
 import {liveRevoked} from './live-ledger.mjs';
 import {normalizeBirth} from './saju.mjs';
 import {DAY,ORDER_NAME,PRICE,checkoutScope,paymentConfig} from './payment-config.mjs';
+import {contractTerms} from '../lib/commerce-contract.mjs';
 
 export default async req => {
  if (req.method !== 'POST') return json({error:'Method not allowed'},405);
@@ -24,6 +25,9 @@ export default async req => {
   if(config?.mode==='live' && (x.policyVersion!==config.policyVersion || x.immediateDelivery!==true)){
     return json({error:'최신 구매 안내를 확인하고 즉시 제공을 요청해 주세요.'},400);
   }
+ if(config?.mode==='live' && x.termsAccepted!==true){
+   return json({error:'이용약관과 구매 조건을 확인해 주세요.'},400);
+ }
   const attempt=typeof x.checkoutAttempt==='string'&&/^[a-f0-9-]{36}$/.test(x.checkoutAttempt)?x.checkoutAttempt:null;
   if (config?.mode==='live' && !attempt) return json({error:'주문 화면에서 다시 시도해 주세요.'},400);
   if (x.consent !== true) return json({error:'정보 처리에 동의해 주세요.'},400);
@@ -48,7 +52,7 @@ export default async req => {
     ...(credential?{browserHash:fingerprint('browser',credential,config)}:{})};
   const store=orders(config);
   let reused=false;
-  let order={...fields,status:'pending',createdAt};
+  let order={...fields,status:'pending',createdAt,...(config?{contractTerms:contractTerms(config)}:{})};
   if(live){
     const purchaseFields={...fields};
     delete purchaseFields.recoveryEmailHash;

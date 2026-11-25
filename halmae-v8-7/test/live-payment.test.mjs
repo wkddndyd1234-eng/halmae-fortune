@@ -18,7 +18,7 @@ const request=(body,{url=origin,token,cookie}={})=>new Request(url,{
  method:body?'POST':'GET',headers:{...(token?{Authorization:'Bearer '+token}:{}),...(cookie?{Cookie:cookie}:{})},
  ...(body?{body:JSON.stringify(body)}:{}),
 });
-const birth={channel:'toss-live',policyVersion:'2026.11-fixture',immediateDelivery:true,gender:'male',birthDate:'1988-10-08',consent:true,
+const birth={channel:'toss-live',policyVersion:'2026.11-fixture',immediateDelivery:true,termsAccepted:true,gender:'male',birthDate:'1988-10-08',consent:true,
  email:'buyer@example.test',recoveryConsent:true,checkoutAttempt:'12345678-abcd-4123-9123-0123456789ab'};
 
 test('운영 판매 승인·호스트·키·정책·운영 인증 정보가 모두 필요하다',async()=>{
@@ -96,11 +96,14 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
   return provider?Response.json(provider):new Response(null,{status:404});
  });
  assert.equal((await order(request({...birth,immediateDelivery:false}))).status,400);
+ assert.equal((await order(request({...birth,termsAccepted:false}))).status,400);
  assert.equal((await order(request({...birth,policyVersion:'old-version'}))).status,400);
  const attempts=await Promise.all([order(request(birth)),order(request(birth))]);
  assert.ok(attempts.every(response=>response.ok));
  const cookie=attempts[0].headers.get('set-cookie').split(';')[0];
  const [first,second]=await Promise.all(attempts.map(response=>response.json()));
+ const contractInput={action:'contract',orderId:first.orderId};
+ assert.equal((await access(request(contractInput,{cookie}))).status,404);
  assert.equal(first.orderId,second.orderId);
  assert.equal(first.checkoutToken,second.checkoutToken);
  assert.equal((await order(request({...birth,birthDate:'1992-01-21'}))).status,409);
@@ -117,6 +120,19 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  assert.equal((await resume.json()).paymentAlreadyApproved,true);
  const paid=await (await payment(request(call,{token:first.checkoutToken}))).json();
  assert.equal(paid.paymentMode,'live');
+ assert.equal(paid.contractAvailable,true);
+ assert.equal((await access(request(contractInput))).status,403);
+ const contractResponse=await access(request(contractInput,{cookie}));
+ assert.equal(contractResponse.headers.get('cache-control'),'no-store');
+ const contract=await contractResponse.json();
+ assert.equal(contract.policyVersion,birth.policyVersion);
+ assert.equal(contract.amount,39900);
+ assert.equal(contract.purchaseExpiresAt,paid.purchaseExpiresAt);
+ assert.doesNotMatch(JSON.stringify(contract),/1988-10-08|live-fixture-payment|recoveryEmailHash|browserHash|checkoutToken/);
+ const originalTermsUrl=process.env.LIVE_TERMS_URL;
+ process.env.LIVE_TERMS_URL='https://policy.example.test/next-terms';
+ assert.equal((await (await access(request(contractInput,{cookie}))).json()).policies.terms,originalTermsUrl);
+ process.env.LIVE_TERMS_URL=originalTermsUrl;
  assert.equal(paid.purchaseExpiresAt,Date.parse(provider.approvedAt)+365*86400000);
  assert.equal(approvals.length,1);
  assert.equal((await report(request(null,{token:paid.token,url:testOrigin}))).status,403);
@@ -170,6 +186,7 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  delete process.env.PAYMENT_WEBHOOK_PUBLIC;
  assert.equal((await report(request(null,{token:paid.token}))).status,403);
  assert.equal((await access(request({orderId:first.orderId},{cookie}))).status,403);
+ assert.deepEqual(await (await access(request(contractInput,{cookie}))).json(),contract);
  const finance=[...records].filter(([key])=>key.includes('/finance/')).map(([,value])=>value);
  assert.deepEqual(finance.map(row=>row.status),['DONE','CANCELED']);
  assert.equal(finance[0].policyAcceptance.version,birth.policyVersion);

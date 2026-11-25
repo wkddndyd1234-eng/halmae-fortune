@@ -16,6 +16,12 @@
   <button id="retry" type="button" hidden>결제 다시 확인</button>
   <p id="order-number" hidden></p>
   <p><a id="recover" href="/recovery.html" hidden>이메일로 테스트 보고서 복구</a></p>
+  <section id="contract" aria-labelledby="contract-heading" hidden>
+    <h2 id="contract-heading">구매 계약내용</h2>
+    <p>이 화면에서 내용을 확인하고 파일로 보관할 수 있어요.</p>
+    <div id="contract-body"></div>
+    <button id="save-contract" type="button">계약내용 파일로 저장</button>
+  </section>
   <section class="ledger-cover ledger-receipt" id="opened-ledger" hidden>
     <span class="ledger-seal" aria-hidden="true">開</span>
     <h2>장부의 봉인이 열렸어요</h2>
@@ -26,6 +32,7 @@
   <form id="renew">
     <label>이 브라우저에서 결제한 주문 번호<input name="orderId" maxlength="39" required autocomplete="off"></label>
     <button type="submit">새 열람 링크 받기</button>
+    <button id="read-contract" type="button">구매 계약내용 다시 보기</button>
   </form>
 </main>
 <script type="module" src="/payment-result.js"></script>

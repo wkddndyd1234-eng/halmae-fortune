@@ -4,6 +4,66 @@ import {checkoutKey,callbackKey,post,recordConversion,reportKey,rememberReport,f
 const status = document.querySelector('#status');
 const retry = document.querySelector('#retry');
 const renew = document.querySelector('#renew');
+const contract = document.querySelector('#contract');
+const contractBody = document.querySelector('#contract-body');
+const documentTime=new Intl.DateTimeFormat('ko-KR',{dateStyle:'long',timeStyle:'long',timeZone:'Asia/Seoul'});
+let contractText='';
+async function showContract(orderId) {
+  contract.hidden=true;
+  contractBody.replaceChildren();
+  contractText='';
+  const record=await post('access',{action:'contract',orderId});
+  const seller=record.seller;
+  const lines=[
+    ...(record.test?['테스트용 거래 기록 · 실제 청구 없음']:[]),
+    '주문번호 '+record.orderId,
+    '판매자 '+seller.name+' · 대표 '+seller.representative,
+    '사업자등록번호 '+seller.registration,
+    ...(seller.mailOrderNumber?['통신판매업 신고번호 '+seller.mailOrderNumber]:[]),
+    '사업장 주소 '+seller.address,
+    '고객 문의 '+[seller.email,seller.phone].filter(Boolean).join(' · '),
+    '상품 '+record.product,
+    '결제수단 카드 · 승인 금액 '+record.amount.toLocaleString('ko-KR')+'원',
+    '승인 시각 '+documentTime.format(new Date(record.approvedAt)),
+    '열람 만료 '+documentTime.format(record.purchaseExpiresAt),
+    record.delivery,record.withdrawal,'적용 정책 버전 '+record.policyVersion,
+  ];
+  for(const line of lines){
+    const p=document.createElement('p');
+    p.textContent=line;
+    contractBody.append(p);
+  }
+  const links=document.createElement('ul');
+  for(const [key,label] of [['terms','이용약관'],['privacy','개인정보처리방침'],['refund','취소·환불 안내']]){
+    const li=document.createElement('li');
+    const link=document.createElement('a');
+    link.href=record.policies[key];
+    link.textContent=label;
+    li.append(link);links.append(li);
+    lines.push(label+' '+record.policies[key]);
+  }
+  contractBody.append(links);
+  contractText=lines.join('\n');
+  contract.hidden=false;
+}
+document.querySelector('#save-contract').addEventListener('click',()=>{
+  if(!contractText) return;
+  const url=URL.createObjectURL(new Blob([contractText],{type:'text/plain;charset=utf-8'}));
+  const link=document.createElement('a');
+  link.href=url;link.download='halmae-contract.txt';link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+document.querySelector('#read-contract').addEventListener('click',async event=>{
+  if(!renew.elements.orderId.reportValidity()) return;
+  event.currentTarget.disabled=true;
+  const button=event.currentTarget;
+  try {
+    await showContract(renew.elements.orderId.value.trim());
+    contract.scrollIntoView();
+    status.textContent='보관된 구매 계약내용을 불러왔어요.';
+  }catch(error){status.textContent=error.message;}
+  finally{button.disabled=false;}
+});
 renew.elements.orderId.value = recentOrder() ?? '';
 renew.addEventListener('submit',async event=>{
   event.preventDefault();
@@ -11,7 +71,7 @@ renew.addEventListener('submit',async event=>{
   try {
     const result = await post('access',{orderId:renew.elements.orderId.value.trim()});
     rememberReport(result);
-    showReport(result);
+    await showReport(result);
   } catch(error) {
     status.textContent = error.message;
   } finally {
@@ -33,7 +93,9 @@ fetch('/.netlify/functions/recovery',{cache:'no-store'}).then(r=>r.json()).then(
   document.querySelector('#recover').hidden = !enabled;
 }).catch(()=>{});
 
-function showReport({token,orderId,purchaseExpiresAt,paymentMode},{fresh=false}={}) {
+async function showReport({token,orderId,purchaseExpiresAt,paymentMode,contractAvailable},{fresh=false}={}) {
+  document.querySelector('#opened-ledger').hidden=true;
+  if(contractAvailable) await showContract(orderId);
   const live=paymentMode==='live';
   if(live) document.querySelector('h1').textContent='결제 결과';
   const order = document.querySelector('#order-number');
@@ -66,7 +128,7 @@ if(params.get('restore')==='1' && recentOrder()){
     rememberReport(result);
     saveBirthDraft(null);
     forgetCheckoutAttempt();
-    showReport(result);
+    await showReport(result);
   }catch(error){status.textContent=error.message;}
 } else if (failure) {
   forgetCheckout();
@@ -84,7 +146,8 @@ if(params.get('restore')==='1' && recentOrder()){
     retry.addEventListener('click',confirm);
     await confirm();
   } else if (saved?.expiresAt > Date.now()) {
-    showReport(saved);
+    try { await showReport(saved); }
+    catch(error){status.textContent=error.message;}
   } else {
     forgetReport();
     status.textContent = '결제 완료일부터 365일 동안 웹 열람할 수 있습니다. 같은 브라우저에서 새 링크를 받거나 동의한 이메일로 복구해 주세요.';
@@ -101,7 +164,7 @@ async function confirm() {
     forgetCheckoutAttempt();
     forgetCheckout();
     recordConversion('test_payment_success');
-    showReport(result,{fresh:true});
+    await showReport(result,{fresh:true});
   } catch (error) {
     status.textContent = error.message;
     recordConversion('test_payment_failure');

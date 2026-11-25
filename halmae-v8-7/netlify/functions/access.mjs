@@ -1,6 +1,7 @@
 import {error,json,orders,parse} from './shared.mjs';
 import {paymentConfig} from './payment-config.mjs';
 import {browserHeader,browserKey,eligibleOrder,fingerprint,orderPattern,reportLink,verifiedPurchase} from './entitlement.mjs';
+import {contractDocument} from '../lib/commerce-contract.mjs';
 
 export default async req => {
   if (req.method !== 'POST') return json({error:'Method not allowed'},405);
@@ -21,6 +22,12 @@ export default async req => {
     if (!key || !orderPattern.test(typeof orderId === 'string'?orderId:'')) return denied();
     const store = orders(config);
     const order = await store.get(orderId,{type:'json'});
+    if(input?.action==='contract'){
+      if(!order || order.orderId!==orderId || order.channel!=='toss-'+config.mode ||
+        order.browserHash!==fingerprint('browser',key,config)) return denied();
+      const document=contractDocument(order);
+      return document?json(document):json({error:'보관된 계약내용을 확인할 수 없어요. 주문번호로 고객센터에 문의해 주세요.'},404);
+    }
     if (!eligibleOrder(order,orderId,config) || order.browserHash !== fingerprint('browser',key,config)) return denied();
     const purchase = await verifiedPurchase(config,store,order);
     const link = purchase && reportLink(purchase,Date.now(),config);

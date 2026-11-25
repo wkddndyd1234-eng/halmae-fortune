@@ -3,6 +3,7 @@ try {
  if(response.ok){
   const {merchant,legal}=await response.json();
   if(merchant){
+   document.querySelector('#merchant-review').hidden=true;
    const details=document.querySelector('.merchant-details');
    for(const [label,value] of [['고객센터 전화',merchant.phone],['통신판매업 신고번호',merchant.mailOrderNumber],['개인정보 보호책임자',merchant.privacyOfficer]]){
     const term=document.createElement('dt');
