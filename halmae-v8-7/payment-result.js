@@ -1,5 +1,5 @@
 import {saveBirthDraft} from './birth-handoff.js';
-import {checkoutKey,callbackKey,post,recordConversion,reportKey,rememberReport,forgetCheckout,forgetReport,recentOrder,forgetCheckoutAttempt} from '/purchase.js';
+import {checkoutKey,callbackKey,post,recordConversion,recordFunnel,reportKey,rememberReport,forgetCheckout,forgetReport,recentOrder,forgetCheckoutAttempt} from '/purchase.js';
 
 const status = document.querySelector('#status');
 const retry = document.querySelector('#retry');
@@ -169,6 +169,7 @@ async function confirm() {
     forgetCheckoutAttempt();
     forgetCheckout();
     recordConversion('test_payment_success');
+    recordFunnel(result.paymentMode==='live'?'payment_approved':'test_payment_approved');
     await showReport(result,{fresh:true});
   } catch (error) {
     status.textContent = error.message;

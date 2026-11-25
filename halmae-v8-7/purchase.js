@@ -24,6 +24,24 @@ export function rememberOrder(orderId) {
 const conversionKey = 'halmae-conversion-counts';
 const variantKey = 'halmae-reading-variant';
 const variants = new Set(['ledger','story']);
+const funnelKey='halmae-funnel-v1';
+const funnelStages=new Set(['home_view','reading_start','reading_complete','purchase_click','checkout_view','payment_approved','test_payment_approved']);
+
+export function readFunnel() {
+  try {
+    const stored=JSON.parse(sessionStorage.getItem(funnelKey)??'{}');
+    return Object.fromEntries([...funnelStages].filter(stage=>stored?.[stage]===true).map(stage=>[stage,true]));
+  } catch { return {}; }
+}
+
+export function recordFunnel(stage) {
+  if(!funnelStages.has(stage)) return;
+  try {
+    const progress=readFunnel();
+    if(progress[stage]) return;
+    sessionStorage.setItem(funnelKey,JSON.stringify({...progress,[stage]:true}));
+  } catch { /* Purchase works even when browser storage is unavailable. */ }
+}
 const events = new Set([
   'free_reading_start','free_reading_success','ledger_preview_mid','ledger_preview_end',
   'checkout_click','checkout_view','report_sample_view','test_order_created',
@@ -102,7 +120,7 @@ export function clearPurchaseStorage() {
   forgetCheckout();
   forgetCheckoutAttempt();
   forgetReport();
-  removeSessionKeys([conversionKey,variantKey,...[...variants].map(variant=>conversionKey+':'+variant)]);
+  removeSessionKeys([funnelKey,conversionKey,variantKey,...[...variants].map(variant=>conversionKey+':'+variant)]);
   try {
     localStorage.removeItem(orderKey);
     localStorage.removeItem(paidOrderKey);

@@ -41,3 +41,17 @@ body:has(#renew) > main.paper {
 .merchant-details{display:grid;gap:.25rem;overflow-wrap:anywhere}
 .merchant-details dt{font-weight:700;color:#eacb91;margin-top:.5rem}
 .merchant-details dd{margin:0}
+
+.free-optional{margin:.65rem 0}
+.free-optional summary,.checkout-sample summary,#checkout-birth-fields summary{cursor:pointer;min-height:44px;align-content:center;color:#ecd1a0}
+.ledger-price small{font-size:.8rem;font-weight:normal}
+.ledger-cta:disabled{opacity:.65;cursor:default}
+footer.footer a{color:#e2c18c}
+#checkout-birth-fields{margin:0 0 .75rem}
+@media (max-width:480px) {
+ .hero{flex-direction:column;min-height:unset!important;padding:1rem .75rem 1.5rem!important}
+ .hero .portrait{max-height:min(32svh,260px);margin-block:.35rem .4rem}
+ .hero .home-reading{margin-top:.5rem}
+ .hero a.scroll{position:static;transform:none;display:block;margin:.75rem auto 0}
+ .checkout-order .buy-button{width:100%;min-height:52px}
+}

@@ -1,7 +1,7 @@
 import {calculateSaju,normalizeBirth} from './saju.mjs';
 import {renderLedgerPreview} from './ledger-preview-view.js';
 import {readBirthDraft,saveBirthDraft,todayInKorea} from './birth-handoff.js';
-import {recordConversion,post,checkoutKey,forgetCheckout,clearPurchaseStorage,rememberOrder,checkoutAttempt,forgetCheckoutAttempt} from '/purchase.js';
+import {recordConversion,recordFunnel,post,checkoutKey,forgetCheckout,clearPurchaseStorage,rememberOrder,checkoutAttempt,forgetCheckoutAttempt} from '/purchase.js';
 
 const form = document.querySelector('#form');
 const msg = document.querySelector('#msg');
@@ -77,10 +77,13 @@ calendarType.addEventListener('change',updateCalendar);
 leapMonth.addEventListener('change',updatePreview);
 const draft = window.opener ? null : readBirthDraft();
 const prefill = document.querySelector('#prefill');
+const birthFields = document.querySelector('#checkout-birth-fields');
+birthFields.addEventListener('invalid',()=>{birthFields.open=true;},true);
 if (draft) {
   calendarType.value=draft.calendarType;updateCalendar();
   for (const [key,value] of Object.entries(draft)) if(form.elements[key])form.elements[key].value = value;
   prefill.hidden = false;
+  birthFields.open = false;
 }
 updateCalendar();
 
@@ -111,15 +114,18 @@ resetBirth.addEventListener('click',()=>{
   forgetCheckoutAttempt();
   for (const field of ['name','birthDate','birthTime','gender']) form.elements[field].value = '';
   prefill.hidden = true;
+  birthFields.open = true;
   calendarType.value='solar';updateCalendar();
   form.elements.name.focus();
   msg.textContent = '출생 입력을 지웠어요.';
 });
 
 recordConversion('checkout_view');
+recordFunnel('checkout_view');
 clearStorage.addEventListener('click',async()=>{
   clearPurchaseStorage();
   form.reset();
+  birthFields.open = true;
   updateCalendar();
   prefill.hidden = true;
   form.elements.email.disabled = true;

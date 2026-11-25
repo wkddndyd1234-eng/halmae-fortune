@@ -5,7 +5,8 @@ import {renderReadingChart} from './reading-chart.js';
 import {calculateSaju,pillarElements} from './saju.mjs';
 import {fromFreeForm,saveBirthDraft,todayInKorea} from './birth-handoff.js';
 import {readFreeInsights} from './free-insights.js';
-import {readingVariant,recordConversion} from './purchase.js';
+import {readingVariant,recordConversion,recordFunnel} from './purchase.js';
+recordFunnel('home_view');
 
 const byId = id=>document.getElementById(id);
 const form = byId('fortune');
@@ -93,6 +94,7 @@ function recordStart(){
  if (started) return;
  started=true;
  recordConversion('free_reading_start');
+ recordFunnel('reading_start');
 }
 form.addEventListener('input',recordStart);
 form.addEventListener('submit',event=>{
@@ -146,12 +148,13 @@ form.addEventListener('submit',event=>{
  draft=input;
  checkoutLink.disabled=!paymentEnabled;
  recordConversion('free_reading_success');
+ recordFunnel('reading_complete');
  focusHeading('resultHeading');
 });
 
 byId('editBirth').addEventListener('click',()=>{
  invalidateReading();
- name.focus({preventScroll:true});
+ year.focus({preventScroll:true});
  form.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
 });
 fetch('/.netlify/functions/payment',{cache:'no-store'})
@@ -167,6 +170,7 @@ fetch('/.netlify/functions/payment',{cache:'no-store'})
    byId('offerAvailability').textContent=paymentMode==='live'?'토스페이먼츠 카드 결제':'토스 테스트 결제 · 실제 청구 없음';
    if(paymentMode==='live'){
     document.querySelector('.deploy-preview-ribbon').hidden=true;
+    document.querySelector('.preview-footer').hidden=true;
     for(const [name,url] of Object.entries(legal)) document.querySelector('a[href="/'+name+'.html"]').href=url;
    }
   }
@@ -186,6 +190,7 @@ checkoutLink.addEventListener('click',()=>{
  if(!draft || !paymentEnabled) return;
  saveBirthDraft(draft);
  recordConversion('checkout_click');
+ recordFunnel('purchase_click');
  location.assign('/checkout.html');
 });
 if('IntersectionObserver' in window){
