@@ -9,6 +9,7 @@ import {financeStore,json,orders,parse} from './shared.mjs';
 import {migrateFinance,putLegalIndex} from '../lib/legal-records.mjs';
 import {eraseCustomerOrder} from '../lib/live-privacy.mjs';
 import {withPolicyOriginals} from '../lib/contract-archive.mjs';
+import {campaign, campaignStore, loadCampaignReport, setSpend} from '../lib/campaigns.mjs';
 
 const denied=()=>json({error:'인증 또는 요청 정보를 확인해 주세요.'},403);
 export default async (req,context)=>{
@@ -20,6 +21,7 @@ export default async (req,context)=>{
   if(req.method==='GET'){
    const session=await sessionFor(req,config);
    return session?json({csrf:session.csrf,mode:provider.mode,
+    campaignsEnabled:provider.mode==='live'&&process.env.CAMPAIGN_MEASUREMENT_ENABLED==='true',
     refundsEnabled:provider.mode==='live'&&process.env.PAYMENT_REFUNDS_APPROVED==='true'}):json({loginRequired:true,mfaRequired:Boolean(config.mfa)},403);
   }
   if(req.method!=='POST') return json({error:'Method not allowed'},405);
@@ -61,6 +63,14 @@ export default async (req,context)=>{
     data.issues.push({orderId:key.split('/').at(-1),issuance:'웹훅 재대조 필요'});
    }
    return json({...data,retention:await store.get('retention/latest',{type:'json'})});
+  }
+  if(action==='campaign-export'||action==='campaign-spend'){
+   if(provider.mode!=='live'||process.env.CAMPAIGN_MEASUREMENT_ENABLED!=='true') return denied();
+   const campaigns=campaignStore();
+   if(action==='campaign-export') return json(await loadCampaignReport(provider,campaigns));
+   if(!await setSpend(campaigns,campaign(input.attribution),input.spend)) return json({error:'캠페인 항목과 광고비를 확인해 주세요.'},400);
+   await audit(store,action,'ok');
+   return json({ok:true});
   }
   if(action==='compare'){
    if(!Array.isArray(input.rows)||input.rows.length>500) return json({error:'최대 500개 거래를 입력해 주세요.'},400);

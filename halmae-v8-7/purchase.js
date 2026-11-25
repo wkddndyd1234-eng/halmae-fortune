@@ -26,6 +26,20 @@ const variantKey = 'halmae-reading-variant';
 const variants = new Set(['ledger','story']);
 const funnelKey='halmae-funnel-v1';
 const funnelStages=new Set(['home_view','reading_start','reading_complete','purchase_click','checkout_view','payment_approved','test_payment_approved']);
+const campaignKey='halmae-campaign-v1';
+
+export function visitCampaign() {
+  try {
+    const persisted=sessionStorage.getItem(campaignKey);
+    if(persisted) return JSON.parse(persisted);
+    const params=new URLSearchParams(location.search);
+    const attribution=Object.fromEntries(['source','medium','campaign'].map(key=>[key,params.get('utm_'+key)]));
+    if(!Object.values(attribution).every(value=>value&&/^[a-z][a-z0-9_-]{0,47}$/.test(value))) return null;
+    const context={attribution,visit:crypto.randomUUID()};
+    sessionStorage.setItem(campaignKey,JSON.stringify(context));
+    return context;
+  } catch { return null; }
+}
 
 export function readFunnel() {
   try {
@@ -41,6 +55,12 @@ export function recordFunnel(stage) {
     if(progress[stage]) return;
     sessionStorage.setItem(funnelKey,JSON.stringify({...progress,[stage]:true}));
   } catch { /* Purchase works even when browser storage is unavailable. */ }
+  if(stage==='payment_approved'||stage==='test_payment_approved') return;
+  const context=visitCampaign();
+  if(context) void fetch('/.netlify/functions/campaign-event',{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({context,stage}),
+    credentials:'omit',referrerPolicy:'no-referrer',keepalive:true,
+  }).catch(()=>{});
 }
 const events = new Set([
   'free_reading_start','free_reading_success','ledger_preview_mid','ledger_preview_end',

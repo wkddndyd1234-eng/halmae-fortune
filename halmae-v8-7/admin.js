@@ -48,6 +48,7 @@ async function start(){
  session=await api();
  pane.hidden=false;
  login.hidden=true;
+ byId('campaign-tools').hidden=!session.campaignsEnabled;
  byId('mode').textContent=session.mode==='live'?'운영 환경':'프리뷰 환경';
  byId('support').elements.action.querySelector('[value="refund"]').disabled=!session.refundsEnabled;
  for(const action of ['reconcile','withdraw-recovery','erase']){
@@ -174,11 +175,29 @@ for(const action of ['legal-index','legal-hold']){
 byId('export').addEventListener('click',event=>run(event.currentTarget,async()=>{
  if(!data||data.truncated) throw Error('자료를 모두 불러온 뒤 저장해 주세요.');
  const columns=['orderId','status','amount','balanceAmount','approvedAt','transactionKey'];
- const cell=value=>'"'+String(value??'').replace(/^[=+\-@\t\r\n]/,"'$&").replaceAll('"','""')+'"';
- const lines=[columns.join(','),...data.finance.map(row=>columns.map(key=>cell(row[key])).join(','))];
+ downloadCsv('halmae-transactions.csv',columns,data.finance);
+}));
+function downloadCsv(filename,columns,rows){
+ const cell=value=>'"'+String(typeof value==='number'?value:String(value??'').replace(/^[=+\-@\t\r\n]/,"'$&")).replaceAll('"','""')+'"';
+ const lines=[columns.join(','),...rows.map(row=>columns.map(key=>cell(row[key])).join(','))];
  const url=URL.createObjectURL(new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}));
  const link=element('a','');
- link.href=url;link.download='halmae-transactions.csv';link.click();
+ link.href=url;link.download=filename;link.click();
  setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+byId('campaign-spend').addEventListener('submit',event=>{
+ event.preventDefault();
+ const {source,medium,campaign,spend}=Object.fromEntries(new FormData(event.currentTarget));
+ run(event.submitter,async()=>{
+  await api({action:'campaign-spend',attribution:{source,medium,campaign},spend:Number(spend)});
+  status.textContent='캠페인 누적 광고비를 저장했습니다.';
+ });
+});
+byId('campaign-export').addEventListener('click',event=>run(event.currentTarget,async()=>{
+ const {rows,truncated}=await api({action:'campaign-export'});
+ if(truncated) throw Error('집계 한도를 초과했습니다. 일부 자료로는 캠페인 손익을 계산할 수 없습니다.');
+ const columns=['source','medium','campaign','home_view','reading_start','reading_complete','purchase_click','checkout_view',
+  'approved','gross','refund','netSales','spend','estimatedContribution'];
+ downloadCsv('halmae-campaigns.csv',columns,rows.map(({attribution,events,...sales})=>({...attribution,...events,...sales})));
 }));
 start().catch(error=>{if(error.message.includes('비활성화')) status.textContent=error.message;});

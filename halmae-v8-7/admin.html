@@ -61,4 +61,16 @@
   </section>
   <section class="panel"><h2>주문 목록</h2><div id="orders"></div></section>
  </section>
+  <section id="campaign-tools" class="panel" hidden>
+   <h2>광고 캠페인</h2>
+   <p>UTM별 누적 성과입니다. 진행 차수마다 다른 캠페인 이름을 사용하고 광고비를 누적 금액으로 입력해 주세요.</p>
+   <form id="campaign-spend">
+    <label>utm_source<input name="source" required maxlength="48" pattern="[a-z][a-z0-9_\-]{0,47}"></label>
+    <label>utm_medium<input name="medium" required maxlength="48" pattern="[a-z][a-z0-9_\-]{0,47}"></label>
+    <label>utm_campaign<input name="campaign" required maxlength="48" pattern="[a-z][a-z0-9_\-]{0,47}"></label>
+    <label>누적 광고비(원)<input type="number" name="spend" required min="0" max="1000000000" step="1"></label>
+    <button>광고비 저장</button>
+   </form>
+   <button id="campaign-export" type="button">캠페인 CSV 저장</button>
+  </section>
 </main><script type="module" src="/admin.js"></script></body></html>

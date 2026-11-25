@@ -1,7 +1,7 @@
 import {calculateSaju,normalizeBirth} from './saju.mjs';
 import {renderLedgerPreview} from './ledger-preview-view.js';
 import {readBirthDraft,saveBirthDraft,todayInKorea} from './birth-handoff.js';
-import {recordConversion,recordFunnel,post,checkoutKey,forgetCheckout,clearPurchaseStorage,rememberOrder,checkoutAttempt,forgetCheckoutAttempt} from '/purchase.js';
+import {recordConversion,recordFunnel,post,checkoutKey,forgetCheckout,clearPurchaseStorage,rememberOrder,checkoutAttempt,forgetCheckoutAttempt,visitCampaign} from '/purchase.js';
 
 const form = document.querySelector('#form');
 const msg = document.querySelector('#msg');
@@ -224,7 +224,7 @@ form.addEventListener('submit', async event => {
     const order = await post('order',{
       name:birth.name,birthDate:birth.birthDate,birthTime:birth.birthTime,gender:birth.gender,calendarType:birth.calendarType,isLeapMonth:birth.isLeapMonth,
       consent:form.elements.consent.checked,channel:customer?(live?'toss-live':'toss-test'):'admin-demo',
-      ...(customer&&live?{checkoutAttempt:checkoutAttempt(),policyVersion:approvedPolicyVersion,policyDigest:approvedPolicyDigest,
+      ...(customer&&live?{attribution:visitCampaign()?.attribution,checkoutAttempt:checkoutAttempt(),policyVersion:approvedPolicyVersion,policyDigest:approvedPolicyDigest,
         immediateDelivery:form.elements.immediateDelivery.checked,termsAccepted:form.elements.termsAccepted.checked}:{}),
       ...(customer && form.elements.recoveryConsent.checked ?
         {email:data.email,recoveryConsent:true} : {}),

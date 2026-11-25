@@ -64,6 +64,12 @@ function configure(){
 
 test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취소와 365일 열람을 격리한다',async t=>{
  configure();
+ const previousCampaignSetting=process.env.CAMPAIGN_MEASUREMENT_ENABLED;
+ process.env.CAMPAIGN_MEASUREMENT_ENABLED='true';
+ t.after(()=>{
+  if(previousCampaignSetting===undefined) delete process.env.CAMPAIGN_MEASUREMENT_ENABLED;
+  else process.env.CAMPAIGN_MEASUREMENT_ENABLED=previousCampaignSetting;
+ });
  const records=new Map(),approvals=[],refunds=[],mails=[];
  let provider;
  let failApproval=true;
@@ -71,7 +77,7 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
   const endpoint=new URL(url);
   if(endpoint.hostname==='blob.example.test'){
    const key=decodeURIComponent(endpoint.pathname);
-   assert.match(key,/halmae-(live-(orders|finance)|admin-live)/);
+   assert.match(key,/halmae-(live-(orders|finance|campaigns)|admin-live)/);
    const verb=options.method;
    if(verb==='delete'){records.delete(key);return new Response(null,{status:200});}
    if(verb==='put'){
@@ -108,10 +114,15 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  assert.equal((await order(request({...birth,termsAccepted:false}))).status,400);
  assert.equal((await order(request({...birth,policyVersion:'old-version'}))).status,400);
  assert.equal((await order(request({...birth,policyDigest:'old-digest'}))).status,400);
- const attempts=await Promise.all([order(request(birth)),order(request(birth))]);
+ const attribution={source:'naver',medium:'cpc',campaign:'newyear_2027'};
+ const tagged={...birth,attribution:{...attribution,email:birth.email}};
+ const attempts=await Promise.all([order(request(tagged)),order(request(tagged))]);
  assert.ok(attempts.every(response=>response.ok));
  const cookie=attempts[0].headers.get('set-cookie').split(';')[0];
  const [first,second]=await Promise.all(attempts.map(response=>response.json()));
+ const tags=[...records].filter(([key])=>key.includes('/halmae-live-campaigns/order/'));
+ assert.equal(tags.length,1);
+ assert.deepEqual(tags[0][1],{attribution});
  const contractInput={action:'contract',orderId:first.orderId};
  assert.equal((await access(request(contractInput,{cookie}))).status,404);
  assert.equal(first.orderId,second.orderId);

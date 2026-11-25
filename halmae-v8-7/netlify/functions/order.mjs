@@ -8,6 +8,7 @@ import {normalizeBirth} from './saju.mjs';
 import {DAY,ORDER_NAME,PRICE,checkoutScope,paymentConfig} from './payment-config.mjs';
 import {contractTerms} from '../lib/commerce-contract.mjs';
 import {savePolicy} from '../lib/contract-archive.mjs';
+import {campaign, campaignStore, linkCampaign} from '../lib/campaigns.mjs';
 
 export default async req => {
  if (req.method !== 'POST') return json({error:'Method not allowed'},405);
@@ -96,6 +97,10 @@ export default async req => {
         return json({error:'기존 주문은 결제 결과 화면에서 확인해 주세요.'},409);
       }
     }
+  }
+  if(live && process.env.CAMPAIGN_MEASUREMENT_ENABLED==='true'){
+    try { await linkCampaign(campaignStore(),orderId,campaign(x.attribution)); }
+    catch { /* Measurement outages must not interrupt checkout. */ }
   }
   const response = json(result);
   if (credential) response.headers.set('Set-Cookie',browserHeader(credential));
