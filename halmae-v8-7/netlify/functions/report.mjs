@@ -29,6 +29,8 @@ export default async req => {
    }
   }
   const result=config?.mode==='live'?await materializeReport(store,purchase):buildReport(o);
-  return json({...result,demo,...(!demo?{purchaseExpiresAt:purchase.purchaseExpiresAt,...(config.mode==='live'?{paymentMode:'live'}:{})}:{})});
+  return json({...result,demo,expiresAt:claim.exp,...(!demo?{
+    orderId:o.orderId,purchaseExpiresAt:purchase.purchaseExpiresAt,...(config.mode==='live'?{paymentMode:'live'}:{})
+  }:{})});
  } catch (e) { return error(e); }
 };

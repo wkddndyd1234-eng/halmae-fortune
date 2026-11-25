@@ -1,4 +1,4 @@
-import {calculateSaju} from './saju.mjs';
+import {calculateSaju,normalizeBirth} from './saju.mjs';
 import {renderLedgerPreview} from './ledger-preview-view.js';
 import {readBirthDraft,saveBirthDraft,todayInKorea} from './birth-handoff.js';
 import {recordConversion,post,checkoutKey,forgetCheckout,clearPurchaseStorage,rememberOrder,checkoutAttempt,forgetCheckoutAttempt} from '/purchase.js';
@@ -21,6 +21,41 @@ let approvedPolicyVersion;
 form.elements.birthDate.max = todayInKorea();
 const calendarType=form.elements.calendarType;
 const leapMonth=form.elements.isLeapMonth;
+const birthConfirmed=form.elements.birthConfirmed;
+const birthSummary=document.querySelector('#birth-summary');
+let confirmedBirth;
+function currentBirth(){
+  const {name,birthDate,birthTime,gender}=form.elements;
+  if(!gender.value || ![name,birthDate,birthTime].every(field=>field.validity.valid)) return null;
+  return {name:name.value.trim(),...normalizeBirth({birthDate:birthDate.value,birthTime:birthTime.value,
+    gender:gender.value,calendarType:calendarType.value,isLeapMonth:leapMonth.value==='true'})};
+}
+function updateBirthConfirmation(){
+  let birth, message;
+  try {birth=currentBirth();}
+  catch(error){message=error.message;}
+  const snapshot=birth?JSON.stringify(birth):undefined;
+  if(snapshot!==confirmedBirth){
+    birthConfirmed.checked=false;
+    if(confirmedBirth) forgetCheckoutAttempt();
+    confirmedBirth=undefined;
+  }
+  birthConfirmed.disabled=!birth;
+  if(!birth){
+    birthSummary.textContent=message||'생년월일과 성별을 선택하면 확인할 정보를 표시해요.';
+    return snapshot;
+  }
+  const calendar=birth.calendarType==='solar'?'양력':birth.isLeapMonth?'음력 윤달':'음력 평달';
+  const converted=birth.calendarType==='lunar'? ' · 양력 환산 '+birth.solarDate:'';
+  birthSummary.textContent=`${birth.name||'손님'} · ${birth.gender==='male'?'남성':'여성'} · ${calendar} ${birth.birthDate}${converted} · ${birth.birthTime?birth.birthTime+' (한국 시간)':'출생 시각 미상'}`;
+  return snapshot;
+}
+birthConfirmed.addEventListener('change',()=>{
+  if(!birthConfirmed.checked){confirmedBirth=undefined;return;}
+  const snapshot=updateBirthConfirmation();
+  confirmedBirth=snapshot;
+  birthConfirmed.checked=Boolean(snapshot);
+});
 function updateCalendar(){
   const lunar=calendarType.value==='lunar';
   const date=form.elements.birthDate;
@@ -35,6 +70,7 @@ function updateCalendar(){
   }
   document.querySelector('#checkout-leap').hidden=!lunar;
   updatePreview();
+  updateBirthConfirmation();
 }
 calendarType.addEventListener('change',updateCalendar);
 leapMonth.addEventListener('change',updatePreview);
@@ -59,6 +95,14 @@ function updatePreview() {
 form.elements.birthDate.addEventListener('input',updatePreview);
 form.elements.birthTime.addEventListener('input',updatePreview);
 form.elements.gender.addEventListener('change',updatePreview);
+for(const name of ['name','birthDate','birthTime','gender','isLeapMonth']){
+  form.elements[name].addEventListener('input',()=>{
+    forgetCheckoutAttempt();
+    updateBirthConfirmation();
+  });
+  form.elements[name].addEventListener('change',updateBirthConfirmation);
+}
+calendarType.addEventListener('input',forgetCheckoutAttempt);
 updatePreview();
 
 resetBirth.addEventListener('click',()=>{
@@ -152,6 +196,12 @@ function loadToss() {
 form.addEventListener('submit', async event => {
   event.preventDefault();
   if (busy || ![buy,admin].includes(event.submitter) || event.submitter.disabled) return;
+  const snapshot=updateBirthConfirmation();
+  if(!snapshot || !birthConfirmed.checked || snapshot!==confirmedBirth){
+    msg.textContent='위 출생 정보를 확인한 뒤 확인란에 체크해 주세요.';
+    (birthConfirmed.disabled?form.elements.birthDate:birthConfirmed).focus();
+    return;
+  }
   const customer = event.submitter === buy;
   busy = true;
   buy.disabled = admin.disabled = clearStorage.disabled = resetBirth.disabled = true;
@@ -159,8 +209,9 @@ form.addEventListener('submit', async event => {
   msg.textContent = live?'주문을 준비하고 있습니다…':'테스트 주문을 준비하고 있습니다…';
   try {
     const data = Object.fromEntries(new FormData(form));
+    const birth=JSON.parse(snapshot);
     const order = await post('order',{
-      name:data.name,birthDate:data.birthDate,birthTime:data.birthTime,gender:data.gender,calendarType:data.calendarType,isLeapMonth:data.isLeapMonth==='true',
+      name:birth.name,birthDate:birth.birthDate,birthTime:birth.birthTime,gender:birth.gender,calendarType:birth.calendarType,isLeapMonth:birth.isLeapMonth,
       consent:form.elements.consent.checked,channel:customer?(live?'toss-live':'toss-test'):'admin-demo',
       ...(customer&&live?{checkoutAttempt:checkoutAttempt(),policyVersion:approvedPolicyVersion,immediateDelivery:form.elements.immediateDelivery.checked}:{}),
       ...(customer && form.elements.recoveryConsent.checked ?
@@ -174,7 +225,7 @@ form.addEventListener('submit', async event => {
       msg.textContent = '관리자 테스트 주문을 준비했습니다.';
       return;
     }
-    saveBirthDraft({name:data.name,birthDate:data.birthDate,birthTime:data.birthTime,gender:data.gender,calendarType:data.calendarType,isLeapMonth:data.isLeapMonth==='true'});
+    saveBirthDraft(birth);
     recordConversion('test_order_created');
     forgetCheckout();
     rememberOrder(order.orderId);

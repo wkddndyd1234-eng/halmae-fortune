@@ -3,6 +3,12 @@ import {saveBirthDraft} from './birth-handoff.js';
 export const checkoutKey = 'halmae-test-checkout';
 export const reportKey = 'halmae-last-test-report';
 const orderKey = 'halmae-preview-order';
+const paidOrderKey = 'halmae-last-paid-order';
+
+export function recentPaidOrder() {
+  try { return localStorage.getItem(paidOrderKey) || recentOrder(); }
+  catch { return recentOrder(); }
+}
 
 export function recentOrder() {
   try { return localStorage.getItem(orderKey); }
@@ -58,6 +64,7 @@ export async function post(name, body, token) {
   catch { throw Error('연결이 잠시 끊겼어요. 잠시 후 다시 시도해 주세요.'); }
   if (!response.ok) {
     const error=Error(result.error || '요청을 처리하지 못했습니다.');
+    error.status=response.status;
     error.restartCheckout=result.restartCheckout===true;
     throw error;
   }
@@ -68,6 +75,10 @@ export const callbackKey = 'halmae-test-payment-callback';
 
 export function rememberReport(result) {
   rememberOrder(result.orderId);
+  if(result.orderId){
+    try { localStorage.setItem(paidOrderKey,result.orderId); }
+    catch { /* Reopening is available through the order number or recovery email. */ }
+  }
   try { sessionStorage.setItem(reportKey,JSON.stringify(result)); }
   catch { /* A report link still works without browser storage. */ }
 }
@@ -92,7 +103,10 @@ export function clearPurchaseStorage() {
   forgetCheckoutAttempt();
   forgetReport();
   removeSessionKeys([conversionKey,variantKey,...[...variants].map(variant=>conversionKey+':'+variant)]);
-  try { localStorage.removeItem(orderKey); } catch { /* Storage is inaccessible. */ }
+  try {
+    localStorage.removeItem(orderKey);
+    localStorage.removeItem(paidOrderKey);
+  } catch { /* Storage is inaccessible. */ }
 }
 
 // One attempt per tab survives payment return and retry without retaining form values.

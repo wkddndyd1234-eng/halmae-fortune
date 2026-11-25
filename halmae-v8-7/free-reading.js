@@ -15,11 +15,29 @@ const calendarType=byId('calendarType');
 const isLeapMonth=byId('isLeapMonth');
 calendarType.addEventListener('change',()=>{byId('leapField').hidden=calendarType.value!=='lunar';if(calendarType.value!=='lunar')isLeapMonth.value='false';});
 const offer = byId('offer');
+const checkoutLink = byId('checkoutLink');
 result.dataset.variant=readingVariant(result.dataset.variant);
 const error = byId('error');
 const name = byId('name');
 let draft = null;
 let readingText = '';
+let paymentEnabled = false;
+
+function invalidateReading(){
+ if(draft) saveBirthDraft(null);
+ draft=null;
+ readingText='';
+ result.hidden=offer.hidden=true;
+ checkoutLink.disabled=true;
+}
+form.addEventListener('input',invalidateReading);
+form.addEventListener('change',invalidateReading);
+window.addEventListener('pageshow',event=>{
+ if(event.persisted && draft){
+  invalidateReading();
+  error.textContent='주문하려면 출생 정보를 확인한 뒤 무료 풀이를 다시 봐 주세요.';
+ }
+});
 
 const relationshipNotes = {
  '솔로':'편안하게 느낀 관계의 장면을 떠올려도 좋아.',
@@ -80,6 +98,8 @@ form.addEventListener('input',recordStart);
 form.addEventListener('submit',event=>{
  recordStart();
  event.preventDefault();
+ invalidateReading();
+ saveBirthDraft(null);
  const input=fromFreeForm({name:name.value,gender:byId('gender').value,calendarType:calendarType.value,isLeapMonth:isLeapMonth.value==='true',year:year.value,month:month.value,day:day.value,hour:hour.value,minute:minute.value});
  error.textContent='';
  if (!input) {
@@ -90,7 +110,6 @@ form.addEventListener('submit',event=>{
  try { saju=calculateSaju(input); }
  catch (e) { error.textContent=e.message||'생년월일과 출생 시각을 다시 확인해 주세요.'; return; }
 
- draft=input;
  const chart=saju.dateBoundaryUncertain?{
   ...saju,
   pillars:[null,null,saju.pillars[2],null],
@@ -124,17 +143,26 @@ form.addEventListener('submit',event=>{
   ...notices,'전통 사주 상징을 바탕으로 한 자기 성찰용 풀이입니다.'].join('\n\n');
  result.hidden=false;
  offer.hidden=false;
+ draft=input;
+ checkoutLink.disabled=!paymentEnabled;
  recordConversion('free_reading_success');
  focusHeading('resultHeading');
 });
 
 byId('editBirth').addEventListener('click',()=>{
+ invalidateReading();
  name.focus({preventScroll:true});
  form.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
 });
 fetch('/.netlify/functions/payment',{cache:'no-store'})
- .then(response=>response.ok?response.json():{})
+ .then(response=>{
+  if(!response.ok) throw Error('Payment status unavailable');
+  return response.json();
+ })
  .then(({enabled,paymentMode,legal})=>{
+  paymentEnabled=enabled===true;
+  checkoutLink.disabled=!paymentEnabled || !draft;
+  checkoutLink.textContent=paymentEnabled?'출생 정보 확인하고 주문하기':'현재 주문할 수 없어요';
   if(enabled===true){
    byId('offerAvailability').textContent=paymentMode==='live'?'토스페이먼츠 카드 결제':'토스 테스트 결제 · 실제 청구 없음';
    if(paymentMode==='live'){
@@ -142,8 +170,11 @@ fetch('/.netlify/functions/payment',{cache:'no-store'})
     for(const [name,url] of Object.entries(legal)) document.querySelector('a[href="/'+name+'.html"]').href=url;
    }
   }
-  if(enabled===false) byId('offerAvailability').textContent='현재 결제를 받을 수 없어요.';
- }).catch(()=>{});
+  if(!paymentEnabled) byId('offerAvailability').textContent='현재 결제를 받을 수 없어요.';
+ }).catch(()=>{
+  checkoutLink.textContent='현재 주문할 수 없어요';
+  byId('offerAvailability').textContent='결제 상태를 확인하지 못했어요. 잠시 후 다시 확인해 주세요.';
+ });
 for(const [id,event] of [['conversionMid','ledger_preview_mid'],['conversionNext','ledger_preview_end']]){
  byId(id).addEventListener('click',()=>{
   recordConversion(event);
@@ -151,10 +182,11 @@ for(const [id,event] of [['conversionMid','ledger_preview_mid'],['conversionNext
  });
 }
 byId('returnReading').addEventListener('click',()=>focusHeading('resultHeading'));
-for(const link of offer.querySelectorAll('[data-order-link]')) link.addEventListener('click',event=>{
- if (event.button!==0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+checkoutLink.addEventListener('click',()=>{
+ if(!draft || !paymentEnabled) return;
  saveBirthDraft(draft);
  recordConversion('checkout_click');
+ location.assign('/checkout.html');
 });
 if('IntersectionObserver' in window){
  const sampleObserver=new IntersectionObserver(entries=>{

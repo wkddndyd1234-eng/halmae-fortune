@@ -45,6 +45,8 @@
     <label id="checkout-leap" hidden>음력 월 구분<select name="isLeapMonth"><option value="false">평달</option><option value="true">윤달</option></select></label>
     <label>생년월일 <span class="small birth-help" id="birth-help">양력·음력을 선택하고 음력이라면 윤달 여부를 확인해 주세요.</span><input type="date" name="birthDate" aria-describedby="birth-help" required min="1900-01-01"></label>
     <label>출생 시간 (한국 시간 · 모르면 비워두세요)<input type="time" name="birthTime"></label>
+    <p class="notice" id="birth-summary" aria-live="polite">생년월일과 성별을 선택하면 확인할 정보를 표시해요.</p>
+    <label class="check"><input type="checkbox" name="birthConfirmed" required disabled aria-describedby="birth-summary"> <span>이 출생 정보로 장부를 발급받을게요.</span></label>
     <fieldset id="recovery-options" hidden>
       <legend>기기 변경 시 다시 보기 (선택)</legend>
       <label class="check"><input type="checkbox" name="recoveryConsent"> 기기를 바꿔도 다시 볼 수 있도록 복구 이메일 등록에 동의해요.</label>

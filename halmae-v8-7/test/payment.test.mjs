@@ -68,6 +68,13 @@ test('서버 승인과 현재 상태가 확인된 주문만 보고서를 발급�
   assert.deepEqual(await (await payment(request(null,null,'https://example.test'))).json(),{enabled:false});
   assert.equal((await order(request({...birth,consent:false}))).status,400);
   assert.equal((await order(request({...birth,calendarType:'lunar',isLeapMonth:true}))).status,400);
+  const lunar = await order(request({...birth,birthDate:'1995-08-15',birthTime:'23:35',calendarType:'lunar',isLeapMonth:true}));
+  assert.equal(lunar.status,200);
+  const lunarOrder=orders.get((await lunar.json()).orderId);
+  assert.deepEqual(
+    [lunarOrder.birthDate,lunarOrder.solarDate,lunarOrder.calendarType,lunarOrder.isLeapMonth,lunarOrder.birthTime],
+    ['1995-08-15','1995-10-09','lunar',true,'23:35'],
+  );
   const created = await order(request(birth));
   assert.equal(created.status,200);
   const o = await created.json();
@@ -113,7 +120,14 @@ test('서버 승인과 현재 상태가 확인된 주문만 보고서를 발급�
   assert.equal(approvals,approvedAttempts);
   const book = await report(request(null,access.token));
   assert.equal(book.status,200);
-  assert.equal((await book.json()).demo,false);
+  assert.equal(book.headers.get('cache-control'),'no-store');
+  const reading=await book.json();
+  assert.equal(reading.demo,false);
+  assert.equal(reading.orderId,o.orderId);
+  assert.equal(reading.expiresAt,access.expiresAt);
+  assert.equal(reading.purchaseExpiresAt,access.purchaseExpiresAt);
+  assert.equal(reading.chapters.length,26);
+  assert.equal('token' in reading,false);
   assert.equal((await report(request(null,access.token,'https://example.test'))).status,403);
   for (const mismatch of [{status:'CANCELED'},{balanceAmount:29900},{currency:'USD'},
      {totalAmount:1},{method:'가상계좌'},{orderId:'other'},{paymentKey:'other'}]) {
