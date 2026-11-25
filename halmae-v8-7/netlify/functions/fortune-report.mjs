@@ -74,7 +74,7 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
   if(s.dateBoundaryUncertain&&i<12){
    const groups=boundaryNatalGroups(i,f);
    chapter.groups=groups;
-   chapter.lead=i===0?`일주 ${day} · ${main}`:groups[1].title;
+   chapter.lead=i===0?`일주 ${day} · ${main}`:groups.at(-1).title;
    chapter.bullets=i===0?[`출생 입력: ${s.birthDate}`,`양력 환산: ${s.solarDate}`]:[];
    chapter.quote='';
   }else{
