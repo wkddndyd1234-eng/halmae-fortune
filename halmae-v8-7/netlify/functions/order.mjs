@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import {orders,json,parse,sign,error} from './shared.mjs';
+import {financeStore,orders,json,parse,sign,error} from './shared.mjs';
 import {mailConfig,recoveryEmail} from './recovery-mail.mjs';
 import {browserCredential,browserHeader,fingerprint,verifiedPurchase} from './entitlement.mjs';
 import {findPayment} from './toss.mjs';
@@ -7,6 +7,7 @@ import {liveRevoked} from './live-ledger.mjs';
 import {normalizeBirth} from './saju.mjs';
 import {DAY,ORDER_NAME,PRICE,checkoutScope,paymentConfig} from './payment-config.mjs';
 import {contractTerms} from '../lib/commerce-contract.mjs';
+import {savePolicy} from '../lib/contract-archive.mjs';
 
 export default async req => {
  if (req.method !== 'POST') return json({error:'Method not allowed'},405);
@@ -22,7 +23,7 @@ export default async req => {
     return json({error:'현재 결제를 시작할 수 없습니다.'},503);
   }
   if (channel==='admin-demo' && process.env.PAYMENT_MODE==='live') return json({error:'관리자 발급은 프리뷰에서만 사용할 수 있습니다.'},403);
-  if(config?.mode==='live' && (x.policyVersion!==config.policyVersion || x.immediateDelivery!==true)){
+ if(config?.mode==='live' && (x.policyVersion!==config.policyVersion || x.policyDigest!==config.policy.digest || x.immediateDelivery!==true)){
     return json({error:'최신 구매 안내를 확인하고 즉시 제공을 요청해 주세요.'},400);
   }
  if(config?.mode==='live' && x.termsAccepted!==true){
@@ -54,6 +55,9 @@ export default async req => {
   let reused=false;
   let order={...fields,status:'pending',createdAt,...(config?{contractTerms:contractTerms(config)}:{})};
   if(live){
+    if(!await savePolicy(financeStore(),config.policy)){
+      return json({error:'구매 정책을 확인하는 중이에요. 잠시 후 다시 시도해 주세요.'},503);
+    }
     const purchaseFields={...fields};
     delete purchaseFields.recoveryEmailHash;
     const inputHash=fingerprint('checkout-input',JSON.stringify(purchaseFields),config);

@@ -14,6 +14,7 @@ export function contractTerms(config){
   delivery:'결제 승인 직후 웹 장부 이용 · 승인 시각부터 365일 열람',
   withdrawal:'청약철회·환불은 구매 시 적용된 안내와 관계 법령에 따릅니다. 제공 오류나 열람 장애는 주문번호로 고객센터에 접수할 수 있습니다.',
   policyVersion:live?config.policyVersion:'preview',
+  ...(live && config.policy?{policyDigest:config.policy.digest}:{}),
   policies:live?config.legal:{terms:config.origin+'/terms.html',privacy:config.origin+'/privacy.html',refund:config.origin+'/refund.html'},
   test:!live,
  };

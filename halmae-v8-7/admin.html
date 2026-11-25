@@ -43,6 +43,15 @@
    <div id="mismatches"></div>
   </section>
   <section class="panel" id="legal-tools" hidden><h2>법정 보존 기록</h2>
+   <form id="contract-reissue">
+    <h3>계약서면 재교부용 사본</h3>
+    <p>접수 기록에 본인 확인을 남긴 뒤 사용하세요. 문의 접수번호에는 개인정보를 넣지 마세요.</p>
+    <label>주문 번호<input name="orderId" required maxlength="39" autocomplete="off"></label>
+    <label>확인용 주문 번호<input name="confirmation" required maxlength="39" autocomplete="off"></label>
+    <label>문의 접수번호<input name="reference" required pattern="CASE-[A-Za-z0-9_\-]{6,60}" maxlength="65" autocomplete="off"></label>
+    <label><input name="identityVerified" type="checkbox" required> 구매자 본인과 서면 전달 경로를 확인했습니다.</label>
+    <button>재교부용 사본 저장</button>
+   </form>
    <form id="legal-index"><label>기록 종류<select name="kind"><option value="contract">계약·철회</option><option value="dispute">불만·분쟁</option><option value="advertising">표시·광고</option></select></label>
    <label>내부 참조 번호<input name="reference" required maxlength="80" pattern="[A-Za-z0-9_-]+"></label>
    <label>기록 기준일<input name="closedOn" type="date" required></label><button>보존 일정 등록</button></form>

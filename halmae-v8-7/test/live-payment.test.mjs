@@ -7,6 +7,10 @@ import recovery from '../netlify/functions/recovery.mjs';
 import report from '../netlify/functions/report.mjs';
 import webhook from '../netlify/functions/payment-webhook.mjs';
 import operations from '../netlify/functions/payment-operations.mjs';
+import admin from '../netlify/functions/admin.mjs';
+import {createSession} from '../netlify/lib/admin-auth.mjs';
+import {adminStore} from '../netlify/functions/shared.mjs';
+import {policyArchive} from '../netlify/lib/contract-archive.mjs';
 import {sign} from '../netlify/functions/shared.mjs';
 
 const origin='https://commerce.example.test';
@@ -25,7 +29,7 @@ test('운영 판매 승인·호스트·키·정책·운영 인증 정보가 모�
  configure();
  for(const [key,value] of [
   ['PAYMENT_RUNTIME_TIER','deploy-preview'],['PAYMENT_LIVE_SITE_ID','wrong-site'],['URL',testOrigin],['PAYMENT_LIVE_APPROVED','false'],
-  ['PAYMENT_LIVE_SALES_ENABLED','false'],['TOSS_LIVE_SECRET_KEY','test_sk_dummy'],
+  ['PAYMENT_LIVE_SALES_ENABLED','false'],['TOSS_LIVE_SECRET_KEY','test_sk_dummy'],['LIVE_POLICY_ARCHIVE_JSON','{}'],
   ['LIVE_REPORT_TOKEN_SECRET','short'],['LIVE_PRIVACY_URL','javascript:alert(0)'],
   ['PAYMENT_LIVE_WEBHOOK_KEY',operator],['LIVE_POLICY_APPROVED','false'],['LIVE_MAIL_ORDER_NUMBER','주소 변경 중'],['LIVE_SUPPORT_PHONE',''],['LIVE_PRIVACY_OFFICER','지정 대기'],
  ]){
@@ -49,8 +53,13 @@ function configure(){
   LIVE_REPORT_TOKEN_SECRET:secret,REPORT_TOKEN_SECRET:'test-local-fixture-separate-signing-key',
   PAYMENT_LIVE_WEBHOOK_KEY:hookKey,PAYMENT_LIVE_OPERATOR_TOKEN:operator,
   LIVE_TERMS_URL:origin+'/legal/terms',LIVE_PRIVACY_URL:origin+'/legal/privacy',LIVE_REFUND_URL:origin+'/legal/refund',
+  LIVE_POLICY_ARCHIVE_JSON:JSON.stringify({version:'2026.11-fixture',...Object.fromEntries(
+   ['terms','privacy','refund'].map(key=>[key,{url:origin+'/legal/'+key,text:'검수용 '+key+' 원문'}]))}),
   NETLIFY_BLOBS_CONTEXT:Buffer.from(JSON.stringify({siteID:'local',edgeURL:'https://blob.example.test',uncachedEdgeURL:'https://blob.example.test',token:'fixture'})).toString('base64'),
  });
+ birth.policyDigest=policyArchive(process.env.LIVE_POLICY_ARCHIVE_JSON,birth.policyVersion,{
+  terms:process.env.LIVE_TERMS_URL,privacy:process.env.LIVE_PRIVACY_URL,refund:process.env.LIVE_REFUND_URL,
+ }).digest;
 }
 
 test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취소와 365일 열람을 격리한다',async t=>{
@@ -98,6 +107,7 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  assert.equal((await order(request({...birth,immediateDelivery:false}))).status,400);
  assert.equal((await order(request({...birth,termsAccepted:false}))).status,400);
  assert.equal((await order(request({...birth,policyVersion:'old-version'}))).status,400);
+ assert.equal((await order(request({...birth,policyDigest:'old-digest'}))).status,400);
  const attempts=await Promise.all([order(request(birth)),order(request(birth))]);
  assert.ok(attempts.every(response=>response.ok));
  const cookie=attempts[0].headers.get('set-cookie').split(';')[0];
@@ -143,6 +153,11 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  const open=await report(request(null,{token:paid.token}));
  assert.equal(open.status,200);
  assert.equal((await open.json()).chapters.length,26);
+ const archiveConfig=process.env.LIVE_POLICY_ARCHIVE_JSON;
+ delete process.env.LIVE_POLICY_ARCHIVE_JSON;
+ assert.equal((await report(request(null,{token:paid.token}))).status,200);
+ assert.equal((await access(request(contractInput,{cookie}))).status,200);
+ process.env.LIVE_POLICY_ARCHIVE_JSON=archiveConfig;
  const disclosure=process.env.LIVE_MAIL_ORDER_NUMBER;
  delete process.env.LIVE_MAIL_ORDER_NUMBER;
  assert.equal((await report(request(null,{token:paid.token}))).status,200);
@@ -192,4 +207,58 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  assert.equal(finance[0].policyAcceptance.version,birth.policyVersion);
  assert.equal(finance.at(-1).transactionKey,'cancel-transaction');
  assert.doesNotMatch(JSON.stringify(finance),/1988-10-08|고객 요청/);
+ const hash='a'.repeat(32)+':'+'b'.repeat(128);
+ const mfa='cd'.repeat(20);
+ Object.assign(process.env,{OPS_ADMIN_ENABLED:'true',OPS_LIVE_PASSWORD_HASH:hash,OPS_LIVE_TOTP_SECRET_HEX:mfa});
+ const ip='192.0.2.7';
+ const {id,session}=await createSession({store:adminStore('live'),hash,ip,mfa});
+ const reissue={action:'contract-reissue',orderId:first.orderId,confirmation:first.orderId,identityVerified:true,reference:'CASE-test01'};
+ const sendReissue=(body,csrf=session.csrf)=>admin(new Request(origin,{method:'POST',headers:{
+  Cookie:'__Host-halmae-operator='+id,Origin:origin,'Content-Type':'application/json','X-CSRF-Token':csrf
+ },body:JSON.stringify(body)}),{ip});
+ assert.equal((await sendReissue(reissue,'invalid')).status,403);
+ assert.equal((await sendReissue({...reissue,identityVerified:false})).status,403);
+ assert.equal((await sendReissue({...reissue,confirmation:'different'})).status,403);
+ records.delete('/halmae-live-orders/'+first.orderId);
+ assert.equal((await access(request(contractInput,{cookie}))).status,403);
+ assert.deepEqual(await (await sendReissue(reissue)).json(),contract);
+ assert.equal(contract.policyOriginals.terms.text,'검수용 terms 원문');
+ const reissueAudit=[...records.values()].find(record=>record.action==='contract-reissue');
+ assert.equal(reissueAudit.reference,reissue.reference);
+ assert.doesNotMatch(JSON.stringify(reissueAudit),/buyer@example|live-fixture-payment/);
+});
+
+test('운영 모의 부분 취소는 별도 거래에서 잔액과 무관하게 장부 권한을 차단한다',async t=>{
+ configure();
+ const records=new Map();
+ let provider;
+ t.mock.method(globalThis,'fetch',async (url,options)=>{
+  const target=new URL(url);
+  if(target.hostname==='blob.example.test'){
+   const path=decodeURIComponent(target.pathname);
+   if(options.method==='put'){
+    if(new Headers(options.headers).get('if-none-match')==='*'&&records.has(path)) return new Response(null,{status:412});
+    records.set(path,JSON.parse(options.body));return new Response(null,{status:200});
+   }
+   return records.has(path)?Response.json(records.get(path)):new Response(null,{status:404});
+  }
+  assert.equal(target.hostname,'api.tosspayments.com');
+  if(target.pathname.endsWith('/confirm')){
+   provider={...JSON.parse(options.body),mId:'merchant-fixture',currency:'KRW',method:'카드',status:'DONE',
+    approvedAt:new Date().toISOString(),totalAmount:39900,balanceAmount:39900};
+  }
+  return provider?Response.json(provider):new Response(null,{status:404});
+ });
+ const ordered=await order(request({...birth,recoveryConsent:false}));
+ assert.equal(ordered.status,200);
+ const cookie=ordered.headers.get('set-cookie').split(';')[0];
+ const {orderId,checkoutToken}=await ordered.json();
+ const result=await payment(request({orderId,paymentKey:'mock-partial',amount:39900},{token:checkoutToken}));
+ assert.equal(result.status,200);
+ const {token}=await result.json();
+ assert.equal((await report(request(null,{token}))).status,200);
+ provider={...provider,status:'PARTIAL_CANCELED',balanceAmount:29900};
+ assert.equal((await report(request(null,{token}))).status,403);
+ assert.equal((await access(request({orderId},{cookie}))).status,403);
+ assert.equal((await access(request({orderId,action:'contract'},{cookie}))).status,200);
 });

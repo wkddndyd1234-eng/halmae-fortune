@@ -17,6 +17,7 @@ let adminOrderId;
 let busy = false;
 let live = false;
 let approvedPolicyVersion;
+let approvedPolicyDigest;
 
 form.elements.birthDate.max = todayInKorea();
 const calendarType=form.elements.calendarType;
@@ -135,10 +136,11 @@ clearStorage.addEventListener('click',async()=>{
 });
 fetch(endpoint+'payment',{cache:'no-store'})
   .then(response => response.ok ? response.json() : {enabled:false})
-  .then(({enabled,recoveryEnabled,adminPreview,paymentMode,legal,policyVersion}) => {
+  .then(({enabled,recoveryEnabled,adminPreview,paymentMode,legal,policyVersion,policyDigest}) => {
     live=paymentMode==='live';
     if(live && enabled){
       approvedPolicyVersion=policyVersion;
+      approvedPolicyDigest=policyDigest;
       document.querySelector('#immediate-delivery').hidden=false;
       form.elements.immediateDelivery.disabled=false;
       form.elements.immediateDelivery.required=true;
@@ -216,7 +218,7 @@ form.addEventListener('submit', async event => {
     const order = await post('order',{
       name:birth.name,birthDate:birth.birthDate,birthTime:birth.birthTime,gender:birth.gender,calendarType:birth.calendarType,isLeapMonth:birth.isLeapMonth,
       consent:form.elements.consent.checked,channel:customer?(live?'toss-live':'toss-test'):'admin-demo',
-      ...(customer&&live?{checkoutAttempt:checkoutAttempt(),policyVersion:approvedPolicyVersion,
+      ...(customer&&live?{checkoutAttempt:checkoutAttempt(),policyVersion:approvedPolicyVersion,policyDigest:approvedPolicyDigest,
         immediateDelivery:form.elements.immediateDelivery.checked,termsAccepted:form.elements.termsAccepted.checked}:{}),
       ...(customer && form.elements.recoveryConsent.checked ?
         {email:data.email,recoveryConsent:true} : {}),

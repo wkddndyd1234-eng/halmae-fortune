@@ -63,13 +63,13 @@ export async function migrateFinance(source,target){
 
 export async function purgeArchive(store,now=Date.now()){
  const counts={deleted:0,failed:0};
- for(const prefix of ['legal/','finance/']){
+ for(const prefix of ['legal/','finance/','contract/']){
   for await(const page of store.list({prefix,paginate:true})){
    for(const {key} of page.blobs){
     try{
      const entry=await store.get(key,{type:'json'});
      if(!entry) continue;
-     const ref=prefix==='finance/'?entry.orderId:entry.reference;
+    const ref=prefix==='legal/'?entry.reference:entry.orderId;
      if(!ref||await store.get('hold/'+ref,{type:'json'})) continue;
      const dates=[entry.approvedAt,...(entry.cancellations??[]).map(row=>row.canceledAt)]
       .map(value=>Date.parse(value)).filter(Number.isFinite);

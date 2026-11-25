@@ -3,6 +3,7 @@ import {financeStore,secret,sign} from './shared.mjs';
 import {DAY,PRICE} from './payment-config.mjs';
 import {liveRevoked,saveLiveSnapshot} from './live-ledger.mjs';
 import {approvedPayment,findPayment} from './toss.mjs';
+import {saveContract} from '../lib/contract-archive.mjs';
 
 export const orderPattern = /^HM-[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
 export const PURCHASE_DURATION = 365*DAY;
@@ -51,6 +52,7 @@ export async function recordApproval(store,order,payment,now=Date.now(),config) 
   if (order.status === paidStatus(config) && order.purchaseExpiresAt === expiry && !order.recoveryEmail) return order;
   const {recoveryEmail,...fields} = order;
   const updated = {...fields,status:paidStatus(config),paymentKey:payment.paymentKey,approvedAt:payment.approvedAt,purchaseExpiresAt:expiry};
+  if(config?.mode==='live' && !await saveContract(financeStore(),updated)) return null;
   if (recoveryEmail && !fields.recoveryEmailHash) updated.recoveryEmailHash = fingerprint('email',recoveryEmail,config);
   if(config?.mode==='live'){
     const current=await store.getWithMetadata(order.orderId,{type:'json'});

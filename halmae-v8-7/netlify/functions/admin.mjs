@@ -8,6 +8,7 @@ import recovery from './recovery.mjs';
 import {financeStore,json,orders,parse} from './shared.mjs';
 import {migrateFinance,putLegalIndex} from '../lib/legal-records.mjs';
 import {eraseCustomerOrder} from '../lib/live-privacy.mjs';
+import {withPolicyOriginals} from '../lib/contract-archive.mjs';
 
 const denied=()=>json({error:'인증 또는 요청 정보를 확인해 주세요.'},403);
 export default async (req,context)=>{
@@ -98,6 +99,15 @@ export default async (req,context)=>{
    return json(await sweepLive(provider,orders(provider),store));
   }
   if(!orderPattern.test(typeof orderId==='string'?orderId:'')) return json({error:'주문 번호를 확인해 주세요.'},400);
+  if(action==='contract-reissue'){
+   if(provider.mode!=='live' || input.confirmation!==orderId || input.identityVerified!==true ||
+      typeof input.reference!=='string' || !/^CASE-[A-Za-z0-9_-]{6,60}$/.test(input.reference)) return denied();
+   const archive=financeStore();
+   const document=await withPolicyOriginals(archive,await archive.get('contract/'+orderId,{type:'json'}));
+   if(!document) return json({error:'보존된 계약 원문을 찾지 못했습니다. 거래기록과 구매 당시 정책 원문을 별도로 확인해 주세요.'},404);
+   await audit(store,action,'download-prepared',orderId,input.reference);
+   return json(document);
+  }
   const customerStore=orders(provider);
   const order=await customerStore.get(orderId,{type:'json'});
   if(!order) return json({error:'주문을 찾지 못했습니다.'},404);

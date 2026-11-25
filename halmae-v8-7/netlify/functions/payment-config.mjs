@@ -1,4 +1,5 @@
 import {isIP} from 'node:net';
+import {policyArchive} from '../lib/contract-archive.mjs';
 export const PRICE = 39900;
 export const ORDER_NAME = '할매의 깊은 장부';
 export const DAY = 24 * 60 * 60 * 1000;
@@ -44,14 +45,15 @@ export function paymentConfig(req) {
         (LIVE_REPORT_TOKEN_SECRET?.length??0)<32 || LIVE_REPORT_TOKEN_SECRET===REPORT_TOKEN_SECRET) return null;
     const legal={terms:legalUrl(LIVE_TERMS_URL),privacy:legalUrl(LIVE_PRIVACY_URL),refund:legalUrl(LIVE_REFUND_URL)};
     const policyVersion=process.env.LIVE_POLICY_VERSION;
+    const policy=policyArchive(process.env.LIVE_POLICY_ARCHIVE_JSON,policyVersion,legal);
     const merchant=merchantReady()?{phone:process.env.LIVE_SUPPORT_PHONE,
       mailOrderNumber:process.env.LIVE_MAIL_ORDER_NUMBER,privacyOfficer:process.env.LIVE_PRIVACY_OFFICER}:null;
-    const salesEnabled=Boolean(merchant) && process.env.LIVE_POLICY_APPROVED==='true' && /^[a-zA-Z0-9._-]{1,50}$/.test(policyVersion??'') &&PAYMENT_LIVE_SALES_ENABLED==='true' && Object.values(legal).every(Boolean) &&
+    const salesEnabled=Boolean(merchant && policy) && process.env.LIVE_POLICY_APPROVED==='true' && PAYMENT_LIVE_SALES_ENABLED==='true' &&
       (process.env.PAYMENT_WEBHOOK_PUBLIC==='true'
         ? (process.env.PAYMENT_WEBHOOK_ALLOWED_IPS??'').split(',').every(ip=>Boolean(isIP(ip.trim())))
         : (PAYMENT_LIVE_WEBHOOK_KEY?.length??0)>=32) && (PAYMENT_LIVE_OPERATOR_TOKEN?.length??0)>=32 &&
       PAYMENT_LIVE_WEBHOOK_KEY!==PAYMENT_LIVE_OPERATOR_TOKEN;
-    return {origin,mode:'live',salesEnabled,legal,policyVersion,merchant,
+    return {origin,mode:'live',salesEnabled,legal,policyVersion,policy,merchant,
       clientKey:TOSS_LIVE_CLIENT_KEY,secretKey:TOSS_LIVE_SECRET_KEY,tokenSecret:LIVE_REPORT_TOKEN_SECRET,identitySecret:process.env.LIVE_IDENTITY_SECRET||LIVE_REPORT_TOKEN_SECRET,merchantId:TOSS_LIVE_MERCHANT_ID};
   }
   if (PAYMENT_MODE !== 'test' || !isPreview(req) ||

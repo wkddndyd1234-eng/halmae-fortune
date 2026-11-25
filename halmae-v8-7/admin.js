@@ -144,6 +144,20 @@ byId('compare').addEventListener('submit',event=>{
   fill('mismatches',result.issues.map(row=>[row.orderId,row.issue]),'입력한 거래에서 불일치를 찾지 못했습니다.');
  });
 });
+byId('contract-reissue').addEventListener('submit',event=>{
+ event.preventDefault();
+ const form=event.currentTarget;
+ run(event.submitter,async()=>{
+  const fields=Object.fromEntries(new FormData(form));
+  const documentCopy=await api({action:'contract-reissue',...fields,identityVerified:form.elements.identityVerified.checked});
+  const url=URL.createObjectURL(new Blob([JSON.stringify(documentCopy,null,2)],{type:'application/json;charset=utf-8'}));
+  const link=document.createElement('a');
+  link.href=url;link.download='halmae-contract.json';link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  form.reset();
+  status.textContent='재교부용 사본을 준비했습니다. 확인한 고객 전달 경로를 사용해 주세요.';
+ });
+});
 for(const action of ['legal-index','legal-hold']){
  byId(action).addEventListener('submit',event=>{
   event.preventDefault();

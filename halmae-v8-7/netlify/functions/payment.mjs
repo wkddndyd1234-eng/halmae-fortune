@@ -9,7 +9,7 @@ export default async req => {
   const config = paymentConfig(req);
   if (req.method === 'GET') {
     const adminPreview = isPreview(req) && (process.env.DEMO_ACCESS_CODE?.length ?? 0)>=12;
-    return json({enabled:Boolean(config?.salesEnabled),...(config?.mode==='live'?{paymentMode:'live',...(config.merchant?{merchant:config.merchant}:{}),...(config.salesEnabled?{legal:config.legal,policyVersion:config.policyVersion}:{})}:{}),...(mailConfig(config)?{recoveryEnabled:true}:{}),
+    return json({enabled:Boolean(config?.salesEnabled),...(config?.mode==='live'?{paymentMode:'live',...(config.merchant?{merchant:config.merchant}:{}),...(config.salesEnabled?{legal:config.legal,policyVersion:config.policyVersion,policyDigest:config.policy.digest}:{})}:{}),...(mailConfig(config)?{recoveryEnabled:true}:{}),
       ...(adminPreview?{adminPreview:true}:{})});
   }
   if (req.method !== 'POST') return json({error:'Method not allowed'},405);

@@ -59,7 +59,7 @@ export async function rateAllowed(store,scope,limit,interval=60_000){
  return false;
 }
 
-export async function audit(store,action,outcome,orderId){
+export async function audit(store,action,outcome,orderId,reference){
  const at=new Date().toISOString();
- await store.setJSON('audit/'+at+'/'+random(),{at,action,outcome,...(orderId?{orderId}:{})},{onlyIfNew:true});
+ await store.setJSON('audit/'+at+'/'+random(),{at,action,outcome,...(orderId?{orderId}:{}),...(reference?{reference}:{})},{onlyIfNew:true});
 }

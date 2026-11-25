@@ -43,6 +43,11 @@ async function showContract(orderId) {
     lines.push(label+' '+record.policies[key]);
   }
   contractBody.append(links);
+  if(record.policyOriginals){
+    const labels={terms:'이용약관',privacy:'개인정보처리방침',refund:'취소·환불 안내'};
+    lines.push('', '구매 당시 정책 원문');
+    for(const key of ['terms','privacy','refund']) lines.push('',labels[key],record.policyOriginals[key].text);
+  }
   contractText=lines.join('\n');
   contract.hidden=false;
 }
