@@ -42,10 +42,10 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
   const [title,a,b,caution]=domain[i];
   const found=f.stemTenGods.filter(x=>x===a||x===b);
   const hiddenFound=f.hiddenTenGods.flatMap((items,j)=>items.filter(x=>x.tenGod===a||x.tenGod===b).map(x=>['년','월','일','시'][j]+'지 '+x.stem+'('+x.tenGod+')'));
-  chapters.push(section('第'+['七','八','九','十','十一','十二'][i]+'章',title,found.length?`네 천간에 ${found.join('·')}이 보이는구나.`:`이 주제와 연결되는 ${a}·${b}의 상징을 살펴보자.`,[
-   `${a}는 ${ten[a]}, ${b}는 ${ten[b]}의 뜻으로 읽힌단다.`,
-   found.length?`‘${title}’을 읽을 때 겉천간의 ${found.join('·')}은 먼저 보이는 단서란다. 아래 지장간을 펴서 안쪽에 담긴 역할도 같이 살펴봐.`:`겉천간에서 ${a}·${b}의 이름은 확인되지 않으니 아래 지장간을 펴 보렴. 때마다 만나는 운의 글자가 다른 단서를 건네기도 한단다.`,
-   hiddenFound.length?'지장간까지 살피면 '+hiddenFound.join(' · ')+'도 나타나는구나. 겉에 드러난 역할과 안에 담긴 역할은 구분해서 읽어야 한단다.':`이 원국에는 ${a}·${b}를 지장간에서도 확인할 수 없구나. 그 자리에서는 이 주제로 복의 유무를 판단하지 않아.`,
+  chapters.push(section('第'+['七','八','九','十','十一','十二'][i]+'章',title,found.length?`네 천간에 ${found.join('·')} 표시가 보이는구나.`:`이 주제와 연결되는 ${a}·${b}의 상징을 살펴보자.`,[
+   `${a}의 뜻은 ${ten[a]}, ${b}의 뜻은 ${ten[b]}이란다.`,
+   found.length?`‘${title}’에서 먼저 확인할 겉천간의 단서는 ${found.join('·')} 표시야.`:`겉천간에 ${a}·${b} 표시가 없으니 아래 지장간의 단서를 펴 보렴.`,
+   hiddenFound.length?'지장간까지 살피면 '+hiddenFound.join(' · ')+'도 나타나는구나. 겉에 드러난 역할과 안에 담긴 역할은 구분해서 읽어야 한단다.':`지장간에도 ${a}·${b} 표시는 없구나. 이 표에서 해당 역할이 보이지 않는다고 실제 여건을 판단할 수는 없단다.`,
    caution
   ],[`일간: ${s.dayStem}`,`관련 십성: ${a}·${b}`]));
  }
@@ -59,8 +59,8 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
  const annualRelations=s.dateBoundaryUncertain?f.annual.relations.filter(item=>item.position==='일'):f.annual.relations;
  chapters.push(section('第十四章','2027년 정미년의 기운',`${f.annual.pillar} · ${f.annual.tenGod}`,[
   annualReflection(s,f.annual),
-  `할매는 정미년의 등불 아래 ${ten[f.annual.tenGod]}의 이야기를 펴 놓았단다. 빛이 들어야 보이는 일과 어둑한 자리에 두어도 괜찮은 일이 있지. 누가 알아주었으면 했던 수고부터 네가 직접 말해 보렴.`,
-  ...(annualRelations.length?[`정미의 未와 장부에 펼친 자리를 대조하면 ${transitText(annualRelations)}이란다. 그 자리에 필요한 약속부터 작게 챙겨 보렴.`]:[]),
+  `정미년의 십성 ${f.annual.tenGod}에서 살필 주제는 ‘${ten[f.annual.tenGod]}’이야.`,
+  ...(annualRelations.length?[`정미의 未와 장부에 펼친 자리를 대조하면 ${transitText(annualRelations)} 관계가 보이는구나.`]:[]),
   ...(f.annual.decades.length?[luckText(f.annual.decades)]:[]),
  ]));
  f.monthly.forEach((m,i)=>{
@@ -82,6 +82,9 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
   }
   chapter.paragraphs=chapter.groups.flatMap(g=>g.paragraphs);
  }
- const calculationNotes=[s.calculationBasis,...s.warnings,'세운은 입춘, 월운은 월별 절입 시각에 바뀌어요. 2027년 소한 전은 2026년 자월에 속해요.',decades.length?f.luck.caveat:f.luck.unavailableReason].filter(Boolean);
+ const calculationNotes=[s.calculationBasis,...s.warnings,
+  ...(s.dateBoundaryUncertain?['표의 연주·월주는 정오 참고값이란다. 본문 원국 해석은 확인된 일주만 쓰고, 월운도 일지와 견줘 읽어.']:[]),
+  ...(s.isLeapMonth?[`입력한 음력 윤달 ${s.birthDate}를 양력 ${s.solarDate}로 환산해 명식을 계산했단다.`]:[]),
+  ...(s.birthTime?.startsWith('23:')?['이 장부는 한국 시간 자정에 일주를 바꾸는 관례를 써. 밤 11시에 날을 바꾸는 관례로 보면 일주와 시주가 달라질 수 있단다.']:[]),'세운은 입춘, 월운은 월별 절입 시각에 바뀌어요. 2027년 소한 전은 2026년 자월에 속해요.',decades.length?f.luck.caveat:f.luck.unavailableReason].filter(Boolean);
  return {meta:{name,birthDate:s.birthDate,solarDate:s.solarDate,calendarType:s.calendarType,isLeapMonth:s.isLeapMonth,gender:s.gender||null,birthTime:s.birthTime||'미상',pillars:s.pillars,elementCounts:s.elements,calculationWarnings:s.warnings,calculationNotes,weekday:weekdays[new Date(s.solarDate+'T00:00:00Z').getUTCDay()]+'요일',edition:'할매의 운명방 · 2027 개인별 전통 명리 해석',chapterCount:chapters.length,verified:false},chapters:chapters.map((c,i)=>({...c,basis:i<12&&s.dateBoundaryUncertain?'일주의 전통 상징':i<6?'원국의 전통 상징':i<12?'원국·십성의 상징':i===12?(decades.length?'대운 근사 계산':'긴 시간의 전통 상징'):i===13?'2027 세운':'절기 기반 2027 월운'}))};
 }
