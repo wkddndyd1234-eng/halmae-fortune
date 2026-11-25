@@ -60,3 +60,15 @@
   #chapters .chapter { box-shadow: none; }
   #chapters .chapter-back { display: none; }
 }
+
+.chapter-jump{display:grid;gap:.35rem;margin-top:1.5rem}
+.chapter-jump select{max-width:100%;min-height:44px;color:#f5e0b7;background:#21190f;border:1px solid #c09b5d}
+.chapter-navigation,.report-help{display:flex;flex-wrap:wrap;align-items:center;gap:.45rem 1rem}
+.chapter-navigation{margin-top:1.5rem;border-top:1px solid #b89a65;padding-top:.35rem}
+.report-help{justify-content:center;margin:1rem auto;padding:0 1rem}
+.report-help a,.report-help button{display:inline-flex;align-items:center;min-height:44px}
+#chapters .chapter-subtitle{margin-top:1.2rem}
+@media (max-width:480px){
+ #chapters .chapter-text{font-size:1.04rem;line-height:1.82}
+ #chapters .chapter{margin-block:.8rem}
+}

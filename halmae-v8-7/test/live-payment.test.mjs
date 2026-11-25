@@ -27,7 +27,7 @@ test('운영 판매 승인·호스트·키·정책·운영 인증 정보가 모�
   ['PAYMENT_RUNTIME_TIER','deploy-preview'],['PAYMENT_LIVE_SITE_ID','wrong-site'],['URL',testOrigin],['PAYMENT_LIVE_APPROVED','false'],
   ['PAYMENT_LIVE_SALES_ENABLED','false'],['TOSS_LIVE_SECRET_KEY','test_sk_dummy'],
   ['LIVE_REPORT_TOKEN_SECRET','short'],['LIVE_PRIVACY_URL','javascript:alert(0)'],
-  ['PAYMENT_LIVE_WEBHOOK_KEY',operator],['LIVE_POLICY_APPROVED','false'],
+  ['PAYMENT_LIVE_WEBHOOK_KEY',operator],['LIVE_POLICY_APPROVED','false'],['LIVE_MAIL_ORDER_NUMBER','주소 변경 중'],['LIVE_SUPPORT_PHONE',''],['LIVE_PRIVACY_OFFICER','지정 대기'],
  ]){
   const original=process.env[key];
   process.env[key]=value;
@@ -41,7 +41,8 @@ test('운영 판매 승인·호스트·키·정책·운영 인증 정보가 모�
 
 function configure(){
  Object.assign(process.env,{
-  OPS_LIVE_ALLOWED_IPS:'192.0.2.7',PAYMENT_REFUNDS_APPROVED:'true',LIVE_POLICY_APPROVED:'true',LIVE_POLICY_VERSION:'2026.11-fixture',PAYMENT_MODE:'live',PAYMENT_RUNTIME_TIER:'production',SITE_ID:'fixture-site',PAYMENT_LIVE_SITE_ID:'fixture-site',TOSS_LIVE_MERCHANT_ID:'merchant-fixture',URL:origin,PAYMENT_LIVE_ORIGIN:origin,
+  OPS_LIVE_ALLOWED_IPS:'192.0.2.7',PAYMENT_REFUNDS_APPROVED:'true',LIVE_MERCHANT_DISCLOSURES_APPROVED:'true',LIVE_SUPPORT_PHONE:'02-0000-0000',
+  LIVE_MAIL_ORDER_NUMBER:'2026-가상시-0000',LIVE_PRIVACY_OFFICER:'가상 검증',LIVE_POLICY_APPROVED:'true',LIVE_POLICY_VERSION:'2026.11-fixture',PAYMENT_MODE:'live',PAYMENT_RUNTIME_TIER:'production',SITE_ID:'fixture-site',PAYMENT_LIVE_SITE_ID:'fixture-site',TOSS_LIVE_MERCHANT_ID:'merchant-fixture',URL:origin,PAYMENT_LIVE_ORIGIN:origin,
   PAYMENT_LIVE_APPROVED:'true',PAYMENT_LIVE_SALES_ENABLED:'true',
   TOSS_LIVE_CLIENT_KEY:'live_ck_dummy',TOSS_LIVE_SECRET_KEY:'live_sk_dummy',
   LIVE_RECOVERY_RESEND_API_KEY:'mock-live-mail',LIVE_RECOVERY_FROM_EMAIL:'sender@example.test',
@@ -72,7 +73,8 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
   }
   if(endpoint.hostname==='api.resend.com'){
    assert.equal(options.headers.Authorization,'Bearer mock-live-mail');
-   mails.push(JSON.parse(options.body));
+   mails.push({key:options.headers['Idempotency-Key'],...JSON.parse(options.body)});
+   if(mails.length===1) return new Response(null,{status:503});
    return Response.json({id:'fixture-mail'});
   }
   assert.equal(endpoint.hostname,'api.tosspayments.com');
@@ -125,13 +127,18 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  const open=await report(request(null,{token:paid.token}));
  assert.equal(open.status,200);
  assert.equal((await open.json()).chapters.length,26);
+ const disclosure=process.env.LIVE_MAIL_ORDER_NUMBER;
+ delete process.env.LIVE_MAIL_ORDER_NUMBER;
+ assert.equal((await report(request(null,{token:paid.token}))).status,200);
+ process.env.LIVE_MAIL_ORDER_NUMBER=disclosure;
  const original=provider;
  provider={...original,mId:'other-merchant'};
  assert.equal((await report(request(null,{token:paid.token}))).status,403);
  provider=original;
  const recoveryInput={action:'request',orderId:first.orderId,email:birth.email};
  assert.equal((await recovery(request(recoveryInput))).status,202);
- assert.equal(mails.length,1);
+ assert.equal(mails.length,2);
+ assert.deepEqual(mails[0],mails[1]);
  assert.deepEqual(mails[0].to,[birth.email]);
  const recoveryToken=mails[0].text.split('#').at(-1);
  const exchange=()=>recovery(request({action:'exchange',token:recoveryToken}));

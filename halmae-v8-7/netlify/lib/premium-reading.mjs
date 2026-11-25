@@ -19,6 +19,18 @@ const rolePrompt={
  편인:'새로 배운 것과 현실에서 확인한 것을 구별해',
  정인:'도움받을 부분과 네가 결정할 부분을 구별해',
 };
+const businessLens={
+ 비견:'함께 파는 물건이라면 같은 가격표보다 각자가 감당할 일부터 나눠.',
+ 겁재:'경쟁자가 붙더라도 값을 낮추기 전에 공동 비용과 남는 몫부터 살펴.',
+ 식신:'만드는 손이 바빠질수록 같은 품질로 반복할 수 있는 분량을 먼저 잡아.',
+ 상관:'오래된 거래 방식을 고치고 싶다면 달라지는 조건은 한 가지부터 시험해.',
+ 편재:'새 판로가 눈에 띈다면 작은 거래로 운반비와 돌아오는 돈의 간격을 보렴.',
+ 정재:'꾸준한 거래에는 재료비보다 약속한 날짜마다 받을 수 있는 돈도 중요해.',
+ 편관:'갑작스러운 큰 주문이라면 먼저 납기와 지연 책임을 글로 남겨 두렴.',
+ 정관:'누구와 거래하든 검사 기준과 환불 절차를 같은 문장으로 설명해 보렴.',
+ 편인:'낯선 홍보 방식을 쓰고 싶다면 한 번에 바꾸지 말고 반응을 따로 기록해.',
+ 정인:'배워 온 기술을 팔기 전에 누가 다시 찾아오는지와 그 이유를 먼저 살펴.',
+};
 const domainPrompts=[
  '월간에 직접 보이는 몫이라면 거래 조건을 처음부터 말로 밝히는 장면에, 지장간에서 보이는 몫이라면 가격표 뒤로 들어간 시간과 수고를 가려내는 장면에 놓아 보렴. 이미 도와준 값과 앞으로도 맡을 값은 한꺼번에 정하지 않아도 돼.',
  '아이디어 제안, 실제 제작, 손님이나 동료에게 전달하는 일 중 어떤 것을 맡는 상황인지 구별해. 주변에서 반응한 부분과 계속 운영할 사람이 필요한 부분은 다르지. 한 역할이 잘 맞는다고 세 가지를 모두 바꿀 필요는 없단다.',
@@ -63,13 +75,15 @@ export function natalGroups(index,f,now){
    [`이번 표에는 표시할 쌍이 없어 지장간을 먼저 펴 보자. 일지 ${s.dayBranch}에 놓인 ${dayHidden.stem}의 ${dayHidden.tenGod}을 중심으로 보면 ${rolePrompt[dayHidden.tenGod]} 볼 만하겠구나. 쌍이 없다는 사실로 실제 인간관계의 깊이를 알 수는 없단다.`]),
   '표에서 반복되는 이름이 있다면 어느 기둥 사이인지 먼저 확인해. 바깥 활동에 얽힌 두 자리와 가깝게 지내는 사람을 떠올리게 하는 자리는 같은 질문을 던지지 않지. 충과 형이 같은 쌍에서 보일 경우에도 실제 사건이 두 가지라고 세지 않아.'));
  if(index>=6&&index<=11){
+  const dayTie=f.relations.find(({a,b})=>a==='일'||b==='일');
   const focus=[
-   `돈이 여러 사람 손을 거치는 경우라면 월간 ${monthGod}의 주제에서 ${rolePrompt[monthGod]} 보고, 금액과 지급할 사람을 같은 줄에 적어 보렴.`,
-   `일지 안의 ${dayHidden.tenGod}에선 ${rolePrompt[dayHidden.tenGod]} 보는 질문이 나와. 직함을 얻는 일과 혼자서도 갈고닦을 수 있는 기술을 함께 살펴.`,
-   `일지의 ${dayHidden.stem}(${dayHidden.tenGod})을 가까워질 때의 성찰에 놓고, ${rolePrompt[dayHidden.tenGod]} 보는 질문을 건네고 싶구나.`,
-   `함께 생활하는 방식을 상의할 때는 월간 ${monthGod}과 일지 안의 ${dayHidden.tenGod}을 구분해 읽어. 바깥 역할에서 익숙해진 기준을 서로 동의하지 않고 집에 가져오지는 않는지 살펴봐.`,
+   `월간에서 본 ${monthGod}의 주제를 거래에 옮겨 보렴. ${rolePortraits[monthGod][1]}`,
+   `일지 안의 ${dayHidden.tenGod}을 기술의 쓰임에 빗대어 보면 이런 질문을 할 수 있어. ${rolePortraits[dayHidden.tenGod][2]}`,
+   dayTie?`가까운 사이를 나타내는 일지에도 ${dayTie.type}의 단서가 있구나. ${relationReading[dayTie.type]}`:
+    `일지의 ${dayHidden.stem}(${dayHidden.tenGod})에 마음을 건네는 방식을 비춰 볼 수 있어. ${rolePortraits[dayHidden.tenGod][3]}`,
+   `함께 사는 약속을 만들 땐 월간에서 본 ${monthGod}과 일지에서 살핀 ${dayHidden.tenGod}의 자리를 갈라 보렴. 밖에서 익숙한 기준을 집의 약속에도 쓰고 싶다면 생활비, 돌봄 시간, 혼자 쉬는 자리를 한 가지씩 서로 확인해.`,
    `바깥 인연에서는 월간 ${monthGod}을 단서로, ${rolePrompt[monthGod]} 볼 만해. 오래 알고 지낸 사람과 같은 일을 한다면 예전의 친분과 이번에 한 합의를 명확히 해.`,
-   `월간 ${monthGod}을 평소 맡는 역할의 상징으로 놓고 ${rolePrompt[monthGod]} 보렴. 그 질문으로 하루를 조금 가볍게 만들 수 있어도 신체 상태는 실제 생활과 증상으로 살펴야 해.`,
+   `월간의 ${monthGod}은 몸 상태를 가리키는 글자가 아니란다. 이 장에서는 ${rolePrompt[monthGod]} 보는 기준으로만 쓰렴. 할 일을 더 맡은 날과 평소의 쉼을 지킨 날을 돌아보고, 불편이 계속되면 증상을 의료진과 상의해.`,
   ];
   groups.push(group('네 글자를 생활에 놓기',domainPrompts[index-6],focus[index-6]));
  }
@@ -90,6 +104,8 @@ export function monthlyGroups(f,month,index){
  const [heading,season,money,work,love,caution]=monthEditorial[index];
  const [overallScene,moneyScene,workScene,loveScene,cautionScene]=monthScenes[index];
  const [role,moneyRole,workRole,loveRole]=rolePortraits[month.tenGod];
+ const innerRole=f.hiddenTenGods[2][0].tenGod;
+ const roleOpening=role.split('. ',1)[0]+'.';
  const dayRelations=month.relations.filter(item=>item.position==='일');
  const relations=s.dateBoundaryUncertain?dayRelations:month.relations;
  const workMeeting=relations.filter(item=>item.position==='월');
@@ -101,16 +117,16 @@ export function monthlyGroups(f,month,index){
    workScene;
  return [
   group('총운',`${heading}를 펼쳐 보렴. ${season}`,
-   `이달의 ${month.pillar[0]} 곁에 네 일간 ${s.dayStem}을 놓으면, 할매 장부에선 ${month.tenGod}의 이야기가 열린단다. ${role} ${overallScene}`),
-  group('재물운',`재물 쪽에서 ${month.tenGod}의 상징을 읽을 때는 ‘${money}’부터 찾아 보렴. ${moneyRole}`,moneyScene),
-  group('직업운',`일터에서 할매가 네게 건네고 싶은 화두는 ‘${work}’란다. ${workRole}`,workReading),
-  group('사업운',businessScenes[index]),
+   `이달 천간 ${month.pillar[0]}과 일간 ${s.dayStem}의 만남은 ${month.tenGod}으로 읽어. ${roleOpening} 일지 속 ${innerRole}의 기준도 곁에 놓고 ${rolePrompt[innerRole]} 보렴. ${overallScene}`),
+  group('재물운',`재물에서 먼저 볼 것은 ‘${money}’란다. ${moneyRole}`,moneyScene),
+  group('직업운',`일터에서는 ‘${work}’를 놓고 읽어 보렴. ${workRole}`,workReading),
+  group('사업운',`${businessLens[month.tenGod]} ${businessScenes[index]}`),
   group('애정운',`애정에서는 ‘${love}’를 떠올려 보렴. ${loveRole}`,
    dayRelations.length?`네 일지 ${s.dayBranch}와 달의 지지 ${month.pillar[1]} 사이에서 ${dayRelations.map(item=>item.type).join('·')}을 확인했구나. ${dayRelations.map(({type})=>relationReading[type]).join(' ')} ${loveScene}`:
     `이달의 ${month.pillar[1]}과 일지 ${s.dayBranch} 사이에 특별히 얽힌 글자는 없구나. 이 대목은 절기의 그림을 따라 천천히 읽어 보렴. ${loveScene}`),
-  group('주의할 점',`‘${caution}’을 조심해서 살펴봐. ${cautionScene}`,
+  group('주의할 점',`‘${caution}’을 살펴봐. ${cautionScene}`,
    relations.length?
-    `이번 달 ${month.pillar[1]}과 장부에 펼친 자리를 대조하면 ${relations.map(({position,natal,type})=>position+'지 '+natal+'의 '+type).join(' · ')}이란다. 각 관계가 어느 자리에서 보이는지 구별해. ${relationReading[relations[0].type]}`:
+    `이번 달 ${month.pillar[1]}과 장부에 펼친 자리를 대조하면 ${relations.map(({position,natal,type})=>position+'지 '+natal+'의 '+type).join(' · ')}이란다. ${relationReading[relations[0].type]}`:
     `${heading}에선 살펴본 지지와 ${month.pillar[1]} 사이에 바로 표시할 합충형해가 없구나.`,
    ...month.decades.filter(cycle=>cycle.relations.length).map(cycle=>
     `${heading}의 ${month.pillar[1]}과 대운 ${cycle.pillar[1]} 사이에는 ${cycle.relations.join('·')}이 보이는구나. ${relationReading[cycle.relations[0]]}`)),

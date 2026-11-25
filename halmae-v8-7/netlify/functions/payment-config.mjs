@@ -19,6 +19,17 @@ function legalUrl(value){
   } catch { return null; }
 }
 
+export function merchantReady(env=process.env){
+  const phone=env.LIVE_SUPPORT_PHONE??'';
+  const mailOrder=env.LIVE_MAIL_ORDER_NUMBER??'';
+  const officer=env.LIVE_PRIVACY_OFFICER??'';
+  return env.LIVE_MERCHANT_DISCLOSURES_APPROVED==='true' &&
+    /^0\d{1,2}-\d{3,4}-\d{4}$/.test(phone) &&
+    /^\d{4}-[가-힣]{2,20}-\d{4,8}$/.test(mailOrder) &&
+    /^[가-힣A-Za-z][가-힣A-Za-z .'-]{1,59}$/.test(officer) &&
+    !/미정|대기|미확정|담당자|추후|TBD|placeholder/i.test(officer);
+}
+
 export function paymentConfig(req) {
   const {PAYMENT_MODE, TOSS_TEST_CLIENT_KEY, TOSS_TEST_SECRET_KEY, REPORT_TOKEN_SECRET} = process.env;
   const origin = new URL(req.url).origin;
@@ -33,12 +44,14 @@ export function paymentConfig(req) {
         (LIVE_REPORT_TOKEN_SECRET?.length??0)<32 || LIVE_REPORT_TOKEN_SECRET===REPORT_TOKEN_SECRET) return null;
     const legal={terms:legalUrl(LIVE_TERMS_URL),privacy:legalUrl(LIVE_PRIVACY_URL),refund:legalUrl(LIVE_REFUND_URL)};
     const policyVersion=process.env.LIVE_POLICY_VERSION;
-    const salesEnabled=process.env.LIVE_POLICY_APPROVED==='true' && /^[a-zA-Z0-9._-]{1,50}$/.test(policyVersion??'') &&PAYMENT_LIVE_SALES_ENABLED==='true' && Object.values(legal).every(Boolean) &&
+    const merchant=merchantReady()?{phone:process.env.LIVE_SUPPORT_PHONE,
+      mailOrderNumber:process.env.LIVE_MAIL_ORDER_NUMBER,privacyOfficer:process.env.LIVE_PRIVACY_OFFICER}:null;
+    const salesEnabled=Boolean(merchant) && process.env.LIVE_POLICY_APPROVED==='true' && /^[a-zA-Z0-9._-]{1,50}$/.test(policyVersion??'') &&PAYMENT_LIVE_SALES_ENABLED==='true' && Object.values(legal).every(Boolean) &&
       (process.env.PAYMENT_WEBHOOK_PUBLIC==='true'
         ? (process.env.PAYMENT_WEBHOOK_ALLOWED_IPS??'').split(',').every(ip=>Boolean(isIP(ip.trim())))
         : (PAYMENT_LIVE_WEBHOOK_KEY?.length??0)>=32) && (PAYMENT_LIVE_OPERATOR_TOKEN?.length??0)>=32 &&
       PAYMENT_LIVE_WEBHOOK_KEY!==PAYMENT_LIVE_OPERATOR_TOKEN;
-    return {origin,mode:'live',salesEnabled,legal,policyVersion,
+    return {origin,mode:'live',salesEnabled,legal,policyVersion,merchant,
       clientKey:TOSS_LIVE_CLIENT_KEY,secretKey:TOSS_LIVE_SECRET_KEY,tokenSecret:LIVE_REPORT_TOKEN_SECRET,identitySecret:process.env.LIVE_IDENTITY_SECRET||LIVE_REPORT_TOKEN_SECRET,merchantId:TOSS_LIVE_MERCHANT_ID};
   }
   if (PAYMENT_MODE !== 'test' || !isPreview(req) ||

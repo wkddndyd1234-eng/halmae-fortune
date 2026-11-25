@@ -32,13 +32,17 @@ function fill(id,rows,empty){
  }):[element('p',empty)]));
 }
 async function refresh(){
- data=await api({action:'dashboard'});
- fill('orders',data.list.map(row=>[row.orderId,row.financialStatus??row.status,amount(row.amount),row.issuance]),'표시할 주문이 없습니다.');
- fill('sales',[...Object.entries(data.daily),...Object.entries(data.monthly)].sort(([a],[b])=>b.localeCompare(a))
-  .map(([day,row])=>[day,'승인 '+amount(row.gross),'환불 '+amount(row.refund)]),'집계할 운영 거래가 없습니다.');
- fill('issues',data.issues.map(row=>[row.orderId,row.financialStatus??row.issuance,row.mail]),'표시할 점검 주문이 없습니다.');
- byId('retention').textContent=data.retention?'최근 삭제 작업 '+(data.retention.erased??0)+'건 · 재시도 필요 '+data.retention.failed+'건':'아직 삭제 작업 기록이 없습니다.';
- if(data.truncated) status.textContent='일부 자료만 조회됐습니다. 이 화면의 집계를 전체 정산에 사용하지 마세요.';
+ byId('export').disabled=true;
+ data=null;
+ try {
+  data=await api({action:'dashboard'});
+  fill('orders',data.list.map(row=>[row.orderId,row.financialStatus??row.status,amount(row.amount),row.issuance]),'표시할 주문이 없습니다.');
+  fill('sales',[...Object.entries(data.daily),...Object.entries(data.monthly)].sort(([a],[b])=>b.localeCompare(a))
+   .map(([day,row])=>[day,'승인 '+amount(row.gross),'환불 '+amount(row.refund)]),'집계할 운영 거래가 없습니다.');
+  fill('issues',data.issues.map(row=>[row.orderId,row.financialStatus??row.issuance,row.mail]),'표시할 점검 주문이 없습니다.');
+  byId('retention').textContent=data.retention?'최근 삭제 작업 '+(data.retention.erased??0)+'건 · 재시도 필요 '+data.retention.failed+'건':'아직 삭제 작업 기록이 없습니다.';
+  if(data.truncated) status.textContent='일부 자료만 조회됐습니다. 이 화면의 집계를 전체 정산에 사용하지 마세요.';
+ } finally { byId('export').disabled=false; }
 }
 async function start(){
  session=await api();
@@ -109,8 +113,10 @@ byId('support').addEventListener('submit',event=>{
   form.elements.email.value='';
   form.elements.reason.value='';
   form.elements.confirmation.value='';
-  status.textContent=result.accepted?'등록 정보가 일치하면 복구 메일을 보냅니다.':result.status?'거래 상태 '+result.status:'작업을 처리했습니다.';
   await refresh();
+  if(!data.truncated){
+   status.textContent=result.accepted?'등록 정보가 일치하면 복구 메일을 보냅니다.':result.status?'거래 상태 '+result.status:'작업을 처리했습니다.';
+  }
  });
 });
 byId('retry-retention').addEventListener('click',event=>run(event.currentTarget,async()=>{

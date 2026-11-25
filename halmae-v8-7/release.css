@@ -33,3 +33,11 @@ body:has(#renew) > main.paper {
  .book-wrap .cover h1 { font-size: clamp(1.85rem, 9.5vw, 2.8rem); letter-spacing: .035em; }
  .book-wrap .status { word-break: keep-all; }
 }
+
+.hero .hero-promise{word-break:keep-all;color:#f2d59f;font-weight:700;font-size:clamp(.97rem,3.1vw,1.2rem);margin:0 auto .4rem}
+.hero .hero-hook{word-break:keep-all;margin-bottom:.25rem!important}
+.hero .hero-quote{margin-top:.25rem}
+.ledger-value{line-height:1.75;color:#eed8af;margin:0 0 1rem;max-width:43rem}
+.merchant-details{display:grid;gap:.25rem;overflow-wrap:anywhere}
+.merchant-details dt{font-weight:700;color:#eacb91;margin-top:.5rem}
+.merchant-details dd{margin:0}
