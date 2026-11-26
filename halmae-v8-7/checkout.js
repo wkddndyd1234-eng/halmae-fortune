@@ -24,6 +24,11 @@ const calendarType=form.elements.calendarType;
 const leapMonth=form.elements.isLeapMonth;
 const birthConfirmed=form.elements.birthConfirmed;
 const birthSummary=document.querySelector('#birth-summary');
+document.querySelector('#open-checkout-sample').addEventListener('click',()=>{
+  const sample=document.querySelector('#checkout-sample');
+  sample.open=true;
+  sample.querySelector('summary').focus({preventScroll:true});
+});
 let confirmedBirth;
 function currentBirth(){
   const {name,birthDate,birthTime,gender}=form.elements;
