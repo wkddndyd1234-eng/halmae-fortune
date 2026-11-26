@@ -1,11 +1,13 @@
 [build]
   command = "node build.mjs"
   publish = "dist"
-  functions = "netlify/functions"
+[functions]
+  directory = "public-demo-functions"
 [[headers]]
   for = "/*"
   [headers.values]
     X-Content-Type-Options = "nosniff"
+    X-Robots-Tag = "noindex"
     Referrer-Policy = "strict-origin-when-cross-origin"
     X-Frame-Options = "DENY"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"

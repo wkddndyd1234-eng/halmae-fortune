@@ -3,12 +3,10 @@ import {ledgerPreview} from './ledger-preview.mjs';
 import {renderLedgerPreview} from './ledger-preview-view.js';
 import {renderReadingChart} from './reading-chart.js';
 import {calculateSaju,pillarElements} from './saju.mjs';
-import {fromFreeForm,saveBirthDraft,todayInKorea} from './birth-handoff.js';
+import {fromFreeForm,todayInKorea} from './birth-handoff.js';
 import {readPersonalReading} from './free-insights.js';
 import {cyclesForSaju} from './fortune-cycles.mjs';
 import {readingName} from './reading-name.mjs';
-import {readingVariant,recordConversion,recordFunnel} from './purchase.js';
-recordFunnel('home_view');
 
 const byId = id=>document.getElementById(id);
 const form = byId('fortune');
@@ -19,28 +17,16 @@ const isLeapMonth=byId('isLeapMonth');
 calendarType.addEventListener('change',()=>{byId('leapField').hidden=calendarType.value!=='lunar';if(calendarType.value!=='lunar')isLeapMonth.value='false';});
 const offer = byId('offer');
 const checkoutLink = byId('checkoutLink');
-result.dataset.variant=readingVariant(result.dataset.variant);
 const error = byId('error');
 const name = byId('name');
-let draft = null;
 let readingText = '';
-let paymentEnabled = false;
 
 function invalidateReading(){
- if(draft) saveBirthDraft(null);
- draft=null;
  readingText='';
  result.hidden=offer.hidden=true;
- checkoutLink.disabled=true;
 }
 form.addEventListener('input',invalidateReading);
 form.addEventListener('change',invalidateReading);
-window.addEventListener('pageshow',event=>{
- if(event.persisted && draft){
-  invalidateReading();
-  error.textContent='주문하려면 출생 정보를 확인한 뒤 무료 풀이를 다시 봐 주세요.';
- }
-});
 
 const relationshipNotes = {
  '솔로':'편안하게 느낀 관계의 장면을 떠올려도 좋아.',
@@ -91,19 +77,9 @@ function focusHeading(id) {
  (id==='resultHeading'?result:heading).scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
 }
 
-let started=false;
-function recordStart(){
- if (started) return;
- started=true;
- recordConversion('free_reading_start');
- recordFunnel('reading_start');
-}
-form.addEventListener('input',recordStart);
 form.addEventListener('submit',event=>{
- recordStart();
  event.preventDefault();
  invalidateReading();
- saveBirthDraft(null);
  const input=fromFreeForm({name:name.value,gender:byId('gender').value,calendarType:calendarType.value,isLeapMonth:isLeapMonth.value==='true',year:year.value,month:month.value,day:day.value,hour:hour.value,minute:minute.value});
  error.textContent='';
  if (!input) {
@@ -126,7 +102,7 @@ form.addEventListener('submit',event=>{
  byId('ledger-bridge-heading').textContent=call+', 이제부터가 중요한 이야기란다.';
  const purchaseCopy=possessive+' 2027년 운명 장부 펼치기';
  byId('conversionNext').textContent=purchaseCopy;
- if(paymentEnabled) checkoutLink.textContent=purchaseCopy;
+ checkoutLink.textContent=purchaseCopy;
  byId('resultMeta').textContent=`${input.gender==='male'?'남성':'여성'} · ${input.birthDate} ${input.calendarType==='lunar'?(input.isLeapMonth?'음력 윤달':'음력 평달'):'양력'} · ${input.birthTime||'출생 시각 미상'}`;
  for (const [id,value] of Object.entries({
   resultHeading:reading.headline,compassDetail:reading.introduction,
@@ -153,10 +129,6 @@ form.addEventListener('submit',event=>{
   ...notices,'전통 사주 상징을 바탕으로 한 자기 성찰용 풀이입니다.'].join('\n\n');
  result.hidden=false;
  offer.hidden=false;
- draft=input;
- checkoutLink.disabled=!paymentEnabled;
- recordConversion('free_reading_success');
- recordFunnel('reading_complete');
  focusHeading('resultHeading');
 });
 
@@ -165,55 +137,10 @@ byId('editBirth').addEventListener('click',()=>{
  year.focus({preventScroll:true});
  form.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
 });
-fetch('/.netlify/functions/payment',{cache:'no-store'})
- .then(response=>{
-  if(!response.ok) throw Error('Payment status unavailable');
-  return response.json();
- })
- .then(({enabled,paymentMode,legal,merchant})=>{
-  paymentEnabled=enabled===true;
-  checkoutLink.disabled=!paymentEnabled || !draft;
-  checkoutLink.textContent=paymentEnabled?readingName(draft?.name).possessive+' 2027년 운명 장부 펼치기':'현재 주문할 수 없어요';
-  if(enabled===true){
-   byId('offerAvailability').textContent=paymentMode==='live'?'토스페이먼츠 카드 결제':'토스 테스트 결제 · 실제 청구 없음';
-   if(paymentMode==='live'){
-    document.querySelector('.deploy-preview-ribbon').hidden=true;
-    document.querySelector('.preview-footer').hidden=true;
-    for(const [name,url] of Object.entries(legal)) document.querySelector('a[href="/'+name+'.html"]').href=url;
-    if(merchant?.phone && merchant.mailOrderNumber){
-     const disclosure=byId('footer-merchant-disclosures');
-     disclosure.textContent='통신판매업 신고번호 '+merchant.mailOrderNumber+' · 전화 '+merchant.phone;
-     disclosure.hidden=false;
-    }
-   }
-  }
-  if(!paymentEnabled) byId('offerAvailability').textContent='현재 결제를 받을 수 없어요.';
- }).catch(()=>{
-  checkoutLink.textContent='현재 주문할 수 없어요';
-  byId('offerAvailability').textContent='결제 상태를 확인하지 못했어요. 잠시 후 다시 확인해 주세요.';
- });
-for(const [id,event] of [['conversionMid','ledger_preview_mid'],['conversionNext','ledger_preview_end']]){
- byId(id).addEventListener('click',()=>{
-  recordConversion(event);
-  focusHeading('offerHeading');
- });
+for(const id of ['conversionMid','conversionNext']){
+ byId(id).addEventListener('click',()=>focusHeading('offerHeading'));
 }
 byId('returnReading').addEventListener('click',()=>focusHeading('resultHeading'));
-checkoutLink.addEventListener('click',()=>{
- if(!draft || !paymentEnabled) return;
- saveBirthDraft(draft);
- recordConversion('checkout_click');
- recordFunnel('purchase_click');
- location.assign('/checkout.html');
-});
-if('IntersectionObserver' in window){
- const sampleObserver=new IntersectionObserver(entries=>{
-  if(!entries.some(entry=>entry.isIntersecting)) return;
-  recordConversion('report_sample_view');
-  sampleObserver.disconnect();
- });
- sampleObserver.observe(byId('reportSample'));
-}
 byId('saveReading').addEventListener('click',()=>{
  if (!readingText) return;
  const url=URL.createObjectURL(new Blob([readingText],{type:'text/plain;charset=utf-8'}));
