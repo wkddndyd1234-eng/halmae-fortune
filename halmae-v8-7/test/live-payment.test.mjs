@@ -76,7 +76,7 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  t.mock.method(globalThis,'fetch',async (url,options)=>{
   const endpoint=new URL(url);
   if(endpoint.hostname==='blob.example.test'){
-   const key=decodeURIComponent(endpoint.pathname);
+   const key=decodeURIComponent(endpoint.pathname).replace('/site:','/');
    assert.match(key,/halmae-(live-(orders|finance|campaigns)|admin-live)/);
    const verb=options.method;
    if(verb==='delete'){records.delete(key);return new Response(null,{status:200});}
@@ -230,7 +230,8 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  assert.equal((await sendReissue(reissue,'invalid')).status,403);
  assert.equal((await sendReissue({...reissue,identityVerified:false})).status,403);
  assert.equal((await sendReissue({...reissue,confirmation:'different'})).status,403);
- records.delete('/halmae-live-orders/'+first.orderId);
+ const orderRecord=[...records.keys()].find(key=>key.endsWith('/halmae-live-orders/'+first.orderId));
+ assert.ok(records.delete(orderRecord));
  assert.equal((await access(request(contractInput,{cookie}))).status,403);
  assert.deepEqual(await (await sendReissue(reissue)).json(),contract);
  assert.equal(contract.policyOriginals.terms.text,'검수용 terms 원문');

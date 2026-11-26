@@ -7,8 +7,35 @@ import {campaign, campaignContext, campaignReport, linkCampaign, recordStage, se
 
 const attribution={source:'naver',medium:'cpc',campaign:'newyear_2027'};
 
+function fixtureStore(name){
+ const records=new Map();
+ const edgeURL='https://campaign-blobs.example.test';
+ return getStore({name,siteID:'fixture',token:'fixture',edgeURL,fetch:async(input,options)=>{
+  const url=new URL(input);
+  assert.equal(url.origin,edgeURL);
+  const [,site,store,...parts]=decodeURIComponent(url.pathname).split('/');
+  assert.equal(site,'fixture');
+  assert.equal(store,'site:'+name);
+  const key=parts.join('/');
+  if(options.method==='put'){
+   if(new Headers(options.headers).get('if-none-match')==='*'&&records.has(key)){
+    return new Response(null,{status:412});
+   }
+   records.set(key,options.body);
+   return new Response(null,{status:200});
+  }
+  assert.equal(options.method,'get');
+  if(!key){
+   const prefix=url.searchParams.get('prefix')??'';
+   const blobs=[...records.keys()].filter(item=>item.startsWith(prefix)).map(key=>({key,etag:'fixture'}));
+   return Response.json({blobs,directories:[]});
+  }
+  return records.has(key)?new Response(records.get(key)):new Response(null,{status:404});
+ }});
+}
+
 test('campaign storage allows just campaign fields and deduplicates stages on retry',async()=>{
- const store=getStore('campaign-stage-fixture');
+ const store=fixtureStore('campaign-stage-fixture');
  const context=campaignContext({attribution:{...attribution,email:'hidden@example.com'},visit:randomUUID(),birthDate:'1992-01-21'});
  assert.deepEqual(context.attribution,attribution);
  assert.equal(campaign({...attribution,campaign:'hidden@example.com'}),null);
@@ -23,7 +50,7 @@ test('campaign storage allows just campaign fields and deduplicates stages on re
 });
 
 test('campaign revenue counts a verified order once and reflects partial and full refunds',async()=>{
- const store=getStore('campaign-finance-fixture');
+ const store=fixtureStore('campaign-finance-fixture');
  const orderId='fixture-order';
  await linkCampaign(store,orderId,attribution);
  await linkCampaign(store,orderId,{...attribution,campaign:'different'});
