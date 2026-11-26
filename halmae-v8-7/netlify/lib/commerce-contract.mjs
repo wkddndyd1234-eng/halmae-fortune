@@ -2,7 +2,7 @@ export const merchantIdentity={
  name:'주식회사 밸류시커 (VALUE SEEKER)',
  representative:'장철근',
  registration:'244-86-02709',
- address:'서울특별시 서초구 사임당로8길 13, 4층 402-S36호(서초동, 제일빌딩)',
+ address:'서울특별시 서초구 사임당로8길 13, 4층 402-S36호',
  email:'valueseeker123@naver.com',
 };
 

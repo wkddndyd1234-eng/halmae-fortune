@@ -162,7 +162,7 @@ fetch('/.netlify/functions/payment',{cache:'no-store'})
   if(!response.ok) throw Error('Payment status unavailable');
   return response.json();
  })
- .then(({enabled,paymentMode,legal})=>{
+ .then(({enabled,paymentMode,legal,merchant})=>{
   paymentEnabled=enabled===true;
   checkoutLink.disabled=!paymentEnabled || !draft;
   checkoutLink.textContent=paymentEnabled?'출생 정보 확인하고 주문하기':'현재 주문할 수 없어요';
@@ -172,6 +172,11 @@ fetch('/.netlify/functions/payment',{cache:'no-store'})
     document.querySelector('.deploy-preview-ribbon').hidden=true;
     document.querySelector('.preview-footer').hidden=true;
     for(const [name,url] of Object.entries(legal)) document.querySelector('a[href="/'+name+'.html"]').href=url;
+    if(merchant?.phone && merchant.mailOrderNumber){
+     const disclosure=byId('footer-merchant-disclosures');
+     disclosure.textContent='통신판매업 신고번호 '+merchant.mailOrderNumber+' · 전화 '+merchant.phone;
+     disclosure.hidden=false;
+    }
    }
   }
   if(!paymentEnabled) byId('offerAvailability').textContent='현재 결제를 받을 수 없어요.';
