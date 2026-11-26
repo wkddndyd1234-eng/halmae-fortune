@@ -160,7 +160,7 @@ fetch(endpoint+'payment',{cache:'no-store'})
       form.elements.termsAccepted.required=true;
       for(const [id,url] of Object.entries(legal)) document.querySelector('a[href="/'+id+'.html"]').href=url;
       document.querySelector('#consent-copy').textContent='을 읽었고 보고서 발급을 위한 정보 처리에 동의합니다.';
-      buy.textContent='39,900원 결제하기';
+      buy.textContent='내 운명 장부 펼치기';
     }
     if(live){
       document.querySelector('#recent-preview').hidden=false;

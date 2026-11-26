@@ -55,3 +55,18 @@ footer.footer a{color:#e2c18c}
  .hero a.scroll{position:static;transform:none;display:block;margin:.75rem auto 0}
  .checkout-order .buy-button{width:100%;min-height:52px}
 }
+ 
+/* Keep headlines readable and let the purchase action fill narrow screens. */
+.ledger-cover .title,
+.ledger-cover h1,
+#resultHeading { text-wrap: balance; word-break: keep-all; overflow-wrap: anywhere; }
+.ledger-value,
+.ledger-bridge p,
+.sample-page blockquote { line-height: 1.85; word-break: keep-all; overflow-wrap: anywhere; }
+.chapter-group > summary { cursor: pointer; }
+@media (max-width: 480px) {
+  .ledger-order-actions .ledger-cta,
+  .ledger-bridge .conversion-cta,
+  .checkout-order .buy-button { display: block; width: 100%; min-height: 52px; box-sizing: border-box; }
+  .ledger-order-actions .sig-button { margin-top: .5rem; }
+}

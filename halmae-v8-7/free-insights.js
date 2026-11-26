@@ -40,17 +40,17 @@ export function readFreeInsights(dayPillar,counts,relationshipNote='',monthBranc
   const topCount = Math.max(...elements.map(([,count])=>count));
   const leading = elements.filter(([,count])=>count===topCount).map(([element])=>element);
   const useful = leading.map(element=>workOptions[element]);
-  const work = leading.length===1 ? useful[0] : '이 중 요즘 네 일에 가까운 질문 하나를 골라 보렴. '+useful.join(' ');
+  const work = leading.length===1 ? useful[0] : '요즘 네가 맡은 일을 하나 떠올리고, 더 도움이 되는 쪽부터 해 보렴. '+useful.join(' ');
   const season=({寅:'봄의 시작',卯:'깊은 봄',辰:'봄의 끝',巳:'여름의 시작',午:'한여름',未:'여름의 끝',申:'가을의 시작',酉:'깊은 가을',戌:'가을의 끝',亥:'겨울의 시작',子:'한겨울',丑:'겨울의 끝'})[monthBranch]||'태어난 계절';
-  const tension=!monthBranch?'네 일주에서 볼 수 있는 작은 장면부터 함께 떠올려 보자꾸나.':stem==='丙'&&['亥','子','丑'].includes(monthBranch)?'그런데 얘야, 겨울의 태양은 한여름의 태양과 다르단다. 차가운 계절에 놓인 빛은 주변의 기운과 함께 읽어야 하지.':`그런데 얘야, ${image}도 ${season}에 놓이면 그 모습이 달라진단다. 같은 일간이라도 태어난 계절과 주변 글자에 따라 풀이가 달라지지.`;
+  const tension=!monthBranch?'태어난 철은 열어 두고 네가 어떤 때 편안한지 먼저 떠올려 보렴.':stem==='丙'&&['亥','子','丑'].includes(monthBranch)?'겨울 햇살은 어디서나 뜨거울 필요가 없지. 한 사람에게 먼저 말을 건네는 것만으로도 분위기는 달라진단다.':`${season}에 태어난 네 이야기를 듣다 보면 힘을 내기 쉬운 날과 한 번쯤 힘을 아껴야 하는 날이 다르다는 게 보인단다.`;
   return {
     symbol:name,
     imageId:imageIds[stem],
     headline:`${image}`,
-    introduction:`어디 보자… 할매가 펼친 장부에 ${image}의 상징이 있구나. 그 안에 담긴 이야기를 천천히 들려주마.`,
-    temperament:`할매는 ${name}에서 ‘${strength}’을 떠올려. ${scene}`,
+    introduction:`할매가 네 장부를 펴니 ${image}가 먼저 떠오르는구나. 마음을 쓰는 버릇부터 천천히 살펴보자.`,
+    temperament:`네가 일을 풀어 가는 데 도움이 될 힘은 ‘${strength}’이란다. ${scene}`,
     balance:`${tension} ${balance}`,
-    work:`겉글자에서 가장 자주 보이는 기운은 ${leading.join('·')} 쪽이란다. 그 이름으로 세어 보면 ${leading.length===1?'모두':'각각'} ${topCount}글자야. ${work} 개수로 성공이나 강약을 정하지는 않아.`,
-    relationships:`가까운 인연을 읽는 자리의 글자는 ${branch}란다. ${branchQuestions[branch]}${relationshipNote?' '+relationshipNote:''}`,
+    work:`일이 마음처럼 풀리지 않는 날엔 이렇게 해 보렴. ${work}`,
+    relationships:`가까운 사람에게는 네 마음도 한 번쯤 설명해 줄 때가 있단다. ${branchQuestions[branch]}${relationshipNote?' '+relationshipNote:''}`,
   };
 }

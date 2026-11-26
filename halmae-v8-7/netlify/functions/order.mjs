@@ -16,7 +16,7 @@ export default async req => {
   const x = await parse(req);
   if (!x || typeof x !== 'object') return json({error:'출생 정보를 확인해 주세요.'},400);
   const name = typeof x.name === 'string' ? x.name.trim() : '';
-  if (name.length > 30) return json({error:'별칭은 30자 이하로 입력해 주세요.'},400);
+  if (name.length > 30) return json({error:'이름은 30자 이하로 입력해 주세요.'},400);
   const channel = x.channel ?? 'admin-demo';
   if (!['admin-demo','toss-test','toss-live'].includes(channel)) return json({error:'주문 유형을 확인해 주세요.'},400);
   const config=channel==='admin-demo'?null:paymentConfig(req);

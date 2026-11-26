@@ -119,7 +119,7 @@ form.addEventListener('submit',event=>{
    [element,pillarElements(saju.pillars[2]).filter(value=>value===element).length])),
  }:saju;
  const reading=readFreeInsights(chart.pillars[2],chart.elements,relationshipNotes[byId('relation').value],chart.pillars[1]?.[1]);
- byId('greeting').textContent=input.name?input.name+', 이리 와 앉아 보렴.':'네 이야기를 들려주마.';
+ byId('greeting').textContent=input.name?input.name+', 너를 기다리고 있었단다.':'네 이야기를 들려주마.';
  byId('resultMeta').textContent=`${input.gender==='male'?'남성':'여성'} · ${input.birthDate} ${input.calendarType==='lunar'?(input.isLeapMonth?'음력 윤달':'음력 평달'):'양력'} · ${input.birthTime||'출생 시각 미상'}`;
  for (const [id,value] of Object.entries({
   resultHeading:reading.headline,compassDetail:reading.introduction,
@@ -129,8 +129,8 @@ form.addEventListener('submit',event=>{
  artwork.alt=reading.symbol+'의 상징, '+reading.headline;
  artwork.src='/art/'+reading.imageId+'.webp';
  const preview=ledgerPreview(saju);
- byId('season-context').textContent=preview.context;
- byId('ledgerQuestion').textContent=preview.hook;
+ byId('season-context').textContent=preview.story;
+ byId('ledgerQuestion').textContent=preview.invitation;
  byId('luck-preview').textContent=preview.luck;
  renderLedgerPreview(byId('reportSample'),saju);
  const notices = [];
@@ -165,7 +165,7 @@ fetch('/.netlify/functions/payment',{cache:'no-store'})
  .then(({enabled,paymentMode,legal,merchant})=>{
   paymentEnabled=enabled===true;
   checkoutLink.disabled=!paymentEnabled || !draft;
-  checkoutLink.textContent=paymentEnabled?'출생 정보 확인하고 주문하기':'현재 주문할 수 없어요';
+  checkoutLink.textContent=paymentEnabled?'내 2027년 운명 장부 열어보기':'현재 주문할 수 없어요';
   if(enabled===true){
    byId('offerAvailability').textContent=paymentMode==='live'?'토스페이먼츠 카드 결제':'토스 테스트 결제 · 실제 청구 없음';
    if(paymentMode==='live'){

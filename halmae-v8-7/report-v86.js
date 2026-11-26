@@ -34,14 +34,23 @@ function renderChapter(chapter,index,total){
  section.append(
   element('p','eyebrow',[chapter.kicker,chapter.basis].filter(Boolean).join(' · ')),
   element('h2','chapter-title',chapter.title),
-  element('p','chapter-lead',chapter.lead),
+  element('p','chapter-lead',chapter.displayLead??chapter.lead),
  );
  section.querySelector('h2').tabIndex=-1;
  const groups=chapter.groups??[{paragraphs:chapter.paragraphs}];
  for(const group of groups){
-  const block=element('div','chapter-group');
-  if(group.title) block.append(element('h3','chapter-subtitle',group.title));
-  for(const text of group.paragraphs) block.append(element('p','chapter-text',text));
+  const block=element(group.detail?'details':'div','chapter-group');
+  if(group.title) block.append(element(group.detail?'summary':'h3','chapter-subtitle',group.title));
+  const detailFrom=group.detailFrom??group.paragraphs.length;
+  for(const text of group.paragraphs.slice(0,detailFrom)){
+   if(text!==chapter.lead) block.append(element('p','chapter-text',text));
+  }
+  if(detailFrom<group.paragraphs.length){
+   const notes=element('details','chapter-reading-notes');
+   notes.append(element('summary','', '풀이에 쓴 사주 근거'));
+   for(const text of group.paragraphs.slice(detailFrom)) notes.append(element('p','chapter-text',text));
+   block.append(notes);
+  }
   section.append(block);
  }
  if(chapter.bullets?.length){

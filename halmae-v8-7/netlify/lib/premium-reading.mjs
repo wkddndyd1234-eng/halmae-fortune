@@ -181,12 +181,14 @@ export function monthlyGroups(f,month,index){
  const boundaryContext=s.dateBoundaryUncertain?
   `태어난 시각을 모르니 이달 일터의 화두 ‘${work}’는 일지 ${s.dayBranch} 속 ${boundaryRole.stem}의 ${boundaryRole.tenGod}에서 시작하자. 평소 맡은 일에서는 ${roleLenses[boundaryRole.tenGod][1]}부터 해 보렴. 그다음 이달 천간 ${month.pillar[0]}에서 읽은 ${month.tenGod}의 질문을 얹으면, 익숙한 방식과 이번에 시도할 방법을 따로 생각해 볼 수 있단다.`:'';
  return [
-  group('총운',season,overallScene,
-   `이달 천간 ${month.pillar[0]}과 네 일간 ${s.dayStem}, 이 두 글자의 관계를 십성으로 보면 ${month.tenGod} 역할이 드러나. ${roleOpening} ‘${caution}’이 마음에 걸리면, ${rolePrompt[month.tenGod]} 보렴.`),
-  group('재물운',`이달 재물 장의 화두는 ‘${money}’야. ${natalWealth?`기준으로 삼은 원국의 단서는 ${evidenceText(natalWealth)}란다. `:''}${moneyFollowup}`,financeScene,exampleDetail(moneyScene,recurring?1:2)),
-  group('직업운',`일터에서는 ‘${work}’부터 살펴. 이달의 ${month.tenGod}에서 읽은 ${role[1]}부터 시험해 보렴.`,workReading,exampleDetail(workScene,workNeedsAuthority?1:2),...[boundaryContext,workFollowup].filter(Boolean)),
-  group('사업운',`이달 천간 ${month.pillar[0]}에서 본 ${month.tenGod}의 상징을 거래에 대어 보자. ${businessLens[month.tenGod]} ${scene}`),
-  group('애정운',`애정운의 화두는 ‘${love}’란다. 이달 ${month.tenGod}에서는 ${role[2]}부터 생각해 보렴.`,relationship,...(dayRelations.length?[]:[loveScene])),
+  group('총운',overallScene,
+   `${season} ‘${caution}’이 마음에 걸리면, ${rolePrompt[month.tenGod]} 보렴.`,
+   `이달 천간 ${month.pillar[0]}과 네 일간 ${s.dayStem}의 관계에서 ${month.tenGod} 역할을 읽었단다. ${roleOpening}`),
+  group('재물운',financeScene,exampleDetail(moneyScene,recurring?1:2),
+   `이번 달 재물 흐름에서는 ‘${money}’를 살펴보렴. ${recurring?'지출 계획을 같이 쓰는 사람이 있다면 날짜와 금액을 맞춰 두렴.':'새 기회를 본다면 실제로 받을 날짜까지 달력에 적어 두렴.'} ${natalWealth?`태어난 사주에서는 ${evidenceText(natalWealth)}가 단서야. `:''}${moneyFollowup}`),
+  group('직업운',`일터에서는 ‘${work}’부터 살펴. 이번 달에 네가 맡은 일 하나를 골라 ${role[1]}부터 시험해 보렴.`,exampleDetail(workScene,workNeedsAuthority?1:2),workReading,...[boundaryContext,workFollowup].filter(Boolean)),
+  group('사업운',businessLens[month.tenGod]+' '+scene),
+  group('애정운',`이달 애정운을 볼 때는 ‘${love}’를 떠올려 보렴. ${role[2]}부터 생각해 봐.`,...(dayRelations.length?[]:[loveScene]),relationship),
   group('주의할 점',`이달 조심할 습관을 한 가지 꼽자면 ‘${caution}’이야. ${cautionScene}`,
    place?`절기 지지 ${month.pillar[1]}에서 확인한 관계를 적어 둘게. ${mainRelation}. ${monthlyRelation(place,2)}`:
     `절기 지지 ${month.pillar[1]}에 견줘 보면 이 장에서 바로 표시할 합충형해는 없구나.`,

@@ -22,6 +22,14 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
  const base=`${name}, 네 일간은 ${s.dayStem}(${s.dayElement})이구나. 전통 명리에서는 ${main}에 빗대어 읽지. 월지 ${month[1]}는 ${monthSeason}의 자리야.`;
  const evidence=`원국은 ${[year,month,day,hour||'시주 미상'].join(' · ')}이고, 겉에 드러난 오행은 ${e}란다. 이 수치는 지장간의 세력이나 용신을 판정한 점수가 아니야.`;
  const noHour=hour?'시주 '+hour+'는 오래 품어 온 바람을 돌아보는 자리에 두렴.':'가장 오래 품은 바람은 앞으로도 네가 직접 이야기해 줄 수 있단다.';
+ const leads=[
+  `${name}, 할매가 네 장부를 펴니 ${main}의 모습이 떠오르는구나. 그 모습이 네가 힘을 내는 순간과 닮았는지부터 살펴보렴.`,
+  `너에게 편한 방식이 무엇인지 떠올려 보렴. 할매는 ${main}의 모습을 빌려 그 이야기를 들려줄게.`,
+  '힘을 자주 쓰는 곳이 있으면 잠시 내려놓을 곳도 필요하단다. 요즘 자꾸 마음이 쏠리는 일은 뭐니?',
+  '같은 사람도 일할 때, 배울 때, 누군가를 도울 때 모습이 달라지지. 요즘 네가 가장 자주 맡는 몫부터 떠올려 보렴.',
+  '가까운 사람과는 익숙하다는 이유로 마음을 짐작하기 쉽지. 한 번쯤 네가 원하는 걸 말로 건네 보렴.',
+  '사람과 일을 맞춰 갈 때 유난히 손발이 잘 맞는 대목과 자꾸 어긋나는 대목이 있지. 실제로 있었던 일 하나를 놓고 생각해 보렴.',
+ ];
  const chapters=[
  section('第一章','네 사주 네 기둥',base,[evidence,`연주 ${year}는 바깥 환경, 월주 ${month}는 계절과 사회적 자리, 일주 ${day}는 자신과 가까운 관계, 시주 ${hour||'미상'}는 후반의 지향을 읽는 상징이란다.`,noHour],[`출생 입력: ${s.birthDate} · ${s.calendarType==='lunar'?(s.isLeapMonth?'음력 윤달':'음력 평달'):'양력'}`,`양력 환산: ${s.solarDate}`,`성별: ${s.gender==='male'?'남성':s.gender==='female'?'여성':'기록 없음'}`,],`“${name}, 이 네 기둥이 네 운명의 첫 문장이란다.”`),
  section('第二章','일간에 새겨진 너의 빛',`${s.dayStem} · ${main}`,[`같은 ${s.dayElement} 기운도 계절과 주변 글자에 따라 다르게 읽는단다. 강하다고 늘 밀어붙일 필요도, 약하다고 빛을 잃는 것도 아니지.`,`이 상징이 네 실제 성격을 단정하는 것은 아니야. 다만 네가 힘을 얻는 장면을 돌아보는 거울로 삼아 보렴.`],[`일간 ${s.dayStem}`,`일지 ${s.dayBranch}`]),
@@ -42,7 +50,8 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
   const [title,a,b,caution]=domain[i];
   const found=f.stemTenGods.filter(x=>x===a||x===b);
   const hiddenFound=f.hiddenTenGods.flatMap((items,j)=>items.filter(x=>x.tenGod===a||x.tenGod===b).map(x=>['년','월','일','시'][j]+'지 '+x.stem+'('+x.tenGod+')'));
-  chapters.push(section('第'+['七','八','九','十','十一','十二'][i]+'章',title,found.length?`네 천간에 ${found.join('·')} 표시가 보이는구나.`:`이 주제와 연결되는 ${a}·${b}의 상징을 살펴보자.`,[
+  const domainLeads=['돈을 더 벌 궁리와 지금 가진 돈을 지킬 궁리는 따로 해야 한단다.','맡은 일이 힘을 보태 주는지, 네 몫만 더 늘리는지 살펴보렴.','사랑에서는 말해 준 마음과 네가 짐작한 마음을 구별해 보렴.','함께 살아가는 이야기는 생활비나 쉬는 시간처럼 작은 약속에서 시작한단다.','도움이 필요할 때는 무엇을 어디까지 부탁할지부터 생각해 봐.','몸이 보내는 신호가 있다면 운수에 기대기 전에 쉬고 살펴보렴.'];
+  chapters.push(section('第'+['七','八','九','十','十一','十二'][i]+'章',title,domainLeads[i],[
    `${a}의 뜻은 ${ten[a]}, ${b}의 뜻은 ${ten[b]}이란다.`,
    found.length?`‘${title}’에서 먼저 확인할 겉천간의 단서는 ${found.join('·')} 표시야.`:`겉천간에 ${a}·${b} 표시가 없으니 아래 지장간의 단서를 펴 보렴.`,
    hiddenFound.length?'지장간까지 살피면 '+hiddenFound.join(' · ')+'도 나타나는구나. 겉에 드러난 역할과 안에 담긴 역할은 구분해서 읽어야 한단다.':`지장간에도 ${a}·${b} 표시는 없구나. 이 표에서 해당 역할이 보이지 않는다고 실제 여건을 판단할 수는 없단다.`,
@@ -64,9 +73,8 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
   ...(f.annual.decades.length?[luckText(f.annual.decades)]:[]),
  ]));
  f.monthly.forEach((m,i)=>{
-  const relation=m.dayBranchClash?'일지의 충이 건네는 변화 이야기':m.dayBranchCombine?'일지의 육합이 건네는 인연 이야기':'이달의 절기와 네 일간이 만나는 자리';
-  const groups=monthlyGroups(f,m,i);
-  chapters.push({...section('2027 · '+String(i+1).padStart(2,'0')+'월',`${i+1}월 · ${m.pillar}의 문`,`${m.tenGod} · ${relation}`,groups.flatMap(g=>g.paragraphs),
+  const groups=monthlyGroups(f,m,i).map((group,index)=>({...group,detailFrom:[2,2,2,1,group.paragraphs.length-1,1][index]}));
+  chapters.push({...section('2027 · '+String(i+1).padStart(2,'0')+'월',`${i+1}월 · ${m.pillar}의 문`,groups[0].paragraphs[0],groups.flatMap(g=>g.paragraphs),
    [`월운 간지: ${m.pillar}`,`일간 기준 십성: ${m.tenGod}`,`절기 구간: ${fmt(m.start)}부터 ${fmt(m.end)} 직전까지 · 한국 시간`]),groups});
  });
  for(let i=0;i<14;i++){
@@ -78,7 +86,18 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
    chapter.bullets=i===0?[`출생 입력: ${s.birthDate}`,`양력 환산: ${s.solarDate}`]:[];
    chapter.quote='';
   }else{
-   chapter.groups=[{title:'할매 이야기의 첫 대목',paragraphs:chapter.paragraphs},...natalGroups(i,f,now)];
+   const details={title:'풀이에 쓴 사주 근거',paragraphs:chapter.paragraphs,detail:true};
+   const readings=natalGroups(i,f,now);
+   if(i<6){
+    chapter.lead=leads[i];
+    chapter.groups=[readings[0],details,...readings.slice(1).map(group=>({...group,detail:true}))];
+   }else if(i===13){
+    chapter.displayLead='2027년에 어떤 선택을 살펴볼까?';
+    chapter.groups=[{title:'할매가 먼저 건네는 말',paragraphs:chapter.paragraphs.slice(0,1)},...readings,
+     {...details,paragraphs:chapter.paragraphs.slice(1)}];
+   }else{
+    chapter.groups=[...readings,details];
+   }
   }
   chapter.paragraphs=chapter.groups.flatMap(g=>g.paragraphs);
  }

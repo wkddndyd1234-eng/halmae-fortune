@@ -18,8 +18,8 @@
   </header>
   <div class="ledger-terms">
     <p class="ledger-price">39,900원 <small>단건 결제</small></p>
-    <p>26장 웹 보고서 · 승인 후 즉시 열람 · 365일 다시 보기</p>
-    <p class="small">열람 기간은 승인 시각부터 계산해요. 같은 브라우저에서 새 열람 링크를 받을 수 있어요.</p>
+    <p>나만의 운명 장부 26장 · 2027년 1월~12월 월별 운세</p>
+    <p class="small">결제 승인 후 바로 열람 · 승인 시각부터 365일 다시 보기</p><p class="small">자동결제와 추가 결제가 없어요. 같은 브라우저에서 새 열람 링크를 받을 수 있어요.</p>
     <p class="notice" id="availability" role="status">현재 주문을 받을 수 없어요.</p>
     <a class="ledger-cta" href="#form">출생 정보 확인하기</a>
   </div>
@@ -42,7 +42,7 @@
   <form id="form" method="post" tabindex="-1">
     <p id="prefill" class="small" role="status" hidden>무료 풀이에 쓴 정보를 가져왔어요.</p>
     <details id="checkout-birth-fields" open><summary>출생 정보 입력·수정</summary>
-    <label>별칭 (선택)<input name="name" maxlength="30" autocomplete="off"></label>
+    <label>이름<input name="name" maxlength="20" autocomplete="name" placeholder="이름을 입력해 주세요." pattern=".*\S.*" required></label>
     <label>성별 (전통 명리 대운 계산 기준)<select name="gender" required><option value="">선택해 주세요</option><option value="male">남성</option><option value="female">여성</option></select></label>
     <label>생일 기준<select name="calendarType"><option value="solar">양력</option><option value="lunar">음력</option></select></label>
     <label id="checkout-leap" hidden>음력 월 구분<select name="isLeapMonth"><option value="false">평달</option><option value="true">윤달</option></select></label>
@@ -65,7 +65,8 @@
     </div>
     <label class="check" id="immediate-delivery" hidden><input type="checkbox" name="immediateDelivery" disabled> <span>결제 승인 직후 26장 장부의 제공을 요청합니다. 청약철회는 관련 법령과 안내에 따릅니다.</span></label>
     <div class="checkout-order">
-      <button class="buy-button" type="submit" id="buy" hidden disabled>테스트 결제하기</button>
+      <p class="small" id="checkout-total">결제 금액 39,900원 · 단건 결제</p>
+      <button class="buy-button" type="submit" id="buy" aria-describedby="checkout-total" hidden disabled>테스트 결제하기</button>
       <a href="/">결제하지 않고 돌아가기</a>
     </div>
     <details id="test-guide" hidden><summary>테스트 결제 방법</summary><p>실제 청구는 없어요. 실제 카드정보를 입력할 필요 없이 토스의 공식 테스트 안내에 따라 진행해 주세요. <a href="https://docs.tosspayments.com/guides/v2/get-started/environment" target="_blank" rel="noopener noreferrer">토스 테스트 환경 안내</a></p></details>

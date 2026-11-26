@@ -34,21 +34,26 @@ export function leastVisibleElements(elements) {
 
 export function ledgerPreview(saju) {
   const fortune=cyclesForSaju(saju);
-  const monthGod=fortune.stemTenGods[1];
   const now=Date.now();
   const current=fortune.luck.decades.find(cycle=>Date.parse(cycle.start)<=now&&now<Date.parse(cycle.end));
   const luck=fortune.luck.unavailableReason||
     `대운은 ${fortune.luck.direction}으로, 첫 기산은 약 ${fortune.luck.startAgeYears.toFixed(1)}세로 계산돼. ${current?`지금은 ${current.pillar}(${current.tenGod})의 근사 구간이야. `:''}장부에서는 이 긴 흐름과 2027년의 글자가 어떻게 만나는지 살펴본단다.`;
-  const counts=Object.entries(saju.elements);
-  const high=Math.max(...counts.map(([,value])=>value));
-  const visible=counts.filter(([,value])=>value===high).map(([key])=>key).join('·');
   const relation=fortune.relations.find(item=>item.a==='일'||item.b==='일')??fortune.relations[0];
+  const seasonAction={
+    목:'새로 시작할 일이 많을수록 첫걸음 하나부터 정해 봐.',
+    화:'의견을 꺼낼 때는 네가 바라는 답을 한 문장으로 말해 보렴.',
+    토:'계획이 어긋나면 다시 돌아올 기준부터 정하는 편이 좋단다.',
+    금:'손에 쥔 일에서 꼭 남길 것과 내려놓을 것을 가려 보렴.',
+    수:'바로 답을 내기보다 다른 길이 있는지 한 번 돌아보렴.',
+  };
   const context=saju.dateBoundaryUncertain?
-    '절입일인데 출생 시각을 모르니 태어난 철과 다른 글자의 조합은 열어 둘게. 확인할 수 있는 기둥과 아래 안내를 함께 읽어 보렴.':
-    `너는 ${fortune.season.season}의 ${saju.pillars[1][1]}월에 태어났구나. 이 절기에서는 ${fortune.season.chiefElement}의 이야기를 먼저 보고, 겉글자에서는 ${visible} 표시가 가장 자주 보여. 월간의 ${monthGod}과 함께 살피면 계절의 배경과 평소 네가 쓰는 힘을 따로 생각해 볼 수 있단다. ${relation?`두 자리의 ${relation.type}(${relation.branches})을 사람과 일을 맞춰 가는 방식에 빗대어 보렴.`:'두 지지를 비교한 표에서는 직접 드러나는 합충형해가 없구나. 일상에서 아래 질문을 떠올려 봐.'}`;
+    '계절이 바뀌는 날에 태어났구나. 태어난 시간을 모르니 어느 철로 읽을지는 열어 두고, 확인되는 이야기부터 들려주마.':
+    `할매는 네가 태어난 철을 보고 이렇게 권하고 싶구나. ${seasonAction[fortune.season.chiefElement]} ${relation?'다른 사람과 맞춰야 할 때는 네가 지키고 싶은 기준도 먼저 말해 두렴.':''}`.trim();
   return {
-    context,
-    hook:saju.dateBoundaryUncertain?'네 일주에 정미년의 등불을 비춰 보자꾸나. 재물·직업·사업·인연과 2027년 열두 절기의 이야기를 차례로 담아 두었단다.':`네 일주 ${saju.pillars[2]}와 태어난 절기의 ${monthGod}가 들려주는 이야기가 있단다. 재물·일·인연을 보고, 2027년의 열두 절기 구간도 차례로 살펴보렴.`,
+    context:saju.dateBoundaryUncertain?context:`${context} 풀이에 쓴 태어난 달의 글자는 ${saju.pillars[1][1]}이야.`,
+    story:context,
+    hook:`네 두 글자 ${saju.pillars[2]}에서 이어 읽는 재물·일·인연의 흐름이란다.`,
+    invitation:'새 일이 들어왔을 때 바로 움직일지, 조건을 더 살필지. 할매가 네 2027년 장부에 돈과 일과 인연의 질문을 달마다 적어 두었단다.',
     excerpt:annualReflection(saju,fortune.annual),
     luck,
   };
