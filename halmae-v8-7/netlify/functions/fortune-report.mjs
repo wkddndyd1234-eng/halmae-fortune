@@ -1,5 +1,7 @@
 import {boundaryNatalGroups,monthlyGroups,natalGroups} from '../lib/premium-reading.mjs';
 import {annualReflection,fortuneCycles} from './fortune-cycles.mjs';
+import {readingName} from './reading-name.mjs';
+import {roleLenses,relationalLenses} from '../lib/interpretive-lenses.mjs';
 const names={甲:'곧게 뻗는 큰 나무',乙:'바람을 타는 풀과 덩굴',丙:'먼 곳까지 비추는 태양',丁:'어둠 속을 밝히는 등불',戊:'흔들리지 않는 산',己:'생명을 기르는 밭',庚:'단단한 쇠',辛:'정교하게 빛나는 보석',壬:'넓게 흐르는 강과 바다',癸:'스며드는 이슬과 비'};
 const ten={비견:'나와 비슷한 힘을 가진 동료와 자립',겁재:'경쟁과 나눔 사이의 긴장',식신:'꾸준한 생산과 표현',상관:'틀을 바꾸려는 표현과 문제 제기',편재:'움직이는 자원과 외부 기회',정재:'관리하는 재물과 책임',편관:'압박과 돌파의 과제',정관:'규칙과 공적인 역할',편인:'독특한 배움과 직관',정인:'보호와 축적된 배움'};
 const elements={목:'성장과 시작',화:'표현과 확산',토:'중심과 조율',금:'선택과 정리',수:'관찰과 흐름'};
@@ -12,10 +14,14 @@ const luckText=cycles=>cycles.map(cycle=>
 const transitText=items=>items.length?items.map(r=>r.position+'지 '+r.natal+'와 '+r.transit+'의 '+r.type).join(' · '):'직접적인 합충형해 없음';
 export function buildFortuneReport(order,{now=Date.now()}={}){
  const f=fortuneCycles(order),s=f.saju,name=order.name||'손님';
+ const {call}=readingName(order.name);
  const [year,month,day,hour]=s.pillars;
  const e=Object.entries(s.elements).map(([key,value])=>key+' '+value+'개').join(' · ');
  const monthSeason=seasons[month[1]];
  const main=names[s.dayStem];
+ const activity=f.stemTenGods[1];
+ const inner=f.hiddenTenGods[2][0].tenGod;
+ const personalTie=f.relations.find(({a,b})=>a==='일'||b==='일');
  const relations=f.relations.map(x=>x.a+'·'+x.b+'의 '+x.branches+' '+x.type);
  const relationText=relations.length?relations.join(', '):'이 방식에서 두 글자씩 대조한 합충형해가 없어요';
  const stemText=f.stemTenGods.map((x,i)=>x?['년','월','일','시'][i]+'간 '+x+'('+ten[x]+')':null).filter(Boolean).join(' / ');
@@ -26,9 +32,10 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
   `${name}, 할매가 네 장부를 펴니 ${main}의 모습이 떠오르는구나. 그 모습이 네가 힘을 내는 순간과 닮았는지부터 살펴보렴.`,
   `너에게 편한 방식이 무엇인지 떠올려 보렴. 할매는 ${main}의 모습을 빌려 그 이야기를 들려줄게.`,
   '힘을 자주 쓰는 곳이 있으면 잠시 내려놓을 곳도 필요하단다. 요즘 자꾸 마음이 쏠리는 일은 뭐니?',
-  '같은 사람도 일할 때, 배울 때, 누군가를 도울 때 모습이 달라지지. 요즘 네가 가장 자주 맡는 몫부터 떠올려 보렴.',
-  '가까운 사람과는 익숙하다는 이유로 마음을 짐작하기 쉽지. 한 번쯤 네가 원하는 걸 말로 건네 보렴.',
-  '사람과 일을 맞춰 갈 때 유난히 손발이 잘 맞는 대목과 자꾸 어긋나는 대목이 있지. 실제로 있었던 일 하나를 놓고 생각해 보렴.',
+  `밖에서 네 역할이 애매해질 때가 있지. 마음에 걸리는 일 하나를 골라 ${roleLenses[activity][1]}부터 생각해 보렴.`,
+  `가까운 사이일수록 말하지 않아도 알겠거니 하게 되지. 할매라면 ${roleLenses[inner][2]}부터 살펴보겠어.`,
+  personalTie?`함께 정한 일이 자꾸 마음에 남으면 ${relationalLenses[personalTie.type][2]}`:
+   `사람과 일을 맞춰 갈 때 할매라면 ${roleLenses[activity][1]}부터 돌아보겠어.`,
  ];
  const chapters=[
  section('第一章','네 사주 네 기둥',base,[evidence,`연주 ${year}는 바깥 환경, 월주 ${month}는 계절과 사회적 자리, 일주 ${day}는 자신과 가까운 관계, 시주 ${hour||'미상'}는 후반의 지향을 읽는 상징이란다.`,noHour],[`출생 입력: ${s.birthDate} · ${s.calendarType==='lunar'?(s.isLeapMonth?'음력 윤달':'음력 평달'):'양력'}`,`양력 환산: ${s.solarDate}`,`성별: ${s.gender==='male'?'남성':s.gender==='female'?'여성':'기록 없음'}`,],`“${name}, 이 네 기둥이 네 운명의 첫 문장이란다.”`),
@@ -79,6 +86,7 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
  });
  for(let i=0;i<14;i++){
   const chapter=chapters[i];
+  if(i===0) chapter.displayLead=`${call}, 할매가 네 장부를 펴니 ${main}의 모습이 떠오르는구나. 무슨 일을 할 때 힘이 나는지부터 같이 돌아보자.`;
   if(s.dateBoundaryUncertain&&i<12){
    const groups=boundaryNatalGroups(i,f);
    chapter.groups=groups;
@@ -92,14 +100,23 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
     chapter.lead=leads[i];
     chapter.groups=[readings[0],details,...readings.slice(1).map(group=>({...group,detail:true}))];
    }else if(i===13){
-    chapter.displayLead='2027년에 어떤 선택을 살펴볼까?';
+    chapter.displayLead=`${call}, 2027년에 어떤 선택을 살펴볼까?`;
     chapter.groups=[{title:'할매가 먼저 건네는 말',paragraphs:chapter.paragraphs.slice(0,1)},...readings,
      {...details,paragraphs:chapter.paragraphs.slice(1)}];
    }else{
+    if(i>=6&&i<=11){
+     const [definition,advice]=readings[0].paragraphs;
+     readings[0]={title:'할매가 짚어 보는 이야기',paragraphs:[advice,definition],detailFrom:1};
+    }
+    if(i===12){
+     const current=decades.find(cycle=>Date.parse(cycle.start)<=now&&now<Date.parse(cycle.end));
+     if(current&&!s.dateBoundaryUncertain)chapter.displayLead=`지금 이어지는 일을 떠올려 보렴. 할매라면 ${roleLenses[current.tenGod][1]}부터 돌아보겠어.`;
+    }
     chapter.groups=[...readings,details];
    }
   }
   chapter.paragraphs=chapter.groups.flatMap(g=>g.paragraphs);
+  if(i===0)chapter.quote='';
  }
  const calculationNotes=[s.calculationBasis,...s.warnings,
   ...(s.dateBoundaryUncertain?['표의 연주·월주는 정오 참고값이란다. 본문 원국 해석은 확인된 일주만 쓰고, 월운도 일지와 견줘 읽어.']:[]),

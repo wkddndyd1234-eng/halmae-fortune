@@ -4,7 +4,9 @@ import {renderLedgerPreview} from './ledger-preview-view.js';
 import {renderReadingChart} from './reading-chart.js';
 import {calculateSaju,pillarElements} from './saju.mjs';
 import {fromFreeForm,saveBirthDraft,todayInKorea} from './birth-handoff.js';
-import {readFreeInsights} from './free-insights.js';
+import {readPersonalReading} from './free-insights.js';
+import {cyclesForSaju} from './fortune-cycles.mjs';
+import {readingName} from './reading-name.mjs';
 import {readingVariant,recordConversion,recordFunnel} from './purchase.js';
 recordFunnel('home_view');
 
@@ -118,19 +120,25 @@ form.addEventListener('submit',event=>{
   elements:Object.fromEntries(Object.keys(saju.elements).map(element=>
    [element,pillarElements(saju.pillars[2]).filter(value=>value===element).length])),
  }:saju;
- const reading=readFreeInsights(chart.pillars[2],chart.elements,relationshipNotes[byId('relation').value],chart.pillars[1]?.[1]);
- byId('greeting').textContent=input.name?input.name+', 너를 기다리고 있었단다.':'네 이야기를 들려주마.';
+ const reading=readPersonalReading(cyclesForSaju(saju),chart,relationshipNotes[byId('relation').value]);
+ const {call,possessive}=readingName(input.name);
+ byId('greeting').textContent=call+', 네 장부를 펴 볼까.';
+ byId('ledger-bridge-heading').textContent=call+', 이제부터가 중요한 이야기란다.';
+ const purchaseCopy=possessive+' 2027년 운명 장부 펼치기';
+ byId('conversionNext').textContent=purchaseCopy;
+ if(paymentEnabled) checkoutLink.textContent=purchaseCopy;
  byId('resultMeta').textContent=`${input.gender==='male'?'남성':'여성'} · ${input.birthDate} ${input.calendarType==='lunar'?(input.isLeapMonth?'음력 윤달':'음력 평달'):'양력'} · ${input.birthTime||'출생 시각 미상'}`;
  for (const [id,value] of Object.entries({
   resultHeading:reading.headline,compassDetail:reading.introduction,
   personality:reading.temperament,balanceQuestion:reading.balance,career:reading.work,love:reading.relationships,
+  'elements-story':reading.elementsStory,'money-reading':reading.money,
  })) byId(id).textContent=value;
  const artwork=byId('day-symbol-art');
  artwork.alt=reading.symbol+'의 상징, '+reading.headline;
  artwork.src='/art/'+reading.imageId+'.webp';
  const preview=ledgerPreview(saju);
  byId('season-context').textContent=preview.story;
- byId('ledgerQuestion').textContent=preview.invitation;
+ byId('ledgerQuestion').textContent=reading.bridge;
  byId('luck-preview').textContent=preview.luck;
  renderLedgerPreview(byId('reportSample'),saju);
  const notices = [];
@@ -141,7 +149,7 @@ form.addEventListener('submit',event=>{
  byId('calcNotice').hidden=!notices.length;
  renderReadingChart(byId('pillars'),byId('fiveElements'),chart);
  readingText=[byId('greeting').textContent,byId('resultMeta').textContent,
-  chart.pillars.map(pillar=>pillar??'미상').join(' · '),reading.headline,reading.introduction,reading.temperament,preview.context,reading.work,reading.balance,reading.relationships,
+  chart.pillars.map(pillar=>pillar??'미상').join(' · '),reading.headline,reading.introduction,reading.temperament,preview.story,reading.elementsStory,reading.work,reading.money,reading.balance,reading.relationships,
   ...notices,'전통 사주 상징을 바탕으로 한 자기 성찰용 풀이입니다.'].join('\n\n');
  result.hidden=false;
  offer.hidden=false;
@@ -165,7 +173,7 @@ fetch('/.netlify/functions/payment',{cache:'no-store'})
  .then(({enabled,paymentMode,legal,merchant})=>{
   paymentEnabled=enabled===true;
   checkoutLink.disabled=!paymentEnabled || !draft;
-  checkoutLink.textContent=paymentEnabled?'내 2027년 운명 장부 열어보기':'현재 주문할 수 없어요';
+  checkoutLink.textContent=paymentEnabled?readingName(draft?.name).possessive+' 2027년 운명 장부 펼치기':'현재 주문할 수 없어요';
   if(enabled===true){
    byId('offerAvailability').textContent=paymentMode==='live'?'토스페이먼츠 카드 결제':'토스 테스트 결제 · 실제 청구 없음';
    if(paymentMode==='live'){

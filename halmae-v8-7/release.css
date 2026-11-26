@@ -64,6 +64,8 @@ footer.footer a{color:#e2c18c}
 .ledger-bridge p,
 .sample-page blockquote { line-height: 1.85; word-break: keep-all; overflow-wrap: anywhere; }
 .chapter-group > summary { cursor: pointer; }
+.reading-chart > summary { color: #dfbd83; cursor: pointer; line-height: 1.6; }
+#fortune .name-first { margin-top: 0; }
 @media (max-width: 480px) {
   .ledger-order-actions .ledger-cta,
   .ledger-bridge .conversion-cta,

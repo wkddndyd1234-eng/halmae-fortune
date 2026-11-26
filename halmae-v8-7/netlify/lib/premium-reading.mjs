@@ -181,7 +181,7 @@ export function monthlyGroups(f,month,index){
  const boundaryContext=s.dateBoundaryUncertain?
   `태어난 시각을 모르니 이달 일터의 화두 ‘${work}’는 일지 ${s.dayBranch} 속 ${boundaryRole.stem}의 ${boundaryRole.tenGod}에서 시작하자. 평소 맡은 일에서는 ${roleLenses[boundaryRole.tenGod][1]}부터 해 보렴. 그다음 이달 천간 ${month.pillar[0]}에서 읽은 ${month.tenGod}의 질문을 얹으면, 익숙한 방식과 이번에 시도할 방법을 따로 생각해 볼 수 있단다.`:'';
  return [
-  group('총운',overallScene,
+  group('총운',`${overallScene} ‘${work}’에 마음이 쓰이면 ${role[1]}부터 해 보렴.`,
    `${season} ‘${caution}’이 마음에 걸리면, ${rolePrompt[month.tenGod]} 보렴.`,
    `이달 천간 ${month.pillar[0]}과 네 일간 ${s.dayStem}의 관계에서 ${month.tenGod} 역할을 읽었단다. ${roleOpening}`),
   group('재물운',financeScene,exampleDetail(moneyScene,recurring?1:2),

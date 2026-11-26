@@ -46,11 +46,53 @@ export function readFreeInsights(dayPillar,counts,relationshipNote='',monthBranc
   return {
     symbol:name,
     imageId:imageIds[stem],
-    headline:`${image}`,
+    headline:image,
     introduction:`할매가 네 장부를 펴니 ${image}가 먼저 떠오르는구나. 마음을 쓰는 버릇부터 천천히 살펴보자.`,
     temperament:`네가 일을 풀어 가는 데 도움이 될 힘은 ‘${strength}’이란다. ${scene}`,
     balance:`${tension} ${balance}`,
     work:`일이 마음처럼 풀리지 않는 날엔 이렇게 해 보렴. ${work}`,
     relationships:`가까운 사람에게는 네 마음도 한 번쯤 설명해 줄 때가 있단다. ${branchQuestions[branch]}${relationshipNote?' '+relationshipNote:''}`,
   };
+}
+const titles=['하늘을 향해 자라는 큰 나무','바람에도 꺾이지 않는 풀꽃','세상을 밝히는 큰 태양','어둠을 밝히는 작은 불꽃',
+ '세상을 품은 거대한 산','생명을 키워내는 비옥한 대지','단단하게 벼려진 강철','어둠 속에서도 빛나는 보석',
+ '끝없이 펼쳐진 거대한 바다','메마른 땅을 적시는 단비'];
+const everyday={
+ 목:['새 일을 시작할 때 첫 단계를 구체적으로 잡는 데 힘을 쓰기 쉬워.','시작한 일이 늘면 다음 약속을 잡기 전에 마칠 일부터 골라 보렴.'],
+ 화:['사람들이 머뭇거릴 때 먼저 말을 꺼내 일에 속도를 붙일 수 있단다.','속도가 붙으면 모두 같은 뜻인지 확인하는 말 한마디를 남겨 두렴.'],
+ 토:['흐트러진 일정이나 사람들 몫을 한곳에 모아 정리하는 일이 편할 수 있어.','일정이 꼬였을 때 네가 책임질 일과 돌려줄 일을 먼저 가르렴.'],
+ 금:['여러 선택지 중 무엇을 남길지 기준을 세우는 데 마음이 가기 쉬워.','기준을 적용하기 전에 바뀐 사정이 있는지 한 번 물어보렴.'],
+ 수:['상대가 꺼내지 않은 말이나 계획의 빈틈을 먼저 알아차릴 수 있어.','생각이 길어지면 네가 직접 확인할 질문 하나만 적어 보렴.'],
+};
+const roleAction={
+ 비견:'일을 맡을 때 네가 혼자 정할 일과 같이 결정할 일부터 나눠 보렴.',
+ 겁재:'성과를 함께 낼 사람이라면 누가 무엇을 맡을지 일찍 정하는 편이 마음이 편하단다.',
+ 식신:'한 일을 작게 마쳐 본 뒤, 그 방식을 다음번에도 써 볼 만한지 살펴보렴.',
+ 상관:'기존 방식이 답답하면 불편했던 장면과 바꿀 방법을 하나씩 적어 보렴.',
+ 정재:'일을 넘길 때 완료 기준과 언제까지 넘길지를 한곳에 적어 두렴.',
+ 편재:'새 거래나 일을 제안받으면 처음부터 크게 벌이기보다 어디까지 시험해 볼지 정해 보렴.',
+ 정관:'책임을 맡게 되면 어디까지 네가 결정할 수 있는지 먼저 물어보렴.',
+ 편관:'급한 일을 부탁받을수록 기한부터 맞추고 누구에게 도움을 받을지 생각해 봐.',
+ 정인:'배운 방법을 오래 써 보는 데 힘이 실려. 지금 하는 일에 하나만 꺼내 써 보렴.',
+ 편인:'낯선 방식이 눈에 들어오면 한 번에 바꾸기보다 작은 일 하나로 시험해 봐.',
+};
+
+export function readPersonalReading(fortune,chart,relationship){
+ const saju=fortune.saju;
+ const reading=readFreeInsights(chart.pillars[2],chart.elements,relationship,chart.pillars[1]?.[1]);
+ const visible=Object.entries(chart.elements).sort((a,b)=>b[1]-a[1]);
+ const leading=visible[0][1]===visible[1][1]?saju.dayElement:visible[0][0];
+ const outward=saju.dateBoundaryUncertain?null:fortune.stemTenGods[1];
+ const inner=fortune.hiddenTenGods[2][0].tenGod;
+ const wealth=saju.dateBoundaryUncertain?[inner]:[...fortune.stemTenGods,...fortune.hiddenTenGods.flatMap(items=>items.map(item=>item.tenGod))];
+ const money=wealth.includes('편재')?'새 돈벌이는 들어올 돈만큼 먼저 내야 할 비용도 함께 살펴보렴.':
+  wealth.includes('정재')?'돈은 자주 드나드는 항목부터 날짜를 적어 보면 다음 선택이 선명해져.':
+  '돈이 오가는 일에선 이미 받기로 한 금액과 아직 기대하는 금액을 따로 적어 보렴.';
+ return {...reading,
+  headline:titles[[...'甲乙丙丁戊己庚辛壬癸'].indexOf(saju.dayStem)],
+  introduction:'할매가 네가 힘을 쓰는 모습과 그 힘을 아껴야 할 때를 차근차근 들려주마.',
+  elementsStory:everyday[leading].join(' ')+' '+roleAction[inner],
+  work:roleAction[outward??inner],money,
+  bridge:roleAction[fortune.annual.tenGod]+' 장부에는 그 질문을 언제 꺼내 볼지, 2027년 열두 달에 나누어 적어 두었단다.',
+ };
 }
