@@ -1,3 +1,4 @@
+import {merchantIdentity} from './commerce-contract.mjs';
 const endpoint='https://api.resend.com/emails';
 
 export async function sendContractCopy({key,from,to,document},transport){
@@ -20,7 +21,7 @@ export async function sendContractCopy({key,from,to,document},transport){
     method:'POST',headers:{Authorization:'Bearer '+key,'Content-Type':'application/json',
      'Idempotency-Key':'contract/'+document.orderId},
     redirect:'error',signal:AbortSignal.timeout(4000),
-    body:JSON.stringify({from,to:[to],subject:'할매의 운명방 구매 계약서면',text}),
+    body:JSON.stringify({from:'할매의 운명방 <'+from+'>',reply_to:merchantIdentity.email,to:[to],subject:'할매의 운명방 구매 계약서면',text}),
    });
    if(response.ok) return {state:'accepted',attempt};
    if(response.status<500&&response.status!==429) return {state:'customer-support',attempt};

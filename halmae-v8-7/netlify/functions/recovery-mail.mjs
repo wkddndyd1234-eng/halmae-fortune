@@ -1,3 +1,4 @@
+import {merchantIdentity} from '../lib/commerce-contract.mjs';
 import {recoveryScope} from './payment-config.mjs';
 import {createHmac,randomBytes} from 'node:crypto';
 import {sign} from './shared.mjs';
@@ -34,7 +35,8 @@ export async function sendRecovery(config,order,email,rateKey,now=Date.now()) {
       'Idempotency-Key':rateKey,
     },
     body:JSON.stringify({
-      from:config.from,to:[email],subject:'할매의 운명방 보고서 복구',
+      from:config.mode==='live'?'할매의 운명방 <'+config.from+'>':config.from,
+      ...(config.mode==='live'?{reply_to:merchantIdentity.email}:{}),to:[email],subject:'할매의 운명방 보고서 복구',
       text:'주문 번호 '+order.orderId+'\n\n아래 링크에서 보고서를 복구할 수 있습니다. 링크는 최대 15분 동안 한 번만 유효합니다. 요청한 적이 없으면 이 메일을 무시해 주세요.\n'+url,
     }),
     signal:AbortSignal.timeout(4000),redirect:'error',

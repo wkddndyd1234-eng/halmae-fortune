@@ -346,6 +346,8 @@ test('페이앱 서버 주문, 통지, 계약 메일 실패, 새 브라우저 �
  assert.equal(await (await notify({})).text(),'SUCCESS');
  assert.equal(mails.length,2);
  assert.deepEqual(mails[0].to,['contract@example.test']);
+ assert.equal(mails[0].from,'할매의 운명방 <sender@example.test>');
+ assert.equal(mails[0].reply_to,'valueseeker123@naver.com');
  assert.ok([...records.values()].some(({data})=>data.state==='customer-support'&&data.receipt==='unverified'));
  const wrong='__Host-halmae-preview='+'2'.repeat(64);
  assert.equal((await accessOrder(wrong)).status,403);
@@ -354,6 +356,8 @@ test('페이앱 서버 주문, 통지, 계약 메일 실패, 새 브라우저 �
  const doc=await access(request({orderId,action:'contract'},{cookie}));
  assert.equal((await doc.json()).amount,39900);
  assert.equal((await recovery(request({orderId,action:'request',email:birth.email}))).status,202);
+ assert.equal(mails.at(-1).from,'할매의 운명방 <sender@example.test>');
+ assert.equal(mails.at(-1).reply_to,'valueseeker123@naver.com');
  const token=mails.at(-1).text.split('#').at(-1);
  assert.equal((await recovery(request({action:'exchange',token}))).status,200);
  assert.equal(await (await notify({pay_state:'70',orig_mul_no:'121',orig_price:'39900',mul_no:'122',price:'1000'})).text(),'SUCCESS');

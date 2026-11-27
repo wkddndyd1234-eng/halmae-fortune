@@ -90,3 +90,17 @@ test('transactional contract retry uses the same delivery key and stops on perma
  assert.match(JSON.parse(sent[0][1]).text,/가상 약관/);
  assert.deepEqual(await sendContractCopy(mail,async()=>new Response(null,{status:400})),{state:'customer-support',attempt:1});
 });
+
+test('contract sender uses the authenticated sending domain and routes replies to the business Naver inbox',async()=>{
+ const document={...order,product:'운명 장부 26장',approvedAt:new Date(now).toISOString(),
+  purchaseExpiresAt:now+365*86400000,seller:{name:'합성 판매자'},delivery:'365일',withdrawal:'가상 환불',
+  policyOriginals:{terms:{text:'가상 약관'},privacy:{text:'가상 방침'},refund:{text:'가상 환불'}}};
+ const result=await sendContractCopy({key:'mock',from:'orders@example.test',to:'buyer@example.test',document},async(_url,{body})=>{
+  const payload=JSON.parse(body);
+  assert.equal(payload.from,'할매의 운명방 <orders@example.test>');
+  assert.equal(payload.reply_to,'valueseeker123@naver.com');
+  assert.deepEqual(payload.to,['buyer@example.test']);
+  return new Response(null,{status:200});
+ });
+ assert.deepEqual(result,{state:'accepted',attempt:1});
+});
