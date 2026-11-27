@@ -108,3 +108,29 @@ footer.footer a{color:#e2c18c}
 @media (max-width:480px) {
  .reading-compass .symbol-scene img { max-height:220px; object-fit:cover; }
 }
+
+/* Final review layout */
+.hero { display:block; min-height:0; text-align:center; padding-bottom:2rem; }
+.hero > .wrap { margin-inline:auto; }
+.story { padding-block:3.5rem 2rem; }
+.story .chapter,.story .scene { margin-bottom:4.25rem; }
+.story-fiction { font-size:.76rem; color:#baa789; }
+#story + #form { padding-top:2rem; }
+.field-help { margin:.2rem 0 .45rem; }
+#minute[hidden] { display:none; }
+.element-summary-bar { height:4.2rem; background:#2d251a; outline:1px solid #745c3e; }
+.element-summary-fill { background:var(--summary-tone); }
+.element-summary-item[data-element="목"] { --summary-tone:#a8cf95; }
+.element-summary-item[data-element="화"] { --summary-tone:#f39988; }
+.element-summary-item[data-element="토"] { --summary-tone:#e8b763; }
+.element-summary-item[data-element="금"] { --summary-tone:#f0e8d3; }
+.element-summary-item[data-element="수"] { --summary-tone:#8cc9ef; }
+.ledger-product-counts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.35rem; padding:0; text-align:center; list-style:none; font-size:.78rem; }
+.ledger-product-counts li { border:1px solid #705536; border-radius:.5rem; padding:.55rem .2rem; }
+.ledger-product-counts strong { display:block; color:#f0ce93; font-size:1.12rem; }
+.ledger-order-actions .ledger-cta { display:block; width:100%; min-height:52px; }
+.checkout-cover h1 { font-family:'Noto Serif KR','Nanum Myeongjo',Batang,serif; word-break:keep-all; }
+@media(max-width:480px) {
+ .story { padding-top:2.25rem; }
+ .story .chapter,.story .scene { margin-bottom:3.5rem; }
+}

@@ -81,7 +81,7 @@ isLeapMonth.addEventListener('change',updateDays);
 year.addEventListener('change',updateDays);
 month.addEventListener('change',updateDays);
 hour.addEventListener('change',()=>{
- minute.disabled=hour.value==='';
+ minute.hidden=minute.disabled=hour.value==='';
  if (minute.disabled) minute.value='0';
 });
 
@@ -197,7 +197,6 @@ byId('conversionNext').addEventListener('click',()=>{
  recordConversion('ledger_preview_end');
  focusHeading('offerHeading');
 });
-byId('returnReading').addEventListener('click',()=>focusHeading('resultHeading'));
 checkoutLink.addEventListener('click',()=>{
  if(!draft || !paymentEnabled) return;
  saveBirthDraft(draft);

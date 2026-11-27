@@ -1,3 +1,4 @@
+import {pairRelations,tenGod} from '../functions/fortune-cycles.mjs';
 import {financeCases,workCases,positionLabel,relationalLenses,roleLenses} from './interpretive-lenses.mjs';
 import {businessScenes,branchPortraits,chapterEditorial,monthEditorial,monthScenes,rolePortraits,stemPortraits} from './premium-copy.mjs';
 
@@ -165,7 +166,16 @@ export function natalGroups(index,f,now){
 `${branches}의 ${type} 관계는 ‘${places[a]}’에서 ‘${places[b]}’로 이어지는 자리에서 보이는구나. ${relationReading[type]}`):
    [`이번 표에는 표시할 쌍이 없어 지장간을 먼저 펴 보자. 일지 ${s.dayBranch}에 놓인 ${dayHidden.stem}의 ${dayHidden.tenGod} 역할을 중심으로 보면 ${rolePrompt[dayHidden.tenGod]} 볼 만하겠구나. 쌍이 없다는 사실로 실제 인간관계의 깊이를 알 수는 없단다.`]),
   '표에서 반복되는 이름이 있다면 어느 기둥 사이인지 먼저 확인해. 바깥 활동에 얽힌 두 자리와 가깝게 지내는 사람을 떠올리게 하는 자리는 같은 질문을 던지지 않지. 충과 형이 같은 쌍에서 보일 경우에도 실제 사건이 두 가지라고 세지 않아.'));
- if(index>=6&&index<=11) groups.push(group('명식에서 살펴볼 점',domainDefinitions[index-6],domainReading(index,f)));
+ if(index>=6&&index<=11){
+  const core=domainReading(index,f);
+  const echoes={
+   6:`정미년의 ${f.annual.tenGod} 흐름을 돈에 대어 볼 때는 ${roleLenses[f.annual.tenGod][0]}부터 살펴보렴. 올해의 화두는 실제 수입을 보장하는 말이 아니라 돈을 쓰는 습관을 비춰 보는 단서야.`,
+   7:`태어난 달의 ${monthGod}이 평소 일하는 태도라면, 정미년 ${f.annual.tenGod}은 그 방식을 어느 자리에서 써 볼지 묻는구나. ${businessLens[f.annual.tenGod]}`,
+   8:`가까운 사이에선 일지의 ${dayHidden.tenGod}에서 편안함을 읽고, 올해 새로 나눌 이야기는 ${roleLenses[f.annual.tenGod][2]}에서 시작해 보렴.`,
+  };
+  groups.push(group('명식에서 살펴볼 점',domainDefinitions[index-6],core));
+  if(echoes[index]) groups.push(group('2027년의 흐름을 더해 보면',echoes[index]));
+ }
  if(index===12){
   const active=f.luck.decades.find(cycle=>Date.parse(cycle.start)<=now&&now<Date.parse(cycle.end));
   const activeIndex=f.luck.decades.indexOf(active);
@@ -219,6 +229,10 @@ export function monthlyGroups(f,month,index){
  const relations=s.dateBoundaryUncertain?dayRelations:month.relations;
  const workMeeting=relations.find(item=>item.position==='월');
  const role=roleLenses[month.tenGod];
+ const yearPillar=index===0?'丙午':f.annual.pillar;
+ const yearRole=tenGod(s.dayStem,yearPillar[0]);
+ const yearTies=pairRelations(yearPillar[1],month.pillar[1]);
+ const yearContext=`${yearPillar} 해의 ${yearRole}${yearRole===month.tenGod?' 주제가 이달에도 이어지는구나.':'과 이달의 '+month.tenGod+'을 함께 살펴봐.'}${yearTies.length?` 해와 달의 지지는 ${yearTies.join('·')} 관계야.`:''}`;
  const openingChoice=workMeeting?
   `‘${work}’에 마음이 쓰일 때는 네가 먼저 정할 것과 상대에게 확인할 것을 나눠 봐. ${relationalLenses[workMeeting.type][1]}.`:
   `‘${work}’에 마음이 쓰이면 ${role[1]}부터 해 보렴.`;
@@ -249,15 +263,14 @@ export function monthlyGroups(f,month,index){
   `태어난 시각을 모르니 이달 일터의 화두 ‘${work}’는 일지 ${s.dayBranch} 속 ${boundaryRole.stem}의 ${boundaryRole.tenGod}에서 시작하자. 평소 맡은 일에서는 ${roleLenses[boundaryRole.tenGod][1]}부터 해 보렴. 그다음 이달 천간 ${month.pillar[0]}에서 읽은 ${month.tenGod}의 질문을 얹으면, 익숙한 방식과 이번에 시도할 방법을 따로 생각해 볼 수 있단다.`:'';
  return [
   group('총운',workMeeting?openingChoice:`${overallScene} ${openingChoice}`,
-   `${season}`,
-   `이달 천간 ${month.pillar[0]}과 네 일간 ${s.dayStem}의 관계에서 ${month.tenGod} 역할을 읽었단다. ${roleOpening}`),
+   `이달의 ${month.pillar}에서 읽은 ${month.tenGod}은 ‘${role[0]}’을 살피는 자리야. ${season}`,
+   yearContext),
   group('재물운',financeScene,exampleDetail(moneyScene,recurring?1:2),
-   `이번 달 재물 흐름에서는 ‘${money}’를 살펴보렴. ${recurring?'지출 계획을 같이 쓰는 사람이 있다면 날짜와 금액을 맞춰 두렴.':'새 기회를 본다면 실제로 받을 날짜까지 달력에 적어 두렴.'} ${natalWealth?`태어난 사주에서는 ${evidenceText(natalWealth)}가 단서야. `:''}${moneyFollowup}`),
+   `이번 달 재물 흐름에서는 ‘${money}’를 살펴보렴. ${natalWealth?`태어난 사주에서는 ${evidenceText(natalWealth)}가 단서야. `:''}${moneyFollowup}`),
   group('직업운',`‘${work}’에 마음이 쓰일 때는 이렇게 시험해 보렴. ${workExample}`,exampleDetail(workScene,workNeedsAuthority?1:2),workReading,...[boundaryContext,workFollowup].filter(Boolean)),
-  group('사업운',businessLens[month.tenGod]+' '+scene+
-   (workMeeting?` 이번 달 ‘${work}’에 얽힌 거래라면 견적을 보내기 전에 결정권자와 변경이 가능한 범위를 확인해 보렴.`:
-    recurring?` ‘${money}’에 걸린 거래라면 반복 주문과 이번에만 드는 비용을 장부에서 갈라 적어 봐.`:
-    ` ‘${money}’에 해당하는 새 거래는 결과를 보기 전까지 두 번째 비용을 약속하지 않아도 된단다.`)),
+  group('사업운',scene+' '+businessLens[month.tenGod],
+   workMeeting?`일터를 뜻하는 월지와 이달 지지에서 ${workMeeting.type}이 보여. ${relationalLenses[workMeeting.type][1]}.`:
+    `이달의 ${month.tenGod}에서는 ‘${role[0]}’이 거래를 살필 실마리란다.`),
   group('애정운',dayRelations.length?
    `이달 애정운의 화두는 ‘${love}’란다. ${relationalLenses[dayRelations[0].type][0]}. 네가 먼저 바꿀 수 있는 말 한마디를 골라 보렴.`:
    `이달 애정운에서는 ‘${love}’에 마음을 두고 ${role[2]}부터 떠올려 봐. ${loveScene}`,relationship),

@@ -168,7 +168,7 @@ fetch(endpoint+'payment',{cache:'no-store'})
       document.querySelector('#recover').textContent='이메일로 보고서 복구';
       clearStorage.textContent='브라우저의 열람 정보 지우기';
     }
-    if (adminPreview) {
+    if (!live && adminPreview) {
       adminPanel.hidden = false;
       admin.disabled = false;
     }
@@ -177,6 +177,10 @@ fetch(endpoint+'payment',{cache:'no-store'})
       document.querySelector('#recover').hidden = false;
     }
     if (enabled) {
+      if (!live) {
+        buy.textContent='테스트 결제하기';
+        document.querySelector('#consent-copy').textContent='을 읽었고 가상 출생 정보의 테스트 처리에 동의합니다.';
+      }
       buy.hidden = false;
       buy.disabled = false;
       document.querySelector('#test-guide').hidden = live;

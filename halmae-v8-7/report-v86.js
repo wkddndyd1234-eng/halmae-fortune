@@ -22,18 +22,18 @@ function element(tag,className,text){
 
 function renderChapter(chapter,index,total){
  const id='chapter-'+(index+1);
- const link=element('a','',chapter.title);
+ const link=element('a','',(chapter.displayTitle??chapter.title));
  link.href='#'+id;
  const entry=element('li');
  entry.append(link);
  byId('toc').append(entry);
- byId('chapter-jump').add(new Option((index+1)+'장 · '+chapter.title,id));
+ byId('chapter-jump').add(new Option((index+1)+'장 · '+(chapter.displayTitle??chapter.title),id));
 
  const section=element('section','chapter');
  section.id=id;
  section.append(
   element('p','eyebrow',[chapter.kicker,chapter.basis].filter(Boolean).join(' · ')),
-  element('h2','chapter-title',chapter.title),
+  element('h2','chapter-title',(chapter.displayTitle??chapter.title)),
   element('p','chapter-lead',chapter.displayLead??chapter.lead),
  );
  section.querySelector('h2').tabIndex=-1;

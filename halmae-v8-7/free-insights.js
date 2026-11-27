@@ -77,6 +77,19 @@ const roleAction={
  편인:'낯선 방식이 눈에 들어오면 한 번에 바꾸기보다 작은 일 하나로 시험해 봐.',
 };
 
+const roleStory={
+ 비견:'같은 일을 맡아도 자기 걸음으로 해낼 때 힘을 얻는 자리',
+ 겁재:'나란히 달리는 사람이 있을 때 힘이 붙고, 몫이 겹치면 마음이 복잡해지는 자리',
+ 식신:'익숙한 솜씨를 꾸준히 써서 남이 누릴 결과로 만드는 자리',
+ 상관:'남들이 지나친 불편에 이름을 붙여 새 방식을 찾는 자리',
+ 정재:'손에 들어온 것을 오래 돌보고 약속한 몫을 지키는 자리',
+ 편재:'사람과 기회가 오갈 때 서로 필요한 것을 이어 보는 자리',
+ 정관:'믿고 맡길 수 있도록 말과 행동의 기준을 맞추는 자리',
+ 편관:'힘겨운 때에도 어디부터 움직여야 할지 앞을 살피는 자리',
+ 정인:'익힌 것을 안에 쌓아 두었다가 필요할 때 마음의 바탕으로 삼는 자리',
+ 편인:'익숙한 답을 한 번 더 돌려 보고 다른 쓰임을 찾는 자리',
+};
+
 export function readPersonalReading(fortune,chart,relationship){
  const saju=fortune.saju;
  const reading=readFreeInsights(chart.pillars[2],chart.elements,relationship,chart.pillars[1]?.[1]);
@@ -90,9 +103,12 @@ export function readPersonalReading(fortune,chart,relationship){
   '돈이 오가는 일에선 이미 받기로 한 금액과 아직 기대하는 금액을 따로 적어 보렴.';
  return {...reading,
   headline:titles[[...'甲乙丙丁戊己庚辛壬癸'].indexOf(saju.dayStem)],
-  introduction:'할매가 네가 힘을 쓰는 모습과 그 힘을 아껴야 할 때를 차근차근 들려주마.',
+  introduction:outward
+   ? `네 일주 ${chart.pillars[2]}에 ${fortune.season.season}의 월령을 함께 놓아 보자. ${reading.symbol}의 마음이 바깥세상을 만날 때, 할매는 태어난 달에서 ${roleStory[outward]}를 먼저 읽는단다.`
+   : `일주 ${chart.pillars[2]}부터 펴 보자. 태어난 철은 시각에 따라 달라질 수 있으니, 오늘은 이 두 글자가 들려주는 이야기부터 풀어 주마.`,
+  temperament:`${reading.temperament} 가까운 사람 앞에서는 태어난 날의 글자 속 ${roleStory[inner]}도 함께 돌아볼 만하구나.`,
   elementsStory:everyday[leading].join(' ')+' '+roleAction[inner],
-  work:roleAction[outward??inner],money,
+  work:`할매가 일하는 자리에서 본 단서는 ${roleStory[outward??inner]}야. ${roleAction[outward??inner]}`,money,
   bridge:roleAction[fortune.annual.tenGod]+' 장부에는 그 질문을 언제 꺼내 볼지, 2027년 열두 달에 나누어 적어 두었단다.',
  };
 }

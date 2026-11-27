@@ -82,7 +82,14 @@ export function annualReflection(saju,annual){
  const question=meeting?
   subjects[meeting.position]+'부터 떠올려 봐. '+(questions[meeting.type]??'이미 지킬 수 있는 것과 다시 상의할 것을 가려 두렴.'):
   '하던 일에서 더 키우고 싶은 몫과 잠시 덜어 낼 몫을 골라 보렴. 둘을 한꺼번에 해내려 애쓰지 않아도 된단다.';
- return '2027년의 장을 펴니, 할매는 네게 이 말부터 건네고 싶구나. '+openings[annual.tenGod]+' '+question;
+ const stemName=['갑목','을목','병화','정화','무토','기토','경금','신금','임수','계수'][stems.indexOf(saju.dayStem)];
+ const thisYear={
+  비견:'네 기준과 나란한 힘',겁재:'함께 뛰면서 몫을 살피는 힘',식신:'꾸준히 결과를 내는 힘',상관:'익숙한 틀을 다시 보는 힘',
+  편재:'새 기회를 잇는 힘',정재:'맡은 자원을 지키는 힘',편관:'압박 속에서 돌파하는 힘',정관:'약속과 책임을 다듬는 힘',
+  편인:'다른 길에서 배우는 힘',정인:'배움과 도움을 쌓는 힘',
+ };
+ const meetingNote=meeting? ` 정미년의 미와 네 ${subjects[meeting.position]}를 뜻하는 글자에서는 ${meeting.type}의 단서가 보이는구나.`:'';
+ return `정미년의 정화가 네 ${stemName} 일간을 만나면 ‘${thisYear[annual.tenGod]}’이 화두가 된단다.`+meetingNote+' '+openings[annual.tenGod]+' '+question;
 }
 
 export function cyclesForSaju(saju){

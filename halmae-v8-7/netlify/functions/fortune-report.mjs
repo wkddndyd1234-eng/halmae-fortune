@@ -82,7 +82,7 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
  f.monthly.forEach((m,i)=>{
   const groups=monthlyGroups(f,m,i).map((group,index)=>({...group,detailFrom:[2,2,2,1,group.paragraphs.length-1,1][index]}));
   chapters.push({...section('2027 · '+String(i+1).padStart(2,'0')+'월',`${i+1}월 · ${m.pillar}의 문`,groups[0].paragraphs[0],groups.flatMap(g=>g.paragraphs),
-   [`월운 간지: ${m.pillar}`,`일간 기준 십성: ${m.tenGod}`,`절기 구간: ${fmt(m.start)}부터 ${fmt(m.end)} 직전까지 · 한국 시간`]),groups});
+   [`월운 간지: ${m.pillar}`,`일간 기준 십성: ${m.tenGod}`,`이 풀이가 적용되는 기간: ${fmt(m.start)}부터 ${fmt(m.end)} 직전까지 (한국 시간). 달력의 1일이 아니라 절기가 드는 시각에 바뀌어요.`]),groups,displayTitle:`${i+1}월 운세`});
  });
  for(let i=0;i<14;i++){
   const chapter=chapters[i];
@@ -98,7 +98,7 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
    const readings=natalGroups(i,f,now);
    if(i<6){
     chapter.lead=leads[i];
-    chapter.groups=[readings[0],details,...readings.slice(1).map(group=>({...group,detail:true}))];
+    chapter.groups=[readings[0],details,...readings.slice(1)];
    }else if(i===13){
     chapter.displayLead=`${call}, 2027년에 어떤 선택을 살펴볼까?`;
     chapter.groups=[{title:'할매가 먼저 건네는 말',paragraphs:chapter.paragraphs.slice(0,1)},...readings,
