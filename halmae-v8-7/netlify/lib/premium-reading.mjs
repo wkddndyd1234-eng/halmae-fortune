@@ -47,6 +47,25 @@ const restQuestions={
  금:'검수나 정리를 다시 시작하기 전에 어디까지 확인하면 끝낼지 한 줄로 써 두렴.',
  수:'밤까지 일이 머리에 남는 날에는 내일 처음 확인할 것만 적고 오늘 장부를 덮어도 좋아.',
 };
+const workFit={
+ 비견:'결과를 혼자 책임지는 일과 동료와 기준을 맞추는 일을 구분해 보렴.',
+ 겁재:'협업의 속도를 올리는 데 힘을 쓰되, 결정권이 겹치는 조직에서는 역할을 먼저 합의해 두렴.',
+ 식신:'기술을 꾸준히 쌓아 결과물을 만드는 일에 눈을 줘 봐. 독립한다면 한 번의 성과보다 같은 품질로 다시 만들 수 있는 분량부터 살피렴.',
+ 상관:'문제를 발견하고 고치는 과업에서 힘을 쓰기 좋아. 조직에서는 작은 시험의 결과를 보여 주고, 독립해서는 고객이 다르더라도 통하는지 살펴봐.',
+ 편재:'새 거래와 사람을 잇는 일에 관심을 둘 만해. 선택 폭이 넓을수록 시험할 범위부터 정해 두렴.',
+ 정재:'일정과 비용의 흐름을 차분히 관리하거나 끝까지 마무리하는 역할을 살펴보렴.',
+ 편관:'급한 문제의 순서를 잡는 일도 한 방향이야. 권한 없이 결과를 떠맡는 곳과는 구별해야 한단다.',
+ 정관:'역할과 책임을 분명히 맡는 일이 잘 맞을 수 있어. 조직이든 독립이든 정해진 권한으로 끝까지 해낼 수 있는지를 먼저 살펴.',
+ 편인:'자료를 모아 새로운 방식을 시험하는 일에 눈을 줘 봐. 남에게 보여 줄 결과물까지 만들면 혼자 배운 것이 일로 이어질 수 있단다.',
+ 정인:'배우고 정리한 내용을 다른 사람이 써 볼 수 있게 안내하는 일도 살펴보렴.',
+};
+const relationshipComfort={
+ 비견:'각자 시간을 존중하고 함께 할 일은 직접 말하는 사람',겁재:'다른 의견을 이기고 지는 문제로 만들지 않는 사람',
+ 식신:'작은 챙김을 알아보고 필요한 것은 말로 알려 주는 사람',상관:'불편한 말을 들어도 서로 고칠 점을 의논하는 사람',
+ 편재:'새 경험을 함께 즐기면서 기존 약속도 기억하는 사람',정재:'사소한 약속을 꾸준히 지키고 변하면 먼저 알려 주는 사람',
+ 편관:'바쁜 날에도 속도를 강요하지 않고 쉴 틈을 주는 사람',정관:'서로 기대하는 책임을 말로 맞추고 약속을 지키는 사람',
+ 편인:'혼자 생각하는 시간을 허락하고 궁금한 것은 묻는 사람',정인:'마음을 돌봐 주면서도 네가 고를 몫은 남겨 주는 사람',
+};
 const labels=['연간','월간','일간','시간(시주의 천간)'];
 const branchLabels=['연지','월지','일지','시지'];
 
@@ -78,20 +97,25 @@ function domainReading(index,f){
  if(index===7){
   const work=roleEvidence(f,['식신','상관','정관','편관'],boundary?[2]:[1,3,0,2]);
   const role=work?.role??inner.tenGod;
-  return`요즘 맡은 일에서 네가 기여하는 순간을 하나 떠올려 보렴. ${work?.hidden?'겉으로 보이는 직함보다 실제로 맡아 온 일에서 이 단서를 떠올려 보렴.':'평소 맡은 일을 한 가지 떠올려 보렴.'} ${rolePortraits[role][0]} 할매라면 거기서 ${roleLenses[role][1]}부터 해 보겠어. ${work?evidenceText(work):day}에서 이 질문을 골랐단다.`;
+  return`${workFit[role]} 자리 이동을 고민한다면 비슷한 일을 해 본 경험에서 ${roleLenses[role][1]}을 실제로 해낼 여건이 있었는지 돌아봐. 그 여건은 직함만 보고 알기 어렵단다. ${work?evidenceText(work):day}에서 이 질문을 골랐단다.`;
  }
- if(index===8) return personalTie?
-`${link}에서 가까운 관계의 질문을 찾아보자. ${relationalLenses[personalTie.type][0]}. ${day}에서 읽는 ${roleLenses[inner.tenGod][2]}도 함께 생각해 보렴.`:
-`${day}에선 ${roleLenses[inner.tenGod][2]}을 가까운 사이의 성찰로 삼을 수 있어. 만나기 시작한 사이라면 연락처럼 가벼운 약속부터 사정을 묻고, 오래 만난 사이라면 전에 편했던 방식이 오늘도 편한지 들어 봐. 네가 원하는 것과 상대도 이미 동의한 것을 같은 말로 여기지 않는 게 중요하단다.`;
+ if(index===8){
+  const comfort=relationshipComfort[inner.tenGod];
+  const approach=personalTie?`${relationalLenses[personalTie.type][0]}. 그 차이를 처음 알아차렸을 때 어떤 말이 오갔는지도 떠올려 보렴.`:
+    `네 마음을 표현하고 싶을 때는 ${roleLenses[inner.tenGod][2]}부터 떠올려 봐. 오래 만난 사이라도 예전의 약속이 지금도 편한지 물어볼 수 있단다.`;
+  return `할매라면 가까운 사람이 어떤 말로 너를 안심시키는지 먼저 볼 거야. ${comfort} 곁에서 편안한지 살펴보렴. ${approach} 이 장의 단서는 ${day}${link?'와 '+link:''}야.`;
+ }
  if(index===9){
-  const tie=personalTie?`${link}에서 동행의 약속을 살펴보자. ${relationalLenses[personalTie.type][2]}`:
-`함께 지내는 일에서는 ${roleLenses[inner.tenGod][2]}부터 살펴봐`;
-  return`동행을 읽을 땐 ${day}부터 펴 보렴. ${tie}. 생활비, 돌봄, 혼자 쉬는 자리 중 하나를 골라 각자 기대하는 분담을 말해 봐. 공동의 돈을 쓴다면 누가 얼마를 부담하고 얼마부터 함께 의논할지도 정해 두렴. 결혼 시기나 배우자라는 결론은 이 글자들에서 꺼내지 않는단다.`;
+  const agreement=personalTie?`${relationalLenses[personalTie.type][2]}. 의견이 맞지 않는 날에 다시 상의할 시간도 정해 두렴.`:
+   `함께 쓸 돈, 따로 쉬는 시간, 돌봄 중 한 가지를 고른 뒤 ‘누가, 언제까지’를 합의해 봐. 네가 중요하게 여기는 약속이 무엇인지는 ${relationshipComfort[inner.tenGod]}을 떠올리면 짚어 보기 쉬워.`;
+  return `함께 살림을 꾸린다면 마음과 생활의 약속을 따로 들여다보렴. ${agreement} 생활비를 함께 낸다면 부담할 액수와 미리 상의할 지출 기준을 적어 보자. 이런 질문은 ${day}${link?'와 '+link:''}에서 가져왔어.`;
  }
  if(index===10){
   const help=roleEvidence(f,['정인','편인'],boundary?[2]:[1,0,3,2]);
-  const role=help?.role??inner.tenGod;
-  return `혼자 붙들고 있던 일에서 막힌 대목 하나만 꺼내 보렴. ${rolePortraits[role][0]} 도움을 청할 때는 네가 이미 해 본 것과 다음으로 확인하고 싶은 것을 함께 말해 봐. 할매가 이 질문을 고른 단서는 ${help?evidenceText(help):day}야.`;
+  const approach=help?.role==='편인'?'이전 방식이 막혔을 땐 다른 경로를 써 본 사람에게 처음 바꿨던 한 가지를 물어 봐.':
+   help?.role==='정인'?'다시 찾아갈 수 있는 사람에게 네가 이미 해 본 것과 아직 헷갈리는 것을 나눠 물어 봐.':
+   `네가 막힌 부분을 보여 주고 ${roleLenses[inner.tenGod][1]}에 관해 상대가 본 것도 들어 보렴.`;
+  return `도움받고 싶은 일이 생기면 부탁 전체를 한꺼번에 넘기지 않아도 된단다. ${approach} 첫 만남에서 모든 답을 기대하기보다, 실제로 도움을 받은 대목을 살피고 다음 부탁을 정해 봐. 할매가 이 질문을 고른 단서는 ${help?evidenceText(help):day}야.`;
  }
  return `일간 ${s.dayStem}의 ${s.dayElement} 상징에서 쉼을 돌아보는 질문을 하나 골랐단다. ${restQuestions[s.dayElement]} 해 본 날과 평소의 차이는 네 일정과 경험에서 확인하렴.`;
 }
@@ -108,9 +132,20 @@ export function natalGroups(index,f,now){
  const groups=index>=6&&index<=11?[]:[group(heading,...editorial)];
  const monthGod=f.stemTenGods[1];
  const dayHidden=f.hiddenTenGods[2][0];
+ if(index===0){
+  groups[0]=group('태어난 철과 하루의 두 얼굴',
+   `바깥에서 일을 맡을 땐 ${workFit[monthGod]} 마음이 놓이는 가까운 자리에서는 ${relationshipComfort[dayHidden.tenGod]} 곁에서 네가 어떤 모습을 보이는지도 함께 떠올려 보렴.`,
+   ...editorial);
+  groups[0].detailFrom=1;
+ }
+ if(index===1){
+  groups[0]=group('강점이 힘을 발휘하는 자리',stemPortraits[s.dayStem],
+   `그 힘이 실제 일에서 쓰일 때는 태어난 달에서 읽은 역할도 봐야 해. ${workFit[monthGod]} 일의 결과를 혼자 떠안았던 때와 책임을 적절히 나눴던 때를 나란히 살펴보렴.`,...editorial);
+  groups[0].detailFrom=2;
+ }
  if(index===0) groups.push(group('월지와 일지를 함께 펴기',
 `월지 ${s.pillars[1][1]}를 ${branchPortraits[s.pillars[1][1]]}에 빗대고 일지 ${s.dayBranch}를 ${branchPortraits[s.dayBranch]}에 빗대 보자. 앞엣것은 태어난 철의 이야기이고 뒤엣것은 일간이 바로 기대 선 그림이야. 서로 비슷한 비유가 나오더라도 이 장부에선 두 자리를 바꿔 읽지 않는단다.`));
- if(index===1) groups.push(group('일간의 비유',stemPortraits[s.dayStem],
+ if(index===1) groups.push(group('태어난 달에서 읽은 근거',
 `태어난 철에 먼저 보이는 천간 역할은 ${monthGod} 역할이야. ${rolePrompt[monthGod]} 보는 장면에 이 일간의 비유를 얹어 보렴. 생각나는 일이 없다면 억지로 맞추지 말고 이미 사람들과 힘을 나눴던 장면을 하나 떠올려도 좋아.`));
  if(index===2){
   const entries=Object.entries(s.elements);
@@ -133,13 +168,38 @@ export function natalGroups(index,f,now){
  if(index>=6&&index<=11) groups.push(group('명식에서 살펴볼 점',domainDefinitions[index-6],domainReading(index,f)));
  if(index===12){
   const active=f.luck.decades.find(cycle=>Date.parse(cycle.start)<=now&&now<Date.parse(cycle.end));
-  groups.push(group(active?'현재의 근사 대운':'오래 타는 불의 이야기',
-   active?`현재 표에서 발을 디딘 곳은 ${active.pillar}(${active.tenGod}), 약 ${active.startAge}세부터 이어지는 구간이란다. ${rolePortraits[active.tenGod][0]} 지난해 하던 일 가운데 아직 이어가는 일이 있다면, ${roleLenses[active.tenGod][1]}부터 해 보렴.`:
+  const activeIndex=f.luck.decades.indexOf(active);
+  const previous=activeIndex>0?f.luck.decades[activeIndex-1]:null;
+  const next=active?f.luck.decades[activeIndex+1]:null;
+  groups[0].detail=true;
+  groups.push(group(active?'지금의 긴 흐름을 읽는 법':'대운 시점을 정하기 어려울 때',
+   active?`지금 하는 일에서 앞으로도 가져갈 몫부터 골라 보렴. ${workFit[active.tenGod]} 이 흐름은 약 ${active.startAge}세부터 시작하는 것으로 읽혀. 지난 경험에서 익힌 방식 중 지금도 힘을 보태는 한 가지를 먼저 남겨 봐.`:
 `열 해를 가만히 돌아보면 매일 피우던 작은 불이 나중에는 길을 밝히기도 하지. ${stemPortraits[s.dayStem]} 지난 여러 해 중에 먼저 놓아 준 일 하나와 시간이 지나 더 소중해진 일 하나를 골라 보렴. 두 가지가 같은 날에 생기지 않아도 네 이야기 안에서는 이어질 수 있단다.`));
+  if(active){
+   groups.push(group('지금 흐름의 앞뒤',
+    ...(previous?[`앞 시기에 ${roleLenses[previous.tenGod][1]}이 떠오르는 경험이 있다면, 지금 하는 일에도 아직 필요한지 되짚어 보렴.`]:[]),
+    ...(next?[`다음 구간은 약 ${next.startAge}세 무렵부터야. 할매라면 미리 ${roleLenses[next.tenGod][1]}이 어떤 일에 필요한지 살피겠어. 바뀌는 날짜나 사건을 예고하는 표로 읽지는 마렴.`]:[])));
+   groups.push({...group('대운의 계산 근거',
+    `현재 구간은 ${active.pillar}(${active.tenGod})이야. ${rolePortraits[active.tenGod][0]}`),detail:true});
+  }
  }
- if(index===13) groups.push(group(f.annual.decades.length?'정미년과 대운이 포개지는 자리':'정미년 그늘 아래',
-`해의 천간 丁은 네 일간에 ${f.annual.tenGod} 이야기를 건네. ${rolePortraits[f.annual.tenGod][0]} 올해 이미 맡은 일 하나에서 ${roleLenses[f.annual.tenGod][1]}부터 해 보렴.`,
-  ...(f.annual.decades.length?f.annual.decades.map(describeDecade):['한 해는 긴 두루마리에서 손에 닿는 한 쪽이란다. 정미의 작은 불은 가까운 것이 보이게 하고 여름 끝의 흙은 서둘러 거두지 않아도 되는 몫을 품지. 네가 이미 오래 해 온 일 중 누군가에게 보여 줄 때가 된 것과 한 철 더 뿌리를 내릴 것을 골라 보렴. 두 몫이 다 소중해도 같은 날에 내어 줄 필요는 없단다.'])));
+ if(index===13){
+  const annual=f.annual.tenGod;
+  const wealth=roleEvidence(f,['정재','편재'],s.dateBoundaryUncertain?[2]:[1,3,0,2]);
+  const relation=f.annual.relations.find(item=>item.position==='일');
+  const finance=wealth?.role==='정재'?'기존 수입의 지급일과 고정비를 먼저 달력에 올려 두렴.':
+   wealth?.role==='편재'?'새 제안의 예상액에서 먼저 나갈 돈과 정산이 늦을 때 감당할 비용을 빼 보렴.':
+   '이미 약속받은 돈과 아직 협의 중인 돈을 다른 칸에 적어 두렴.';
+  groups[0].detail=true;
+  groups.push(group('2027년, 네가 먼저 살펴볼 세 자리',
+   `돈은 ${finance} 그다음 올해 들어온 일에 ${roleLenses[annual][0]}을 적용해 봐.`,
+   `일과 사업에서는 ${roleLenses[annual][1]}부터 해 보렴. ${businessLens[annual]}`,
+   relation?`가까운 사이에서는 ${relationalLenses[relation.type][0]}. 올해 네가 지킬 약속을 먼저 말해 보렴.`:
+    `가까운 사이에서는 ${roleLenses[annual][2]}부터 시작해 보렴. 지난해와 달라진 일정이나 부담이 있다면 이번에는 어떻게 나눌지 물어봐.`));
+  groups.push({...group('한 해와 대운을 함께 읽는 근거',
+   `해의 천간 丁은 네 일간에 ${annual} 이야기를 건네. ${rolePortraits[annual][0]}`,
+   ...(f.annual.decades.length?f.annual.decades.map(describeDecade):['대운의 시점을 확정할 정보가 없으니, 2027년 해의 흐름과 대운의 전환이 겹친다고 단정하지 않을게.'])),detail:true});
+ }
  return groups;
 }
 
@@ -178,8 +238,8 @@ export function monthlyGroups(f,month,index){
  const financeScene=financeCases[index][recurring?0:1]+'.';
  const workExample=workCases[index][workNeedsAuthority?0:1]+'.';
  const workReading=workMeeting?
-`${monthlyRelation(workMeeting,1)} ${workExample}`:
-`${month.pillar}에서 본 ${month.tenGod}의 직업 사례로는 이렇게 생각해 볼 수 있어. ${workExample}`;
+`${monthlyRelation(workMeeting,1)}`:
+`${month.pillar}에서 본 ${month.tenGod}의 단서로 골랐단다. ${roleOpening}`;
  const relationship=dayRelations.length?
 `${dayRelations.map(relation=>monthlyRelation(relation,0)).join(' ')}`:
 `일지 ${s.dayBranch}·절기 ${month.pillar[1]} 사이에 직접 확인되는 합충형해는 없구나. 가까운 사이에서 실제로 있었던 일 한 가지에 이달 질문을 대어 보렴.`;
@@ -189,14 +249,19 @@ export function monthlyGroups(f,month,index){
   `태어난 시각을 모르니 이달 일터의 화두 ‘${work}’는 일지 ${s.dayBranch} 속 ${boundaryRole.stem}의 ${boundaryRole.tenGod}에서 시작하자. 평소 맡은 일에서는 ${roleLenses[boundaryRole.tenGod][1]}부터 해 보렴. 그다음 이달 천간 ${month.pillar[0]}에서 읽은 ${month.tenGod}의 질문을 얹으면, 익숙한 방식과 이번에 시도할 방법을 따로 생각해 볼 수 있단다.`:'';
  return [
   group('총운',workMeeting?openingChoice:`${overallScene} ${openingChoice}`,
-   `${season} ‘${caution}’이 마음에 걸리면, ${rolePrompt[month.tenGod]} 보렴.`,
+   `${season}`,
    `이달 천간 ${month.pillar[0]}과 네 일간 ${s.dayStem}의 관계에서 ${month.tenGod} 역할을 읽었단다. ${roleOpening}`),
   group('재물운',financeScene,exampleDetail(moneyScene,recurring?1:2),
    `이번 달 재물 흐름에서는 ‘${money}’를 살펴보렴. ${recurring?'지출 계획을 같이 쓰는 사람이 있다면 날짜와 금액을 맞춰 두렴.':'새 기회를 본다면 실제로 받을 날짜까지 달력에 적어 두렴.'} ${natalWealth?`태어난 사주에서는 ${evidenceText(natalWealth)}가 단서야. `:''}${moneyFollowup}`),
-  group('직업운',`일터에서는 ‘${work}’부터 살펴. 이번 달에 네가 맡은 일 하나를 골라 ${role[1]}부터 시험해 보렴.`,exampleDetail(workScene,workNeedsAuthority?1:2),workReading,...[boundaryContext,workFollowup].filter(Boolean)),
-  group('사업운',businessLens[month.tenGod]+' '+scene),
-  group('애정운',`이달 애정운을 볼 때는 ‘${love}’를 떠올려 보렴. ${role[2]}부터 생각해 봐.`,...(dayRelations.length?[]:[loveScene]),relationship),
-  group('주의할 점',`이달 조심할 습관을 한 가지 꼽자면 ‘${caution}’이야. ${cautionScene}`,
+  group('직업운',`‘${work}’에 마음이 쓰일 때는 이렇게 시험해 보렴. ${workExample}`,exampleDetail(workScene,workNeedsAuthority?1:2),workReading,...[boundaryContext,workFollowup].filter(Boolean)),
+  group('사업운',businessLens[month.tenGod]+' '+scene+
+   (workMeeting?` 이번 달 ‘${work}’에 얽힌 거래라면 견적을 보내기 전에 결정권자와 변경이 가능한 범위를 확인해 보렴.`:
+    recurring?` ‘${money}’에 걸린 거래라면 반복 주문과 이번에만 드는 비용을 장부에서 갈라 적어 봐.`:
+    ` ‘${money}’에 해당하는 새 거래는 결과를 보기 전까지 두 번째 비용을 약속하지 않아도 된단다.`)),
+  group('애정운',dayRelations.length?
+   `이달 애정운의 화두는 ‘${love}’란다. ${relationalLenses[dayRelations[0].type][0]}. 네가 먼저 바꿀 수 있는 말 한마디를 골라 보렴.`:
+   `이달 애정운에서는 ‘${love}’에 마음을 두고 ${role[2]}부터 떠올려 봐. ${loveScene}`,relationship),
+  group('주의할 점',`${cautionScene} 이번 달 메모에는 ‘${caution}’, 이 대목을 적어 두렴.`,
    place?`절기 지지 ${month.pillar[1]}에서 확인한 관계를 적어 둘게. ${mainRelation}. ${monthlyRelation(place,2)}`:
     `절기 지지 ${month.pillar[1]}에 견줘 보면 이 장에서 바로 표시할 합충형해는 없구나.`,
    ...month.decades.filter(cycle=>cycle.relations.length).map(cycle=>
