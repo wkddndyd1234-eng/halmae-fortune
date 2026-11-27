@@ -148,6 +148,18 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  const contract=await contractResponse.json();
  assert.equal(contract.policyVersion,birth.policyVersion);
  assert.equal(contract.amount,39900);
+ assert.equal(contract.orderId,first.orderId);
+ assert.equal(contract.currency,'KRW');
+ assert.equal(contract.approvedAt,provider.approvedAt);
+ assert.equal(contract.purchaseExpiresAt,Date.parse(contract.approvedAt)+365*24*60*60*1000);
+ assert.match(contract.product,/26장.*2027년/);
+ assert.match(contract.delivery,/365일/);
+ assert.match(contract.withdrawal,/청약철회·환불/);
+ for(const field of ['name','representative','registration','address','email','phone','mailOrderNumber']){
+  assert.equal(typeof contract.seller[field],'string',field);
+  assert.ok(contract.seller[field].trim(),field);
+ }
+ assert.deepEqual(Object.keys(contract.policies).sort(),['privacy','refund','terms']);
  assert.equal(contract.purchaseExpiresAt,paid.purchaseExpiresAt);
  assert.doesNotMatch(JSON.stringify(contract),/1988-10-08|live-fixture-payment|recoveryEmailHash|browserHash|checkoutToken/);
  const originalTermsUrl=process.env.LIVE_TERMS_URL;
