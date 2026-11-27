@@ -88,7 +88,8 @@ export function annualReflection(saju,annual){
   편재:'새 기회를 잇는 힘',정재:'맡은 자원을 지키는 힘',편관:'압박 속에서 돌파하는 힘',정관:'약속과 책임을 다듬는 힘',
   편인:'다른 길에서 배우는 힘',정인:'배움과 도움을 쌓는 힘',
  };
- const meetingNote=meeting? ` 정미년의 미와 네 ${subjects[meeting.position]}를 뜻하는 글자에서는 ${meeting.type}의 단서가 보이는구나.`:'';
+ const natalPosition={년:'태어난 해',월:'태어난 달',일:'태어난 날',시:'태어난 시각'};
+ const meetingNote=meeting? ` 정미년의 미와 ${natalPosition[meeting.position]}의 지지를 나란히 놓으면 ${meeting.type}의 단서가 보이는구나.`:'';
  return `정미년의 정화가 네 ${stemName} 일간을 만나면 ‘${thisYear[annual.tenGod]}’이 화두가 된단다.`+meetingNote+' '+openings[annual.tenGod]+' '+question;
 }
 
