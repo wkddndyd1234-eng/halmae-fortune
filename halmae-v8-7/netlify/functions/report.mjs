@@ -1,6 +1,6 @@
 import {materializeReport} from '../lib/report-delivery.mjs';
 import {buildFortuneReport} from './fortune-report.mjs';
-import {orders,json,verifyProvider,error} from './shared.mjs';
+import {financeStore,orders,json,verifyProvider,error} from './shared.mjs';
 import {paymentConfig} from './payment-config.mjs';
 import {eligibleOrder,paidStatus,reportScope,verifiedPurchase} from './entitlement.mjs';
 export const buildReport = buildFortuneReport;
@@ -28,7 +28,7 @@ export default async req => {
     return json({error:'완료된 카드 결제를 확인하지 못했습니다.'},403);
    }
   }
-  const result=config?.mode==='live'?await materializeReport(store,purchase):buildReport(o);
+  const result=config?.mode==='live'?await materializeReport(store,purchase,buildReport,financeStore()):buildReport(o);
   return json({...result,demo,expiresAt:claim.exp,...(!demo?{
     orderId:o.orderId,purchaseExpiresAt:purchase.purchaseExpiresAt,...(config.mode==='live'?{paymentMode:'live'}:{})
   }:{})});

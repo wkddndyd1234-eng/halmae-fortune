@@ -47,10 +47,11 @@ test('PayApp validation checks the original transaction and suppresses duplicate
  assert.equal(payappEntitled(approved,approved.purchaseExpiresAt),false);
  const partial=reconcilePayapp(config,approved,notification({pay_state:'70',orig_mul_no:'23',orig_price:'39900',mul_no:'24',price:'1000'}),now);
  const canceled=reconcilePayapp(config,partial,notification({pay_state:'9'}),now);
- for(const terminal of [partial,canceled]){
-  assert.equal(payappEntitled(terminal,now),false);
-  assert.equal(reconcilePayapp(config,terminal,notification(),now),terminal);
- }
+ assert.equal(payappEntitled(partial,now),true);
+ assert.equal(payappEntitled(partial,partial.purchaseExpiresAt),false);
+ assert.equal(payappEntitled(reconcilePayapp(config,order,notification({pay_state:'70',orig_mul_no:'23',orig_price:'39900',mul_no:'24',price:'1000'}),now),now),false);
+ assert.equal(payappEntitled(canceled,now),false);
+ for(const terminal of [partial,canceled]) assert.equal(reconcilePayapp(config,terminal,notification(),now),terminal);
 });
 
 test('PayApp retries reuse a saved checkout and duplicate feedback leaves one approval',async()=>{

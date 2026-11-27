@@ -365,6 +365,9 @@ test('페이앱 서버 주문, 통지, 계약 메일 실패, 새 브라우저 �
  const token=mails.at(-1).text.split('#').at(-1);
  assert.equal((await recovery(request({action:'exchange',token}))).status,200);
  assert.equal(await (await notify({pay_state:'70',orig_mul_no:'121',orig_price:'39900',mul_no:'122',price:'1000'})).text(),'SUCCESS');
+ assert.equal((await accessOrder()).status,200);
+ assert.equal((await report(request(null,{token:approval.token}))).status,200);
+ assert.equal(await (await notify({pay_state:'9'})).text(),'SUCCESS');
  assert.equal((await accessOrder()).status,403);
  assert.equal((await report(request(null,{token:approval.token}))).status,403);
  assert.equal((await access(request({orderId,action:'contract'},{cookie}))).status,200);

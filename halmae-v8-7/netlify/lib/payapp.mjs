@@ -87,7 +87,8 @@ export function reconcilePayapp(config,order,fields,now=Date.now()){
 }
 
 export function payappEntitled(order,now=Date.now()){
- return order?.status==='approved'&&Number.isSafeInteger(order.purchaseExpiresAt)&&order.purchaseExpiresAt>now;
+ return ['approved','partial'].includes(order?.status) && Number.isFinite(Date.parse(order.approvedAt)) &&
+  Number.isSafeInteger(order.purchaseExpiresAt) && order.purchaseExpiresAt>now;
 }
 
 // Persist a single checkout attempt before calling the provider. An ambiguous
