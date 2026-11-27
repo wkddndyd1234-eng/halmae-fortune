@@ -78,3 +78,21 @@ export function renderReadingChart(pillarsContainer,elementsContainer,saju) {
   return [button,panel];
  }));
 }
+
+const elementGlyphs={목:'木',화:'火',토:'土',금:'金',수:'水'};
+
+export function renderElementSummary(container,counts) {
+ const total=Object.values(counts).reduce((sum,count)=>sum+count,0);
+ container.replaceChildren(...Object.entries(elementGlyphs).map(([element,glyph])=>{
+  const count=counts[element];
+  const item=node('li','element-summary-item');
+  item.dataset.element=element;
+  const bar=node('span','element-summary-bar');
+  bar.setAttribute('aria-hidden','true');
+  const fill=node('span','element-summary-fill');
+  fill.style.height=(total?count/total*100:0)+'%';
+  bar.append(fill);
+  item.append(node('strong','',count+'회'),bar,node('span','',element+'('+glyph+')'));
+  return item;
+ }));
+}

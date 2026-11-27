@@ -72,13 +72,13 @@ function domainReading(index,f){
  if(index===6){
   const wealth=roleEvidence(f,['정재','편재'],boundary?[2]:[1,3,0,2]);
   return wealth?
-`${evidenceText(wealth)}에선 ${wealth.role==='정재'?'반복되는 수입과 지출':'아직 정해지지 않은 제안'}부터 살펴볼 만해. ${roleLenses[wealth.role][0]}부터 해 보렴. ${wealth.hidden?'지장간에서 본 단서이니 겉으로 드러난 수입 구조라고 여기기 전에 이미 해 본 거래부터 확인하렴.':'겉글자에서 보이는 주제이니 금액뿐 아니라 책임과 지급 조건을 밖으로 명확히 밝혀 두렴.'} ${wealth.role==='정재'?'같은 날에 빠져나가는 비용을 묶어 보면 지급일을 옮길 항목이 눈에 띈단다.':'거래가 늦어져도 먼저 내야 하는 비용까지 적어야 제안을 감당할 수 있는지 보인단다.'}`:
+`돈을 살필 때 할매라면 ${wealth.role==='정재'?'반복되는 수입과 지출':'아직 정해지지 않은 제안'}부터 적겠어. ${roleLenses[wealth.role][0]}부터 해 보렴. ${wealth.hidden?'지장간에서 본 단서이니 겉으로 드러난 수입 구조라고 여기기 전에 이미 해 본 거래부터 확인하렴.':'겉글자에서 보이는 주제이니 금액뿐 아니라 책임과 지급 조건을 밖으로 명확히 밝혀 두렴.'} ${wealth.role==='정재'?'같은 날에 빠져나가는 비용을 묶어 보면 지급일을 옮길 항목이 눈에 띈단다.':'거래가 늦어져도 먼저 내야 하는 비용까지 적어야 제안을 감당할 수 있는지 보인단다.'} 이 질문은 ${evidenceText(wealth)}에서 골랐단다.`:
 `살펴본 자리에서 재성의 단서가 없다면 ${day}의 역할을 돈이 오가는 실제 장면에 대어 보렴. ${roleLenses[inner.tenGod][0]}이 출발점이야. 벌이가 적다는 뜻으로 읽을 필요는 없어. 확인할 수 있는 건 견적과 영수증, 정해진 지급일이니까 거래를 시작하기 전에 부담하는 비용부터 적어 두렴.`;
  }
  if(index===7){
   const work=roleEvidence(f,['식신','상관','정관','편관'],boundary?[2]:[1,3,0,2]);
   const role=work?.role??inner.tenGod;
-  return`${work?evidenceText(work):day}에 먼저 눈이 가는구나. ${work?.hidden?'겉으로 보이는 직함보다 실제로 맡아 온 일에서 이 단서를 떠올려 보렴.':'평소 맡은 일을 한 가지 떠올려 보렴.'} ${rolePortraits[role][0]} 할매라면 거기서 ${roleLenses[role][1]}부터 해 보겠어.`;
+  return`요즘 맡은 일에서 네가 기여하는 순간을 하나 떠올려 보렴. ${work?.hidden?'겉으로 보이는 직함보다 실제로 맡아 온 일에서 이 단서를 떠올려 보렴.':'평소 맡은 일을 한 가지 떠올려 보렴.'} ${rolePortraits[role][0]} 할매라면 거기서 ${roleLenses[role][1]}부터 해 보겠어. ${work?evidenceText(work):day}에서 이 질문을 골랐단다.`;
  }
  if(index===8) return personalTie?
 `${link}에서 가까운 관계의 질문을 찾아보자. ${relationalLenses[personalTie.type][0]}. ${day}에서 읽는 ${roleLenses[inner.tenGod][2]}도 함께 생각해 보렴.`:
@@ -88,7 +88,11 @@ function domainReading(index,f){
 `함께 지내는 일에서는 ${roleLenses[inner.tenGod][2]}부터 살펴봐`;
   return`동행을 읽을 땐 ${day}부터 펴 보렴. ${tie}. 생활비, 돌봄, 혼자 쉬는 자리 중 하나를 골라 각자 기대하는 분담을 말해 봐. 공동의 돈을 쓴다면 누가 얼마를 부담하고 얼마부터 함께 의논할지도 정해 두렴. 결혼 시기나 배우자라는 결론은 이 글자들에서 꺼내지 않는단다.`;
  }
- if(index===10) return`도움을 주고받는 일도 ${day}에서 읽어 볼 수 있지. ${roleLenses[inner.tenGod][2]}부터 떠올려 보렴. 부탁할 땐 어떤 도움을 언제까지 원하는지 한 문장으로 말해 봐.`;
+ if(index===10){
+  const help=roleEvidence(f,['정인','편인'],boundary?[2]:[1,0,3,2]);
+  const role=help?.role??inner.tenGod;
+  return `혼자 붙들고 있던 일에서 막힌 대목 하나만 꺼내 보렴. ${rolePortraits[role][0]} 도움을 청할 때는 네가 이미 해 본 것과 다음으로 확인하고 싶은 것을 함께 말해 봐. 할매가 이 질문을 고른 단서는 ${help?evidenceText(help):day}야.`;
+ }
  return `일간 ${s.dayStem}의 ${s.dayElement} 상징에서 쉼을 돌아보는 질문을 하나 골랐단다. ${restQuestions[s.dayElement]} 해 본 날과 평소의 차이는 네 일정과 경험에서 확인하렴.`;
 }
 
@@ -155,6 +159,9 @@ export function monthlyGroups(f,month,index){
  const relations=s.dateBoundaryUncertain?dayRelations:month.relations;
  const workMeeting=relations.find(item=>item.position==='월');
  const role=roleLenses[month.tenGod];
+ const openingChoice=workMeeting?
+  `‘${work}’에 마음이 쓰일 때는 네가 먼저 정할 것과 상대에게 확인할 것을 나눠 봐. ${relationalLenses[workMeeting.type][1]}.`:
+  `‘${work}’에 마음이 쓰이면 ${role[1]}부터 해 보렴.`;
  const natalWealth=roleEvidence(f,['정재','편재'],s.dateBoundaryUncertain?[2]:[1,3,0,2]);
  const moneyQuestion=natalWealth?.role==='정재'?'반복해서 내는 비용과 실제 지급일':
   natalWealth?.role==='편재'?'한 번 들어오는 제안과 정산에 걸리는 시간':'이미 합의한 금액과 아직 기대만 하는 금액';
@@ -181,7 +188,7 @@ export function monthlyGroups(f,month,index){
  const boundaryContext=s.dateBoundaryUncertain?
   `태어난 시각을 모르니 이달 일터의 화두 ‘${work}’는 일지 ${s.dayBranch} 속 ${boundaryRole.stem}의 ${boundaryRole.tenGod}에서 시작하자. 평소 맡은 일에서는 ${roleLenses[boundaryRole.tenGod][1]}부터 해 보렴. 그다음 이달 천간 ${month.pillar[0]}에서 읽은 ${month.tenGod}의 질문을 얹으면, 익숙한 방식과 이번에 시도할 방법을 따로 생각해 볼 수 있단다.`:'';
  return [
-  group('총운',`${overallScene} ‘${work}’에 마음이 쓰이면 ${role[1]}부터 해 보렴.`,
+  group('총운',workMeeting?openingChoice:`${overallScene} ${openingChoice}`,
    `${season} ‘${caution}’이 마음에 걸리면, ${rolePrompt[month.tenGod]} 보렴.`,
    `이달 천간 ${month.pillar[0]}과 네 일간 ${s.dayStem}의 관계에서 ${month.tenGod} 역할을 읽었단다. ${roleOpening}`),
   group('재물운',financeScene,exampleDetail(moneyScene,recurring?1:2),

@@ -34,7 +34,7 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
   '힘을 자주 쓰는 곳이 있으면 잠시 내려놓을 곳도 필요하단다. 요즘 자꾸 마음이 쏠리는 일은 뭐니?',
   `밖에서 네 역할이 애매해질 때가 있지. 마음에 걸리는 일 하나를 골라 ${roleLenses[activity][1]}부터 생각해 보렴.`,
   `가까운 사이일수록 말하지 않아도 알겠거니 하게 되지. 할매라면 ${roleLenses[inner][2]}부터 살펴보겠어.`,
-  personalTie?`함께 정한 일이 자꾸 마음에 남으면 ${relationalLenses[personalTie.type][2]}`:
+  personalTie?`함께 정한 일이 자꾸 마음에 남을 때가 있지. ${relationalLenses[personalTie.type][2]}.`:
    `사람과 일을 맞춰 갈 때 할매라면 ${roleLenses[activity][1]}부터 돌아보겠어.`,
  ];
  const chapters=[

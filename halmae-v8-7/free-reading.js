@@ -1,7 +1,7 @@
 import {lunarMonthLength} from './lunar-conversion.mjs';
 import {ledgerPreview} from './ledger-preview.mjs';
 import {renderLedgerPreview} from './ledger-preview-view.js';
-import {renderReadingChart} from './reading-chart.js';
+import {renderReadingChart,renderElementSummary} from './reading-chart.js';
 import {calculateSaju,pillarElements} from './saju.mjs';
 import {fromFreeForm,saveBirthDraft,todayInKorea} from './birth-handoff.js';
 import {readPersonalReading} from './free-insights.js';
@@ -147,6 +147,7 @@ form.addEventListener('submit',event=>{
  if (input.birthTime.startsWith('23:')) notices.push('밤 11시대는 하루의 경계를 잡는 방식에 따라 일주와 시주가 달라질 수 있어요.');
  byId('calcNotice').textContent=notices.join(' ');
  byId('calcNotice').hidden=!notices.length;
+ renderElementSummary(byId('element-summary-values'),chart.elements);
  renderReadingChart(byId('pillars'),byId('fiveElements'),chart);
  readingText=[byId('greeting').textContent,byId('resultMeta').textContent,
   chart.pillars.map(pillar=>pillar??'미상').join(' · '),reading.headline,reading.introduction,reading.temperament,preview.story,reading.elementsStory,reading.work,reading.money,reading.balance,reading.relationships,
@@ -192,12 +193,10 @@ fetch('/.netlify/functions/payment',{cache:'no-store'})
   checkoutLink.textContent='현재 주문할 수 없어요';
   byId('offerAvailability').textContent='결제 상태를 확인하지 못했어요. 잠시 후 다시 확인해 주세요.';
  });
-for(const [id,event] of [['conversionMid','ledger_preview_mid'],['conversionNext','ledger_preview_end']]){
- byId(id).addEventListener('click',()=>{
-  recordConversion(event);
-  focusHeading('offerHeading');
- });
-}
+byId('conversionNext').addEventListener('click',()=>{
+ recordConversion('ledger_preview_end');
+ focusHeading('offerHeading');
+});
 byId('returnReading').addEventListener('click',()=>focusHeading('resultHeading'));
 checkoutLink.addEventListener('click',()=>{
  if(!draft || !paymentEnabled) return;
