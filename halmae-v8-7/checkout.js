@@ -145,10 +145,13 @@ clearStorage.addEventListener('click',async()=>{
     msg.textContent = '저장 정보를 지웠습니다. 열람 쿠키는 브라우저의 사이트 데이터 설정에서 삭제해 주세요.';
   }
 });
+let payapp=false;
 fetch(endpoint+'payment',{cache:'no-store'})
   .then(response => response.ok ? response.json() : {enabled:false})
-  .then(({enabled,recoveryEnabled,adminPreview,paymentMode,legal,policyVersion,policyDigest}) => {
+  .then(({enabled,recoveryEnabled,adminPreview,paymentMode,provider,legal,policyVersion,policyDigest}) => {
     live=paymentMode==='live';
+    payapp=live&&enabled&&provider==='payapp';
+    document.querySelector('#payapp-fields').hidden=document.querySelector('#payapp-fields').disabled=!payapp;
     if(live && enabled){
       approvedPolicyVersion=policyVersion;
       approvedPolicyDigest=policyDigest;
@@ -186,7 +189,7 @@ fetch(endpoint+'payment',{cache:'no-store'})
       document.querySelector('#test-guide').hidden = live;
       document.querySelector('#recent-preview').hidden = false;
       clearStorage.hidden = false;
-      document.querySelector('#availability').textContent = live?'토스페이먼츠 카드 결제':'토스 테스트 결제 · 실제 청구 없음';
+      document.querySelector('#availability').textContent = live?(payapp?'페이앱 카드 결제':'토스페이먼츠 카드 결제'):'토스 테스트 결제 · 실제 청구 없음';
     }
   }).catch(() => {
     document.querySelector('#availability').textContent = '결제 가능 여부를 확인하지 못했어요. 잠시 후 새로고침해 주세요.';
@@ -232,7 +235,8 @@ form.addEventListener('submit', async event => {
     const birth=JSON.parse(snapshot);
     const order = await post('order',{
       name:birth.name,birthDate:birth.birthDate,birthTime:birth.birthTime,gender:birth.gender,calendarType:birth.calendarType,isLeapMonth:birth.isLeapMonth,
-      consent:form.elements.consent.checked,channel:customer?(live?'toss-live':'toss-test'):'admin-demo',
+      consent:form.elements.consent.checked,channel:customer?(payapp?'payapp-live':live?'toss-live':'toss-test'):'admin-demo',
+      ...(customer&&payapp?{paymentPhone:data.paymentPhone,contractEmail:data.contractEmail}:{}),
       ...(customer&&live?{attribution:visitCampaign()?.attribution,checkoutAttempt:checkoutAttempt(),policyVersion:approvedPolicyVersion,policyDigest:approvedPolicyDigest,
         immediateDelivery:form.elements.immediateDelivery.checked,termsAccepted:form.elements.termsAccepted.checked}:{}),
       ...(customer && form.elements.recoveryConsent.checked ?
@@ -252,6 +256,10 @@ form.addEventListener('submit', async event => {
     rememberOrder(order.orderId);
     if(order.paymentAlreadyApproved){
       location.href='/payment-result.html?restore=1';
+      return;
+    }
+    if(order.provider==='payapp'){
+      location.assign(order.checkoutUrl);
       return;
     }
     msg.textContent = (live?'주문 번호: ':'테스트 주문 번호: ')+order.orderId+' · 결제창을 엽니다.';

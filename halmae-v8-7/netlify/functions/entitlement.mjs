@@ -1,8 +1,9 @@
 import {createHmac,randomBytes} from 'node:crypto';
 import {financeStore,secret,sign} from './shared.mjs';
-import {DAY,PRICE} from './payment-config.mjs';
+import {DAY,PRICE,paymentConfig} from './payment-config.mjs';
 import {liveRevoked,saveLiveSnapshot} from './live-ledger.mjs';
 import {approvedPayment,findPayment} from './toss.mjs';
+import {payappEntitled} from '../lib/payapp.mjs';
 import {saveContract} from '../lib/contract-archive.mjs';
 
 export const orderPattern = /^HM-[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/;
@@ -27,13 +28,13 @@ export function browserCredential(req,fallback) {
   return browserKey(req) ?? fallback ?? randomBytes(32).toString('hex');
 }
 
-export function browserHeader(value) {
+export function browserHeader(value,sameSite='Strict') {
   const maxAge = value ? (PURCHASE_DURATION+DAY)/1000 : 0;
-  return `${browserCookie}=${value ?? ''}; Max-Age=${maxAge}; Path=/; Secure; HttpOnly; SameSite=Strict`;
+  return `${browserCookie}=${value ?? ''}; Max-Age=${maxAge}; Path=/; Secure; HttpOnly; SameSite=${sameSite}`;
 }
 
 export function eligibleOrder(order,id,config) {
-  return order?.orderId === id && order.channel === (config?.mode==='live'?'toss-live':'toss-test') && order.amount === PRICE &&
+  return order?.orderId === id && (order.channel === (config?.mode==='live'?'toss-live':'toss-test') || order.channel==='payapp-live' && config?.mode==='live') && order.amount === PRICE &&
     ['pending',paidStatus(config)].includes(order.status);
 }
 
@@ -72,6 +73,16 @@ export async function recordApproval(store,order,payment,now=Date.now(),config) 
 
 export async function verifiedPurchase(config,store,order) {
   if (!eligibleOrder(order,order.orderId,config) || storedExpiry(order)<=Date.now()) return null;
+  if(order.channel==='payapp-live'){
+    const payment=await store.get('payapp/order/'+order.orderId,{type:'json'});
+    if(!payappEntitled(payment) || await financeStore().get('erased/'+order.orderId,{type:'json'})) return null;
+    return recordApproval(store,order,{paymentKey:payment.transactionId,approvedAt:payment.approvedAt},Date.now(),config);
+  }
+  if(config.provider==='payapp'){
+    const toss=paymentConfig({url:config.origin},'toss');
+    if(!toss) return null;
+    config=toss;
+  }
   const payment = await findPayment(config,order.orderId);
   if(config.mode==='live'){
     if(!await saveLiveSnapshot(config,store,order,payment) || await liveRevoked(store,order)) return null;

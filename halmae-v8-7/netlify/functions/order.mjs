@@ -1,3 +1,4 @@
+import {preparePayappCheckout} from '../lib/payapp-flow.mjs';
 import crypto from 'node:crypto';
 import {financeStore,orders,json,parse,sign,error} from './shared.mjs';
 import {mailConfig,recoveryEmail} from './recovery-mail.mjs';
@@ -18,9 +19,9 @@ export default async req => {
   const name = typeof x.name === 'string' ? x.name.trim() : '';
   if (name.length > 30) return json({error:'이름은 30자 이하로 입력해 주세요.'},400);
   const channel = x.channel ?? 'admin-demo';
-  if (!['admin-demo','toss-test','toss-live'].includes(channel)) return json({error:'주문 유형을 확인해 주세요.'},400);
+  if (!['admin-demo','toss-test','toss-live','payapp-live'].includes(channel)) return json({error:'주문 유형을 확인해 주세요.'},400);
   const config=channel==='admin-demo'?null:paymentConfig(req);
-  if (channel!=='admin-demo' && (!config?.salesEnabled || channel!=='toss-'+config.mode)) {
+  if (channel!=='admin-demo' && (!config?.salesEnabled || channel!==(config.provider??'toss')+'-'+config.mode)) {
     return json({error:'현재 결제를 시작할 수 없습니다.'},503);
   }
   if (channel==='admin-demo' && process.env.PAYMENT_MODE==='live') return json({error:'관리자 발급은 프리뷰에서만 사용할 수 있습니다.'},403);
@@ -30,6 +31,10 @@ export default async req => {
  if(config?.mode==='live' && x.termsAccepted!==true){
    return json({error:'이용약관과 구매 조건을 확인해 주세요.'},400);
  }
+  const isPayapp=config?.provider==='payapp';
+  const contractEmail=isPayapp?recoveryEmail(x.contractEmail):'';
+  const paymentPhone=isPayapp&&typeof x.paymentPhone==='string'?x.paymentPhone.replaceAll('-',''):'';
+  if(isPayapp && (!contractEmail || !/^010\d{8}$/.test(paymentPhone))) return json({error:'계약서면 이메일과 결제용 휴대전화 번호를 확인해 주세요.'},400);
   const attempt=typeof x.checkoutAttempt==='string'&&/^[a-f0-9-]{36}$/.test(x.checkoutAttempt)?x.checkoutAttempt:null;
   if (config?.mode==='live' && !attempt) return json({error:'주문 화면에서 다시 시도해 주세요.'},400);
   if (x.consent !== true) return json({error:'정보 처리에 동의해 주세요.'},400);
@@ -63,6 +68,7 @@ export default async req => {
     delete purchaseFields.recoveryEmailHash;
     const inputHash=fingerprint('checkout-input',JSON.stringify(purchaseFields),config);
     order.inputHash=inputHash;
+    if(isPayapp) order.payappContractIdentity=fingerprint('contract-email',contractEmail,config);
     order.policyAcceptance={version:config.policyVersion,acceptedAt:new Date(createdAt).toISOString(),
       immediateDelivery:true,termsAccepted:true};
     const inserted=await store.setJSON(orderId,order,{onlyIfNew:true});
@@ -74,6 +80,13 @@ export default async req => {
       }
     }
   }else await store.setJSON(orderId,order);
+  if(isPayapp){
+    if(order.payappContractIdentity!==fingerprint('contract-email',contractEmail,config)) return json({error:'기존 주문의 계약서면 이메일을 확인해 주세요.'},409);
+    const checkout=await preparePayappCheckout(store,config,order,paymentPhone,contractEmail);
+    const response=json(checkout.body,checkout.status);
+    response.headers.set('Set-Cookie',browserHeader(credential,'Lax'));
+    return response;
+  }
   const result={orderId,amount:PRICE,status:order.status,paymentEnabled:Boolean(config)};
   if(config){
     result.clientKey=config.clientKey;

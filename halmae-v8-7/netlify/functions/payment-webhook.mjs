@@ -8,7 +8,7 @@ import {approvedPayment,findPayment} from './toss.mjs';
 
 export default async (req,context)=>{
  if(req.method!=='POST') return json({error:'Method not allowed'},405);
- const config=paymentConfig(req);
+ const config=paymentConfig(req,'toss');
  // The card event is only a trigger. All financial data comes from the authenticated order lookup.
  const publicMode=process.env.PAYMENT_WEBHOOK_PUBLIC==='true';
  if(config?.mode!=='live' || !publicMode && !matchesCredential(new URL(req.url).searchParams.get('key'),process.env.PAYMENT_LIVE_WEBHOOK_KEY)){

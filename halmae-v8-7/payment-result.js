@@ -20,6 +20,7 @@ async function showContract(orderId) {
     '판매자 '+seller.name+' · 대표 '+seller.representative,
     '사업자등록번호 '+seller.registration,
     ...(seller.mailOrderNumber?['통신판매업 신고번호 '+seller.mailOrderNumber]:[]),
+    ...(seller.mailOrderAuthority?['통신판매업 신고기관 '+seller.mailOrderAuthority]:[]),
     '사업장 주소 '+seller.address,
     '고객 문의 '+[seller.email,seller.phone].filter(Boolean).join(' · '),
     '상품 '+record.product,
@@ -100,7 +101,10 @@ fetch('/.netlify/functions/recovery',{cache:'no-store'}).then(r=>r.json()).then(
 
 async function showReport({token,orderId,purchaseExpiresAt,paymentMode,contractAvailable},{fresh=false}={}) {
   document.querySelector('#opened-ledger').hidden=true;
-  if(contractAvailable) await showContract(orderId);
+  let contractFailed=false;
+  if(contractAvailable){
+    try{await showContract(orderId);}catch{contractFailed=true;}
+  }
   const live=paymentMode==='live';
   if(live) document.querySelector('h1').textContent='결제 결과';
   const order = document.querySelector('#order-number');
@@ -121,20 +125,25 @@ async function showReport({token,orderId,purchaseExpiresAt,paymentMode,contractA
   ledger.hidden = link.hidden = false;
   if (fresh) ledger.classList.add('ledger-unseal');
   status.textContent = live?'결제가 완료됐어요. 지금 보고서를 열 수 있어요.':'테스트 결제가 완료됐어요. 지금 보고서를 열 수 있어요. 실제로 청구된 금액은 없어요.';
+  if(contractFailed) status.textContent+=' 계약서면을 불러오지 못했어요. 아래에서 다시 확인하거나 고객센터에 문의해 주세요.';
 }
 
 const checkout = read(checkoutKey);
 const saved = read(reportKey);
 let pending = read(callbackKey);
 if(checkout?.paymentMode==='live') document.querySelector('h1').textContent='결제 결과';
-if(params.get('restore')==='1' && recentOrder()){
+const payappReturn=params.get('payapp')==='1';
+if(payappReturn || params.get('restore')==='1' && recentOrder()){
   try{
-    const result=await post('access',{orderId:recentOrder()});
+    const result=await post('access',{orderId:payappReturn?(params.get('orderId')||recentOrder()):recentOrder()});
     rememberReport(result);
     saveBirthDraft(null);
     forgetCheckoutAttempt();
     await showReport(result);
-  }catch(error){status.textContent=error.message;}
+  }catch(error){
+    if(payappReturn) renew.elements.orderId.value=params.get('orderId')||recentOrder()||'';
+    status.textContent=payappReturn?'페이앱 승인 통지를 확인 중이에요. 잠시 후 아래에서 주문번호로 다시 확인해 주세요.':error.message;
+  }
 } else if (failure) {
   forgetCheckout();
   const cancelled = ['USER_CANCEL','PAY_PROCESS_CANCELED'].includes(params.get('code'));

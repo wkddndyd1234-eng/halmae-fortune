@@ -15,12 +15,17 @@ export async function sweepLive(provider,customer,ops,now=Date.now()){
    if(!orderPattern.test(key)) continue;
    try{
     const order=await customer.get(key,{type:'json'});
-    if(!order||order.channel!=='toss-live') continue;
+    if(!order||!['toss-live','payapp-live'].includes(order.channel)) continue;
     const erased=await financeStore().get('erased/'+key,{type:'json'});
     if(!erased){
      const expiry=storedExpiry(order);
      if(Number.isFinite(expiry) && expiry>now ||
         !Number.isFinite(expiry) && !(order.createdAt+30*DAY<=now)) continue;
+     if(order.channel==='payapp-live'){
+      const payment=await customer.get('payapp/order/'+key,{type:'json'});
+      if(payment && ['requesting','pending'].includes(payment.status)) throw Error('PayApp reconciliation required');
+      if(payment?.purchaseExpiresAt>now) continue;
+     }else{
      const payment=await findPayment(provider,key);
      if(payment){
       if(!matchesLivePayment(provider,order,payment)) throw Error('provider mismatch');
@@ -28,6 +33,7 @@ export async function sweepLive(provider,customer,ops,now=Date.now()){
       if(!Number.isFinite(expiry) && (payment.status==='DONE'||payment.status.endsWith('CANCELED'))) continue;
       if(!['DONE','ABORTED','EXPIRED','CANCELED','PARTIAL_CANCELED'].includes(payment.status)) continue;
      }else if(Number.isFinite(expiry)) throw Error('approved transaction missing');
+     }
     }
     await eraseCustomerOrder(customer,key,'erase');
     counts.erased++;

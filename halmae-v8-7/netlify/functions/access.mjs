@@ -24,7 +24,7 @@ export default async req => {
     const store = orders(config);
     const order = await store.get(orderId,{type:'json'});
     if(input?.action==='contract'){
-      if(!order || order.orderId!==orderId || order.channel!=='toss-'+config.mode ||
+      if(!order || order.orderId!==orderId || !eligibleOrder(order,orderId,config) ||
         order.browserHash!==fingerprint('browser',key,config)) return denied();
       const terms=contractDocument(order);
       const document=terms?.policyDigest?await withPolicyOriginals(financeStore(),terms):terms;

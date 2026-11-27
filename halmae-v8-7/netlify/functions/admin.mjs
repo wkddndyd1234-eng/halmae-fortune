@@ -128,8 +128,8 @@ export default async (req,context)=>{
    return recovery(new Request(provider.origin,{method:'POST',
     body:JSON.stringify({action:'request',orderId,email:input.email})}));
   }
-  if(action==='reconcile'||action==='refund'){
-   if(provider.mode!=='live'||action==='refund'&&input.confirmation!==orderId) return denied();
+  if(action==='reconcile'||action==='refund'||action==='contract-delivery'){
+   if(provider.mode!=='live'||action!=='reconcile'&&input.confirmation!==orderId) return denied();
    await audit(store,action,'requested',orderId);
    const result=await executeOperation(provider,{action,orderId,reason:input.reason});
    if(result.ok && action==='reconcile') await store.delete('webhook/issue/'+orderId);

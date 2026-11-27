@@ -286,3 +286,87 @@ test('운영 모의 부분 취소는 별도 거래에서 잔액과 무관하게 
  assert.equal((await access(request({orderId},{cookie}))).status,403);
  assert.equal((await access(request({orderId,action:'contract'},{cookie}))).status,200);
 });
+
+test('페이앱 서버 주문, 통지, 계약 메일 실패, 새 브라우저 복구와 부분 취소를 격리 검증한다',async t=>{
+ configure();
+ Object.assign(process.env,{PAYMENT_PROVIDER:'payapp',PAYAPP_OPERATION_APPROVED:'true',PAYAPP_USER_ID:'fixture-user',
+  PAYAPP_LINK_KEY:'fixture-link',PAYAPP_LINK_VALUE:'fixture-value',PAYAPP_REQUEST_KEY:'fixture-request',
+  PAYAPP_CONTRACT_EMAIL_KEY:'84'.repeat(32),LIVE_MAIL_ORDER_AUTHORITY:'가상시'});
+ t.after(()=>{for(const k of ['PAYMENT_PROVIDER','PAYAPP_OPERATION_APPROVED','PAYAPP_USER_ID','PAYAPP_LINK_KEY','PAYAPP_LINK_VALUE',
+  'PAYAPP_REQUEST_KEY','PAYAPP_CONTRACT_EMAIL_KEY','LIVE_MAIL_ORDER_AUTHORITY']) delete process.env[k];});
+ const {default:feedback}=await import('../netlify/functions/payapp-feedback.mjs');
+ const {createHash}=await import('node:crypto');
+ const records=new Map(),mails=[];
+ let reference, requests=0, loseResponse=false;
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  const endpoint=new URL(url);
+  if(endpoint.hostname==='blob.example.test'){
+   const key=decodeURIComponent(endpoint.pathname), old=records.get(key);
+   if(options.method==='delete'){records.delete(key);return new Response(null);}
+   if(options.method==='put'){
+    const headers=new Headers(options.headers);
+    if(headers.get('if-none-match')==='*'&&old||headers.get('if-match')&&headers.get('if-match')!==old?.etag) return new Response(null,{status:412});
+    records.set(key,{data:JSON.parse(options.body),etag:'fixture-'+Math.random()});
+    return new Response(null);
+   }
+   return old?Response.json(old.data,{headers:{etag:old.etag}}):new Response(null,{status:404});
+  }
+  if(endpoint.hostname==='api.payapp.kr'){
+   requests++;
+   reference=options.body.get('var2');
+   if(loseResponse) throw Error('fixture lost provider response');
+   assert.equal(options.body.get('price'),'39900');
+   return new Response('state=1&mul_no=121&payurl=https%3A%2F%2Fpayapp.kr%2Ffixture');
+  }
+  assert.equal(endpoint.hostname,'api.resend.com');
+  const mail=JSON.parse(options.body);
+  mails.push(mail);
+  return mail.subject.includes('계약서면')?new Response(null,{status:503}):Response.json({id:'mock-recovery'});
+ });
+ const details={...birth,channel:'payapp-live',paymentPhone:'01000000000',contractEmail:'contract@example.test'};
+ const created=await order(request(details));
+ assert.equal(created.status,200,await created.clone().text());
+ const cookie=created.headers.get('set-cookie').split(';')[0];
+ const {orderId,checkoutUrl}=await created.json();
+ assert.equal(checkoutUrl,'https://payapp.kr/fixture');
+ assert.equal((await order(request(details))).status,200);
+ assert.equal(requests,1);
+ const accessOrder=(cookieValue=cookie)=>access(request({orderId},{cookie:cookieValue}));
+ assert.equal((await accessOrder()).status,403);
+ const local=new Date(Date.now()+9*3600_000).toISOString().slice(0,19);
+ const responsedate=local.replace(/\D/g,'');
+ const notify=changes=>feedback(new Request(origin+'/.netlify/functions/payapp-feedback',{method:'POST',body:new URLSearchParams({
+  userid:'fixture-user',linkkey:'fixture-link',linkval:'fixture-value',responsedate,
+  hash:createHash('sha256').update('fixture-user'+responsedate+'fixture-request').digest('hex'),
+  price:'39900',var1:orderId,var2:reference,mul_no:'121',pay_state:'4',pay_type:'1',pay_date:local.replace('T',' '),...changes,
+ })}));
+ assert.equal((await notify({hash:'invalid'})).status,409);
+ assert.equal((await notify({price:'1'})).status,409);
+ assert.equal(await (await notify({})).text(),'SUCCESS');
+ assert.equal(await (await notify({})).text(),'SUCCESS');
+ assert.equal(mails.length,2);
+ assert.deepEqual(mails[0].to,['contract@example.test']);
+ assert.ok([...records.values()].some(({data})=>data.state==='customer-support'&&data.receipt==='unverified'));
+ const wrong='__Host-halmae-preview='+'2'.repeat(64);
+ assert.equal((await accessOrder(wrong)).status,403);
+ const approval=await (await accessOrder()).json();
+ assert.equal((await (await report(request(null,{token:approval.token}))).json()).chapters.length,26);
+ const doc=await access(request({orderId,action:'contract'},{cookie}));
+ assert.equal((await doc.json()).amount,39900);
+ assert.equal((await recovery(request({orderId,action:'request',email:birth.email}))).status,202);
+ const token=mails.at(-1).text.split('#').at(-1);
+ assert.equal((await recovery(request({action:'exchange',token}))).status,200);
+ assert.equal(await (await notify({pay_state:'70',orig_mul_no:'121',orig_price:'39900',mul_no:'122',price:'1000'})).text(),'SUCCESS');
+ assert.equal((await accessOrder()).status,403);
+ assert.equal((await report(request(null,{token:approval.token}))).status,403);
+ assert.equal((await access(request({orderId,action:'contract'},{cookie}))).status,200);
+ loseResponse=true;
+ const lost={...details,checkoutAttempt:'12345678-abcd-4123-9123-0123456789aa'};
+ const uncertain=await order(request(lost));
+ assert.equal(uncertain.status,503);
+ const lostId=(await uncertain.json()).orderId;
+ assert.equal((await order(request(lost))).status,409);
+ assert.equal(requests,2);
+ const reconciled=await operations(request({action:'reconcile',orderId:lostId},{token:operator}),{ip:'192.0.2.7'});
+ assert.equal((await reconciled.json()).manualReconciliation,true);
+});

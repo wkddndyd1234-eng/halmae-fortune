@@ -9,6 +9,7 @@ export async function eraseCustomerOrder(store,orderId,kind){
   await store.delete('recovery/delivery/'+orderId);
   await store.delete('optout/'+orderId);
   await store.delete('approval/'+orderId);
+  await store.delete('payapp/contract-mail/'+orderId);
   return;
  }
  await store.setJSON('optout/'+orderId,{at:new Date().toISOString()},{onlyIfNew:true});

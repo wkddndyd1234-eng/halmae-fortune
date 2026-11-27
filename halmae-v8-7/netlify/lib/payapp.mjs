@@ -33,6 +33,7 @@ export async function requestPayapp(config,order,phone,transport){
  const callback=new URL('/.netlify/functions/payapp-feedback',config.origin);
  const returnUrl=new URL('/payment-result.html',config.origin);
  returnUrl.searchParams.set('payapp','1');
+ returnUrl.searchParams.set('orderId',order.orderId);
  const result=await call(config,{
   cmd:'payrequest',goodname:ORDER_NAME,price:String(PRICE),recvphone:phone,
   smsuse:'n',feedbackurl:callback.href,returnurl:returnUrl.href,

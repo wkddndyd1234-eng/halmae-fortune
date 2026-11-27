@@ -6,10 +6,10 @@ import {liveRevoked,saveLiveSnapshot} from './live-ledger.mjs';
 import {approvedPayment,confirmPayment} from './toss.mjs';
 
 export default async req => {
-  const config = paymentConfig(req);
+  const config = req.method==='POST'?paymentConfig(req,'toss'):paymentConfig(req);
   if (req.method === 'GET') {
     const adminPreview = isPreview(req) && (process.env.DEMO_ACCESS_CODE?.length ?? 0)>=12;
-    return json({enabled:Boolean(config?.salesEnabled),...(config?.mode==='live'?{paymentMode:'live',...(config.merchant?{merchant:config.merchant}:{}),...(config.salesEnabled?{legal:config.legal,policyVersion:config.policyVersion,policyDigest:config.policy.digest}:{})}:{}),...(mailConfig(config)?{recoveryEnabled:true}:{}),
+    return json({enabled:Boolean(config?.salesEnabled),...(config?.mode==='live'?{paymentMode:'live',...(config.provider?{provider:config.provider}:{}),...(config.merchant?{merchant:config.merchant}:{}),...(config.salesEnabled?{legal:config.legal,policyVersion:config.policyVersion,policyDigest:config.policy.digest}:{})}:{}),...(mailConfig(config)?{recoveryEnabled:true}:{}),
       ...(adminPreview?{adminPreview:true}:{})});
   }
   if (req.method !== 'POST') return json({error:'Method not allowed'},405);
@@ -28,7 +28,7 @@ export default async req => {
     if (!signedCheckout && (order?.browserHash !== fingerprint('browser',key,config) ||
         !Number.isFinite(order.createdAt) || order.createdAt+DAY<=Date.now())) return denied();
     if (amount !== PRICE) return json({error:'주문 금액을 확인해 주세요.'},400);
-    if (!eligibleOrder(order,orderId,config)) {
+    if (!eligibleOrder(order,orderId,config) || order.channel==='payapp-live') {
       return json({error:'테스트 주문 상태를 확인해 주세요.'},409);
     }
     if (order.paymentKey && order.paymentKey !== paymentKey) {

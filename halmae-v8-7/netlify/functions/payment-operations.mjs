@@ -1,9 +1,11 @@
+import {cancelPayapp} from '../lib/payapp.mjs';
+import {deliverPayappContract} from '../lib/payapp-flow.mjs';
 import {allowedOperatorIp} from '../lib/ops-access.mjs';
 import {createHash} from 'node:crypto';
 import {eligibleOrder,orderPattern,recordApproval} from './entitlement.mjs';
 import {matchesCredential,isCancelled,liveRevoked,matchesLivePayment,saveLiveSnapshot} from './live-ledger.mjs';
 import {paymentConfig} from './payment-config.mjs';
-import {json,orders,parse} from './shared.mjs';
+import {financeStore,json,orders,parse} from './shared.mjs';
 import {approvedPayment,cancelPayment,findPayment} from './toss.mjs';
 
 export default async (req,context)=>{
@@ -12,7 +14,7 @@ export default async (req,context)=>{
  if(config?.mode!=='live' || !allowedOperatorIp(context?.ip) || !matchesCredential(req.headers.get('authorization')?.replace(/^Bearer /,''),
     process.env.PAYMENT_LIVE_OPERATOR_TOKEN)) return json({error:'Operations unavailable'},403);
  const {action,orderId,reason}=await parse(req)??{};
- if(!['reconcile','refund'].includes(action) || typeof orderId!=='string' || !orderPattern.test(orderId) ||
+ if(!['reconcile','refund','contract-delivery'].includes(action) || typeof orderId!=='string' || !orderPattern.test(orderId) ||
     (action==='refund' && (typeof reason!=='string' || !reason.trim() || reason.length>200))){
   return json({error:'Invalid operations request'},400);
  }
@@ -26,6 +28,25 @@ export async function executeOperation(config,{action,orderId,reason}){
   const store=orders(config);
   const order=await store.get(orderId,{type:'json'});
   if(!eligibleOrder(order,orderId,config)) return json({error:'Order not found'},404);
+  if(order.channel==='payapp-live'){
+   const payment=await store.get('payapp/order/'+orderId,{type:'json'});
+   if(action==='contract-delivery'){
+    const status=await deliverPayappContract(store,financeStore(),order);
+    return json({orderId,status:status??'unavailable'});
+   }
+   if(action==='reconcile') return json({orderId,status:payment?.status??'request-not-recorded',
+    transactionId:payment?.transactionId??null,manualReconciliation:!payment||payment.status==='requesting'||payment.status==='pending'});
+   if(!config.payapp || payment?.status!=='approved') return json({error:'승인된 페이앱 주문을 확인해 주세요.'},409);
+   const refund=await store.setJSON('payapp/refund/'+orderId,{state:'requested',at:Date.now()},{onlyIfNew:true});
+   if(!refund.modified) return json({orderId,status:'refund-confirmation-pending'},202);
+   await cancelPayapp(config.payapp,payment,reason.trim(),fetch);
+   return json({orderId,status:'refund-confirmation-pending'},202);
+  }
+  if(action==='contract-delivery') return json({error:'Unsupported operation'},400);
+  if(config.provider==='payapp'){
+   config=paymentConfig({url:config.origin},'toss');
+   if(!config) return json({error:'기존 토스 운영 설정을 확인해 주세요.'},503);
+  }
   let payment=await findPayment(config,orderId);
   if(!matchesLivePayment(config,order,payment)) return json({error:'Payment verification pending'},409);
   if(action==='refund' && !isCancelled(payment)){

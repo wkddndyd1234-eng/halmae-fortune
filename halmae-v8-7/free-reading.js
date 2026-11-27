@@ -171,12 +171,12 @@ fetch('/.netlify/functions/payment',{cache:'no-store'})
   if(!response.ok) throw Error('Payment status unavailable');
   return response.json();
  })
- .then(({enabled,paymentMode,legal,merchant})=>{
+ .then(({enabled,paymentMode,provider,legal,merchant})=>{
   paymentEnabled=enabled===true;
   checkoutLink.disabled=!paymentEnabled || !draft;
   checkoutLink.textContent=paymentEnabled?readingName(draft?.name).possessive+' 2027년 운명 장부 펼치기':'현재 주문할 수 없어요';
   if(enabled===true){
-   byId('offerAvailability').textContent=paymentMode==='live'?'토스페이먼츠 카드 결제':'토스 테스트 결제 · 실제 청구 없음';
+   byId('offerAvailability').textContent=paymentMode==='live'?(provider==='payapp'?'페이앱 카드 결제':'토스페이먼츠 카드 결제'):'토스 테스트 결제 · 실제 청구 없음';
    if(paymentMode==='live'){
     document.querySelector('.deploy-preview-ribbon').hidden=true;
     document.querySelector('.preview-footer').hidden=true;
