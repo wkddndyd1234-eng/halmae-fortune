@@ -158,10 +158,13 @@ fetch(endpoint+'payment',{cache:'no-store'})
       document.querySelector('#immediate-delivery').hidden=false;
       form.elements.immediateDelivery.disabled=false;
       form.elements.immediateDelivery.required=true;
+      document.querySelector('#withdrawal-ack').hidden=false;
+      form.elements.withdrawalAcknowledged.disabled=false;
+      form.elements.withdrawalAcknowledged.required=true;
       document.querySelector('#terms-acceptance').hidden=false;
       form.elements.termsAccepted.disabled=false;
       form.elements.termsAccepted.required=true;
-      for(const [id,url] of Object.entries(legal)) document.querySelector('a[href="/'+id+'.html"]').href=url;
+      for(const [id,url] of Object.entries(legal)) for(const link of document.querySelectorAll('a[href="/'+id+'.html"]')) link.href=url;
       document.querySelector('#consent-copy').textContent='을 읽었고 보고서 발급을 위한 정보 처리에 동의합니다.';
       buy.textContent='내 운명 장부 펼치기';
     }
@@ -238,7 +241,7 @@ form.addEventListener('submit', async event => {
       consent:form.elements.consent.checked,channel:customer?(payapp?'payapp-live':live?'toss-live':'toss-test'):'admin-demo',
       ...(customer&&payapp?{paymentPhone:data.paymentPhone,contractEmail:data.contractEmail}:{}),
       ...(customer&&live?{attribution:visitCampaign()?.attribution,checkoutAttempt:checkoutAttempt(),policyVersion:approvedPolicyVersion,policyDigest:approvedPolicyDigest,
-        immediateDelivery:form.elements.immediateDelivery.checked,termsAccepted:form.elements.termsAccepted.checked}:{}),
+        withdrawalAcknowledged:form.elements.withdrawalAcknowledged.checked,immediateDelivery:form.elements.immediateDelivery.checked,termsAccepted:form.elements.termsAccepted.checked}:{}),
       ...(customer && form.elements.recoveryConsent.checked ?
         {email:data.email,recoveryConsent:true} : {}),
     });

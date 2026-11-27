@@ -28,7 +28,7 @@ export default async req => {
  if(config?.mode==='live' && (x.policyVersion!==config.policyVersion || x.policyDigest!==config.policy.digest || x.immediateDelivery!==true)){
     return json({error:'최신 구매 안내를 확인하고 즉시 제공을 요청해 주세요.'},400);
   }
- if(config?.mode==='live' && x.termsAccepted!==true){
+ if(config?.mode==='live' && (x.termsAccepted!==true || x.withdrawalAcknowledged!==true)){
    return json({error:'이용약관과 구매 조건을 확인해 주세요.'},400);
  }
   const isPayapp=config?.provider==='payapp';
@@ -70,7 +70,7 @@ export default async req => {
     order.inputHash=inputHash;
     if(isPayapp) order.payappContractIdentity=fingerprint('contract-email',contractEmail,config);
     order.policyAcceptance={version:config.policyVersion,acceptedAt:new Date(createdAt).toISOString(),
-      immediateDelivery:true,termsAccepted:true};
+      digest:config.policy.digest,withdrawalAcknowledged:true,immediateDelivery:true,termsAccepted:true};
     const inserted=await store.setJSON(orderId,order,{onlyIfNew:true});
     if(!inserted.modified){
       reused=true;

@@ -6,6 +6,7 @@ export async function materializeReport(store,order,build=buildFortuneReport){
   try{
    const report=build(order);
    await store.setJSON(key,{state:'generated',at:Date.now()});
+   await store.setJSON('first-delivery/'+order.orderId,{at:Date.now()},{onlyIfNew:true});
    return report;
   }catch(error){
    if(attempt===1){

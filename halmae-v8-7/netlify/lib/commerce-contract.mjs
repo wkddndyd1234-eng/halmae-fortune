@@ -4,6 +4,7 @@ export const merchantIdentity={
  registration:'244-86-02709',
  address:'서울특별시 서초구 사임당로8길 13, 4층 402-S36호 (서초동, 제일빌딩)',
  email:'valueseeker123@naver.com',
+ privacyOfficer:'장철근',
 };
 
 export function contractTerms(config){
@@ -24,5 +25,6 @@ export function contractDocument(order){
  if(!order?.contractTerms || !Number.isFinite(Date.parse(order.approvedAt)) ||
     !Number.isSafeInteger(order.purchaseExpiresAt)) return null;
  return {...order.contractTerms,orderId:order.orderId,amount:order.amount,currency:'KRW',
-  approvedAt:order.approvedAt,purchaseExpiresAt:order.purchaseExpiresAt};
+  approvedAt:order.approvedAt,purchaseExpiresAt:order.purchaseExpiresAt,
+  ...(order.policyAcceptance?.withdrawalAcknowledged?{policyAcceptance:order.policyAcceptance}:{})};
 }

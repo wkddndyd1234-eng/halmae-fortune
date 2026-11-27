@@ -6,6 +6,7 @@ export async function eraseCustomerOrder(store,orderId,kind){
   await financeStore().setJSON('erased/'+orderId,{at:new Date().toISOString()},{onlyIfNew:true});
   await store.delete(orderId);
   await store.delete('delivery/'+orderId);
+  await store.delete('first-delivery/'+orderId);
   await store.delete('recovery/delivery/'+orderId);
   await store.delete('optout/'+orderId);
   await store.delete('approval/'+orderId);

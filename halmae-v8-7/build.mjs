@@ -36,3 +36,14 @@ if(configuredOrigin){
   await writeFile(index,html.replace('content="/art/share.jpg"',`content="${site.origin}/art/share.jpg"`)
     .replace('</head>',`<link rel="canonical" href="${site.origin}/"><meta property="og:url" content="${site.origin}/"></head>`));
 }
+
+const supportPhone=process.env.LIVE_SUPPORT_PHONE;
+if(supportPhone){
+ if(!/^0\d{1,2}-\d{3,4}-\d{4}$/.test(supportPhone)) throw Error('Invalid LIVE_SUPPORT_PHONE');
+ const phoneLink=` · 전화 <a href="tel:${supportPhone}">${supportPhone}</a>`;
+ await Promise.all(['index.html','merchant.html','terms.html','privacy.html','refund.html'].map(async file=>{
+  const path=new URL(file,output);
+  const html=await readFile(path,'utf8');
+  await writeFile(path,html.replace('<!-- support-phone -->',phoneLink));
+ }));
+}

@@ -22,7 +22,7 @@ const request=(body,{url=origin,token,cookie}={})=>new Request(url,{
  method:body?'POST':'GET',headers:{...(token?{Authorization:'Bearer '+token}:{}),...(cookie?{Cookie:cookie}:{})},
  ...(body?{body:JSON.stringify(body)}:{}),
 });
-const birth={channel:'toss-live',policyVersion:'2026.11-fixture',immediateDelivery:true,termsAccepted:true,gender:'male',birthDate:'1988-10-08',consent:true,
+const birth={channel:'toss-live',policyVersion:'2026.11-fixture',immediateDelivery:true,withdrawalAcknowledged:true,termsAccepted:true,gender:'male',birthDate:'1988-10-08',consent:true,
  email:'buyer@example.test',recoveryConsent:true,checkoutAttempt:'12345678-abcd-4123-9123-0123456789ab'};
 
 test('운영 판매 승인·호스트·키·정책·운영 인증 정보가 모두 필요하다',async()=>{
@@ -112,6 +112,7 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  });
  assert.equal((await order(request({...birth,immediateDelivery:false}))).status,400);
  assert.equal((await order(request({...birth,termsAccepted:false}))).status,400);
+ assert.equal((await order(request({...birth,withdrawalAcknowledged:false}))).status,400);
  assert.equal((await order(request({...birth,policyVersion:'old-version'}))).status,400);
  assert.equal((await order(request({...birth,policyDigest:'old-digest'}))).status,400);
  const attribution={source:'naver',medium:'cpc',campaign:'newyear_2027'};
@@ -147,6 +148,9 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  assert.equal(contractResponse.headers.get('cache-control'),'no-store');
  const contract=await contractResponse.json();
  assert.equal(contract.policyVersion,birth.policyVersion);
+ assert.equal(contract.policyAcceptance.withdrawalAcknowledged,true);
+ assert.equal(contract.policyAcceptance.digest,birth.policyDigest);
+ assert.ok(Number.isFinite(Date.parse(contract.policyAcceptance.acceptedAt)));
  assert.equal(contract.amount,39900);
  assert.equal(contract.orderId,first.orderId);
  assert.equal(contract.currency,'KRW');

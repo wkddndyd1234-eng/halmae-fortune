@@ -183,7 +183,11 @@ fetch('/.netlify/functions/payment',{cache:'no-store'})
     for(const [name,url] of Object.entries(legal)) document.querySelector('a[href="/'+name+'.html"]').href=url;
     if(merchant?.phone && merchant.mailOrderNumber){
      const disclosure=byId('footer-merchant-disclosures');
-     disclosure.textContent='통신판매업 신고번호 '+merchant.mailOrderNumber+' · 전화 '+merchant.phone;
+     disclosure.textContent=[
+      merchant.mailOrderNumber&&'통신판매업 신고번호 '+merchant.mailOrderNumber,
+      merchant.mailOrderAuthority&&'신고기관 '+merchant.mailOrderAuthority,
+      !document.querySelector('.footer a[href^="tel:"]')&&merchant.phone&&'전화 '+merchant.phone,
+     ].filter(Boolean).join(' · ');
      disclosure.hidden=false;
     }
    }

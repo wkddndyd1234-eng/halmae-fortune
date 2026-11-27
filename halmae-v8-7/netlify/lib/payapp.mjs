@@ -71,11 +71,11 @@ export function reconcilePayapp(config,order,fields,now=Date.now()){
     order.transactionId!==(partial?get('orig_mul_no'):transactionId)||
     (partial?(get('orig_price')!==String(PRICE)||Number(amount)>=PRICE):amount!==String(PRICE))) return null;
  if(terminal.has(order.status)){
-  if(order.status==='partial' && ['9','64'].includes(state)) return {...order,status:'canceled'};
+  if(order.status==='partial' && ['9','64'].includes(state)) return {...order,status:'canceled',cancellationObservedAt:now};
   return order;
  }
- if(['9','64'].includes(state)) return {...order,status:'canceled'};
- if(partial) return {...order,status:'partial'};
+ if(['9','64'].includes(state)) return {...order,status:'canceled',cancellationObservedAt:now};
+ if(partial) return {...order,status:'partial',cancellationObservedAt:now,partialCancellation:{transactionId,amount:Number(amount)}};
  if(['8','32'].includes(state)) return order.status==='pending'?{...order,status:'request-canceled'}:order;
  if(['1','10'].includes(state)) return order;
  if(state!=='4'||get('pay_type')!=='1') return null;
