@@ -54,3 +54,16 @@ test('monthly copy distinguishes work and relationship evidence and preserves 12
  assert.doesNotMatch(first.flatMap(c=>c.sections[2].paragraphs).join(' '),/월지/);
  assert.ok(first.filter((chapter,i)=>JSON.stringify(chapter.sections)!==JSON.stringify(second[i].sections)).length>=8);
 });
+
+test('customer-facing stories and real excerpts hide technical terms while retaining calculation evidence',()=>{
+ const terms=/[\u4e00-\u9fff]|일간|일지|천간|월간|십성|정재|편재|육합|합충|세운|월운|대운|절입|원국/u;
+ for(const input of samples){
+  const f=fortuneCycles(input);
+  const free=freeEpisodes(f,readPersonalReading(f,f.saju,''),'민지야','money');
+  const {chapters}=buildFortuneReport(input);
+  const visible=chapters.flatMap(c=>[c.story.title,...c.story.intro,...c.story.sections.flatMap(g=>g.paragraphs)]);
+  assert.doesNotMatch([...free.flatMap(e=>e.paragraphs),...visible].join(' '),terms);
+  assert.match(chapters[0].paragraphs.join(' '),terms);
+  assert.equal(chapters[6].story.intro[0],topicExcerpt(f,6));
+ }
+});

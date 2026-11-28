@@ -28,7 +28,7 @@ const editions=[
 ];
 
 const relationshipChoices={
- 육합:'마음이 잘 맞았던 조건을 떠올려. 그 조건을 이번에도 같이 정할 수 있을까?',
+ 육합:'마음이 잘 맞았던 조건을 떠올려. 다음에 만날 때도 그 조건을 같이 정해 봐.',
  충:'원하는 속도가 다를 땐 양쪽이 움직일 수 있는 시간을 따로 물어봐.',
  형:'되풀이되는 다툼에선 이번에 먼저 말하는 사람을 바꿔 보렴.',
  해:'서운했던 일이 있다면 네가 직접 들은 말부터 확인해 보렴.',
@@ -48,6 +48,21 @@ const choices={
  정인:['도움을 받는다고 해서 네 몫이 없어지진 않아. 이후에도 네가 낼 금액을 확인해.','배운 방법을 그대로 들여오기 전에 네 일터에 맞춰 고칠 대목을 한곳 골라.'],
 };
 
+const watch=[
+ '끝낼 날짜를 모르는 일은 끝났다고 계산하지 마.',
+ '새해 기분으로 중요한 계약을 서두르지 마.',
+ '좋은 반응을 받았어도 상대가 확답했는지 확인해.',
+ '서명하기 전에 일이 틀어지면 누가 비용을 내는지 읽어 봐.',
+ '반응이 한 번 좋았다고 비용부터 크게 늘리진 마.',
+ '이미 쓴 시간이 아깝다는 이유만으로 계속할 필요는 없어.',
+ '일정을 놓친 사람이 있다면 꾸짖기 전에 어떤 일이 겹쳤는지 물어 봐.',
+ '방향을 바꿔도 이미 한 약속은 정리할 시간이 필요해.',
+ '작은 실수 하나로 사람 전체를 판단하지 마.',
+ '당장 시원하다고 나중에 필요할 일까지 한꺼번에 접진 마.',
+ '연락이 뜸하다고 관계가 끝났다고 단정하지 마.',
+ '해가 바뀌어도 남은 약속은 이어져. 무엇이 남았는지 먼저 확인해.',
+];
+
 export function monthlyStory(f,index,chapter,roleTheme){
  const month=f.monthly[index];
  const [name,scene,money,work,business,love,remark]=editions[index];
@@ -57,14 +72,14 @@ export function monthlyStory(f,index,chapter,roleTheme){
  const [moneyChoice,businessChoice]=choices[month.tenGod];
  return {
   title:chapter.displayTitle,
-  intro:[`${name}. ${scene}`,`네 일간에서 ${month.pillar}의 첫 글자를 보면 ${month.tenGod}의 자리야. 할매는 이달에 ‘${roleTheme}’이 필요했던 순간을 골라 보라고 권하고 싶구나.`],
+  intro:[`이달에는 ‘${roleTheme}’이 도움이 될 때를 살펴보자.`,`${name}. ${scene}`],
   sections:[
-   {title:overall.title,paragraphs:[workTie?overall.paragraphs[0]:overall.paragraphs[1]]},
+   {title:overall.title,paragraphs:[workTie?'바깥 일정이 달라지면 네가 이미 한 약속부터 다시 읽어 보렴.':'새로 하려는 일은 네가 가진 시간에 맞춰 작게 시작해 봐.']},
    {title:finance.title,paragraphs:[money+' '+moneyChoice]},
-   {title:career.title,paragraphs:[workTie?career.paragraphs[0]:work]},
+   {title:career.title,paragraphs:[workTie?work+' 같이 일하는 사람에게 바뀐 일정을 먼저 알려 줘.':work]},
    {title:trade.title,paragraphs:[business+' '+businessChoice]},
    {title:affection.title,paragraphs:[closeTie?`${love} ${relationshipChoices[closeTie.type]}`:love]},
-   {title:caution.title,paragraphs:[caution.paragraphs[0],remark]},
+   {title:caution.title,paragraphs:[watch[index],remark]},
   ],
  };
 }

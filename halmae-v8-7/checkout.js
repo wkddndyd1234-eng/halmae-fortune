@@ -200,19 +200,17 @@ fetch(endpoint+'payment',{cache:'no-store'})
   });
 
 function updateRecoveryFields(){
-  const {email,recoveryConsent,reuseContractEmail}=form.elements;
-  const reuseAvailable=payapp&&recoveryConsent.checked;
-  document.querySelector('#reuse-contract-option').hidden=!reuseAvailable;
-  reuseContractEmail.disabled=!reuseAvailable;
-  if(!reuseAvailable) reuseContractEmail.checked=false;
-  const separateEmail=recoveryConsent.checked&&!reuseContractEmail.checked;
+  const {email,recoveryConsent}=form.elements;
+  const separateEmail=recoveryConsent.checked&&!payapp;
   document.querySelector('#recovery-email-label').hidden=!separateEmail;
   email.disabled=!separateEmail;
   email.required=separateEmail;
-  if(!recoveryConsent.checked) email.value='';
+  email.value=separateEmail?email.value:'';
+  document.querySelector('#recovery-consent-copy').textContent=payapp
+    ?'계약서면 이메일을 새 기기에서 장부를 다시 읽는 데도 사용할게요.'
+    :'새 기기에서 다시 볼 수 있도록 복구 이메일을 등록할게요.';
 }
 form.elements.recoveryConsent.addEventListener('change',updateRecoveryFields);
-form.elements.reuseContractEmail.addEventListener('change',updateRecoveryFields);
 updateRecoveryFields();
 
 function loadToss() {
@@ -253,7 +251,7 @@ form.addEventListener('submit', async event => {
       ...(customer&&live?{attribution:visitCampaign()?.attribution,checkoutAttempt:checkoutAttempt(),policyVersion:approvedPolicyVersion,policyDigest:approvedPolicyDigest,
         withdrawalAcknowledged:form.elements.withdrawalAcknowledged.checked,immediateDelivery:form.elements.immediateDelivery.checked,termsAccepted:form.elements.termsAccepted.checked}:{}),
       ...(customer && form.elements.recoveryConsent.checked ?
-        {email:payapp&&form.elements.reuseContractEmail.checked?data.contractEmail:data.email,recoveryConsent:true} : {}),
+        {email:payapp?data.contractEmail:data.email,recoveryConsent:true} : {}),
     });
     if (!customer) {
       saveBirthDraft(null);

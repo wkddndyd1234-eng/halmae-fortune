@@ -1,10 +1,11 @@
 import {calculateSaju} from './saju.mjs';
-import {ledgerPreview} from './ledger-preview.mjs';
+import {cyclesForSaju} from './fortune-cycles.mjs';
+import {topicExcerpt} from './story-scenes.mjs';
 
-export function renderLedgerPreview(container,saju) {
+export function renderLedgerPreview(container,saju,chapter=13) {
  const view=saju ?? calculateSaju({birthDate:'2000-01-01',birthTime:'12:00'});
  container.querySelector('[data-preview-label]').textContent=saju?
-  '유료 장부 제14장 실제 발췌 · 내 사주로 읽는 2027년':
-  '실제 보고서 예시 · 가상 입력 2000년 1월 1일 정오 · 「2027년 정미년의 기운」 발췌';
- container.querySelector('blockquote').textContent=ledgerPreview(view).excerpt;
+  `전체 풀이 ${chapter+1}편에서 가져온 한 문단`:
+  '가상 생일로 만든 전체 풀이 예시';
+ container.querySelector('blockquote').textContent=topicExcerpt(cyclesForSaju(view),chapter);
 }

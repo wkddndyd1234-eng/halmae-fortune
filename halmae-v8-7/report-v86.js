@@ -22,25 +22,25 @@ function element(tag,className,text){
 
 function renderChapter(chapter,index,total){
  const id='chapter-'+(index+1);
- const link=element('a','',(chapter.displayTitle??chapter.title));
+ const title=chapter.story?.title??chapter.displayTitle??chapter.title;
+ const link=element('a','',title);
  link.href='#'+id;
  const entry=element('li');
  entry.append(link);
  byId('toc').append(entry);
- byId('chapter-jump').add(new Option((index+1)+'장 · '+(chapter.displayTitle??chapter.title),id));
+ byId('chapter-jump').add(new Option((index+1)+'장 · '+title,id));
 
  const section=element('section','chapter');
  section.id=id;
  section.append(
-  element('p','eyebrow',[chapter.kicker,chapter.basis].filter(Boolean).join(' · ')),
-  element('h2','chapter-title',(chapter.displayTitle??chapter.title)),
+  element('p','eyebrow',(index+1)+'편'),
+  element('h2','chapter-title',title),
   ...(!chapter.story&&chapter.opening?[element('p','chapter-opening',chapter.opening)]:[]),
   ...(!chapter.story?[element('p','chapter-lead',chapter.displayLead??chapter.lead)]:[]),
  );
  section.querySelector('h2').tabIndex=-1;
  if(chapter.story){
   const story=chapter.story;
-  if(story.title!==(chapter.displayTitle??chapter.title)) section.append(element('h3','chapter-story-title',story.title));
   if(story.illustration){
    const image=element('img','chapter-story-art');
    image.src='/art/'+story.illustration+'.webp';
@@ -60,7 +60,8 @@ function renderChapter(chapter,index,total){
  }
  const evidence=chapter.story?element('details','chapter-reading-notes'):section;
  if(chapter.story){
-  evidence.append(element('summary','','명식 근거와 더 읽을 풀이'));
+  evidence.append(element('summary','','내 사주 풀이 근거 보기'));
+  evidence.append(element('p','small',[chapter.kicker,chapter.basis].filter(Boolean).join(' · ')));
   section.append(evidence);
  }
  const groups=chapter.groups??[{paragraphs:chapter.paragraphs}];
