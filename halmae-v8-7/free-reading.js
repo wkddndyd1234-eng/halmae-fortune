@@ -11,6 +11,13 @@ import {readingName} from './reading-name.mjs';
 import {readingVariant,recordConversion,recordFunnel} from './purchase.js';
 recordFunnel('home_view');
 
+const episodeIllustrations=[
+ '촛불 아래 펼쳐 둔 장부와 붓','기와집 문 너머 등불이 켜진 마당',
+ '금빛 자물쇠가 달린 붉은 함','이불 옆에 묶인 붉은 매듭','오행을 상징하는 다섯 그릇',
+ '작은 황동 도구를 다루는 손','동전 그릇과 붉은 주머니','붉은 실이 이어 주는 두 꽃가지',
+ '찻잔 옆에 봉인된 한지 편지','해가 뜨는 산을 담은 병풍',
+];
+
 const byId = id=>document.getElementById(id);
 const form = byId('fortune');
 const [year,month,day,hour,minute] = ['year','month','day','time','minute'].map(byId);
@@ -183,15 +190,14 @@ form.addEventListener('submit',event=>{
   const heading=document.createElement('h3');
   heading.textContent=title;
   article.append(label,heading);
-  if([0,4,6,7,9].includes(index)){
-   const image=document.createElement('img');
-   image.src='/art/'+({0:'hanok',4:reading.imageId,6:'mu',7:'eul',9:'host'}[index])+'.webp';
-   image.width=320;
-   image.height=180;
-   image.alt='';
-   image.loading='lazy';
-   article.append(image);
-  }
+  const image=document.createElement('img');
+  image.src=`/art/episode-${index+1}.webp`;
+  image.width=392;
+  image.height=392;
+  image.alt=episodeIllustrations[index];
+  image.loading='lazy';
+  image.decoding='async';
+  article.append(image);
   for(const text of paragraphs){
    const paragraph=document.createElement('p');
    paragraph.textContent=text;

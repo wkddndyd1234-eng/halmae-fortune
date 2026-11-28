@@ -166,7 +166,7 @@ fetch(endpoint+'payment',{cache:'no-store'})
       form.elements.termsAccepted.required=true;
       for(const [id,url] of Object.entries(legal)) for(const link of document.querySelectorAll('a[href="/'+id+'.html"]')) link.href=url;
       document.querySelector('#consent-copy').textContent='을 읽었고 보고서 발급을 위한 정보 처리에 동의합니다.';
-      buy.textContent='내 운명 장부 펼치기';
+      buy.textContent='29,900원 카드 결제하기';
     }
     if(live){
       document.querySelector('#recent-preview').hidden=false;
@@ -181,10 +181,11 @@ fetch(endpoint+'payment',{cache:'no-store'})
     if ((enabled || live) && recoveryEnabled) {
       document.querySelector('#recovery-options').hidden = false;
       document.querySelector('#recover').hidden = false;
+      updateRecoveryFields();
     }
     if (enabled) {
       if (!live) {
-        buy.textContent='테스트 결제하기';
+        buy.textContent='테스트 카드 결제하기';
         document.querySelector('#consent-copy').textContent='을 읽었고 가상 출생 정보의 테스트 처리에 동의합니다.';
       }
       buy.hidden = false;
@@ -198,12 +199,21 @@ fetch(endpoint+'payment',{cache:'no-store'})
     document.querySelector('#availability').textContent = '결제 가능 여부를 확인하지 못했어요. 잠시 후 새로고침해 주세요.';
   });
 
-form.elements.recoveryConsent.addEventListener('change',()=>{
-  const {email,recoveryConsent} = form.elements;
-  email.disabled = !recoveryConsent.checked;
-  email.required = recoveryConsent.checked;
-  if (email.disabled) email.value = '';
-});
+function updateRecoveryFields(){
+  const {email,recoveryConsent,reuseContractEmail}=form.elements;
+  const reuseAvailable=payapp&&recoveryConsent.checked;
+  document.querySelector('#reuse-contract-option').hidden=!reuseAvailable;
+  reuseContractEmail.disabled=!reuseAvailable;
+  if(!reuseAvailable) reuseContractEmail.checked=false;
+  const separateEmail=recoveryConsent.checked&&!reuseContractEmail.checked;
+  document.querySelector('#recovery-email-label').hidden=!separateEmail;
+  email.disabled=!separateEmail;
+  email.required=separateEmail;
+  if(!recoveryConsent.checked) email.value='';
+}
+form.elements.recoveryConsent.addEventListener('change',updateRecoveryFields);
+form.elements.reuseContractEmail.addEventListener('change',updateRecoveryFields);
+updateRecoveryFields();
 
 function loadToss() {
   return new Promise((resolve,reject) => {
@@ -243,7 +253,7 @@ form.addEventListener('submit', async event => {
       ...(customer&&live?{attribution:visitCampaign()?.attribution,checkoutAttempt:checkoutAttempt(),policyVersion:approvedPolicyVersion,policyDigest:approvedPolicyDigest,
         withdrawalAcknowledged:form.elements.withdrawalAcknowledged.checked,immediateDelivery:form.elements.immediateDelivery.checked,termsAccepted:form.elements.termsAccepted.checked}:{}),
       ...(customer && form.elements.recoveryConsent.checked ?
-        {email:data.email,recoveryConsent:true} : {}),
+        {email:payapp&&form.elements.reuseContractEmail.checked?data.contractEmail:data.email,recoveryConsent:true} : {}),
     });
     if (!customer) {
       saveBirthDraft(null);
