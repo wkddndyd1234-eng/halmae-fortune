@@ -367,6 +367,14 @@ test('페이앱 서버 주문, 통지, 계약 메일 실패, 새 브라우저 �
  assert.equal(await (await notify({pay_state:'70',orig_mul_no:'121',orig_price:'39900',mul_no:'122',price:'1000'})).text(),'SUCCESS');
  assert.equal((await accessOrder()).status,200);
  assert.equal((await report(request(null,{token:approval.token}))).status,200);
+ const secondPartial={pay_state:'71',orig_mul_no:'121',orig_price:'39900',mul_no:'123',price:'1000'};
+ assert.equal(await (await notify(secondPartial)).text(),'SUCCESS');
+ assert.equal(await (await notify(secondPartial)).text(),'SUCCESS');
+ assert.equal((await accessOrder()).status,200);
+ const finalPartial={...secondPartial,mul_no:'124',price:'37900'};
+ assert.equal(await (await notify(finalPartial)).text(),'SUCCESS');
+ assert.equal((await accessOrder()).status,403);
+ assert.equal((await report(request(null,{token:approval.token}))).status,403);
  assert.equal(await (await notify({pay_state:'9'})).text(),'SUCCESS');
  assert.equal((await accessOrder()).status,403);
  assert.equal((await report(request(null,{token:approval.token}))).status,403);

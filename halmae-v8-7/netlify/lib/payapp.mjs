@@ -70,6 +70,17 @@ export function reconcilePayapp(config,order,fields,now=Date.now()){
  if(!numericId.test(transactionId??'')||!numericId.test(amount??'')||
     order.transactionId!==(partial?get('orig_mul_no'):transactionId)||
     (partial?(get('orig_price')!==String(PRICE)||Number(amount)>=PRICE):amount!==String(PRICE))) return null;
+ if(partial && ['approved','partial'].includes(order.status)){
+  if(transactionId===order.transactionId) return null;
+  const previous=order.partialCancellations??(order.partialCancellation?[order.partialCancellation]:[]);
+  const value=Number(amount);
+  const duplicate=previous.find(item=>item.transactionId===transactionId);
+  if(duplicate) return duplicate.amount===value?order:null;
+  const total=previous.reduce((sum,item)=>sum+item.amount,value);
+  if(total>PRICE) return null;
+  return {...order,status:total===PRICE?'canceled':'partial',cancellationObservedAt:now,
+   partialCancellations:[...previous,{transactionId,amount:value}]};
+ }
  if(terminal.has(order.status)){
   if(order.status==='partial' && ['9','64'].includes(state)) return {...order,status:'canceled',cancellationObservedAt:now};
   return order;
