@@ -1,20 +1,5 @@
 import {annualReflection} from './fortune-cycles.mjs';
 
-const monthScenes=[
- '지난해에 마치지 못한 일을 하나 꺼내 보렴. 새 일에 손을 대기 전에 끝내야 마음이 가벼워질 일이 있지 않니?',
- '새 출발을 알리고 싶다면 물건부터 사지 말고 누구의 도움이 필요한지 먼저 찾아봐.',
- '제안 두 가지가 눈에 들어오거든 먼저 약속한 시간을 빼고도 각각 해낼 수 있는지 보렴.',
- '오래 하던 방식이 걸리면 하루만 순서를 바꾸고 어디가 편해졌는지 살펴봐.',
- '사람들의 반응이 빠를 때는 제일 먼저 들은 의견과 마지막까지 남은 의견을 구별하렴.',
- '잘하던 일도 손을 보탤 사람이 필요한 때가 있어. 누구에게 어떤 부분을 맡기면 좋을까?',
- '더워진 마당에선 같은 일을 해도 지치는 속도가 다르지. 약속을 옮겨야 한다면 미리 말해 두렴.',
- '애써 만든 물건이라도 손에 오래 쥐면 남은 일이 보이지 않아. 확인받을 것을 골라 내어 봐.',
- '남겨 둘 것에는 이름을 붙이고, 미뤄 둘 것에는 다시 볼 날을 적어 두렴.',
- '걸음이 엇갈린 사람과는 지난 잘못을 줄줄 외우기 전에 앞으로 함께 지킬 약속부터 묻자.',
- '준비에 시간이 걸리는 일은 다른 사람에게 아직 보여 줄 때가 아닐 수도 있어. 먼저 손볼 데를 한 군데 정해.',
- '올해 가져온 짐을 모두 내년으로 옮길 필요는 없단다. 다시 해도 좋을 일 하나를 골라 두렴.',
-];
-
 const roles={
  비견:['네 손으로 정하고 싶어지는 마음','한 일을 둘이 맡았을 때 자기 방식부터 고집하기','같은 목표만 정하고 방법은 서로 맡겨 보렴'],
  겁재:['나란히 뛰는 사람을 보면 힘이 붙는 성향','남이 속도를 내자 내 사정도 잊고 같이 달리기','그 사람에게 좋은 때와 내게 가능한 때를 구별하렴'],
@@ -27,6 +12,8 @@ const roles={
  편인:['한 가지 단서에서도 여러 뜻을 헤아리는 눈','상대가 말하지 않은 사정까지 혼자 짐작하기','추측을 하나 덜고 짧은 질문을 하나 더해 보렴'],
  정인:['배운 것을 품고 있다가 필요한 곳에 건네는 힘','조언을 더 모으느라 네 판단을 미루기','들은 것 중 하나를 골라 직접 써 보고 판단하렴'],
 };
+
+export const monthlyRoleTheme=role=>roles[role][0];
 
 const elements={
  목:'목은 씨앗이 뿌리를 찾는 장면이야. 벌인 일에 다시 손을 댈 날을 같이 정해 봐.',
@@ -57,21 +44,27 @@ function context(f){
 export function freeEpisodes(f,reading,call,choice){
  const {s,inner,inside,outside,leadingElement,outerBasis}=context(f);
  const topic=Object.hasOwn(topics,choice)?topics[choice]:null;
- const topicEvidence={money:reading.money,work:reading.work,love:reading.relationships,people:reading.relationships,future:annualReflection(s,f.annual)};
+ const topicEvidence={
+  money:topicExcerpt(f,6),
+  work:topicExcerpt(f,7),
+  love:topicExcerpt(f,8),
+  people:topicExcerpt(f,10),
+  future:'해의 글자와 달의 글자는 바뀌는 때가 다르지. 큰 방향을 정한 뒤 그걸 어느 달에 시험할지 따로 보자.',
+ };
  const turn=annualReflection(s,f.annual);
  const stories=[
   ['네가 태어난 날, 하늘에 새겨진 글자','장부를 펴는 밤',[
    `${call}, 여기 가까이 앉아 보렴. 할매가 제일 먼저 본 글자는 네가 태어난 날의 ${s.dayStem}이야. 네 이름 아래 그 글자를 놓고 시작해 볼까?`,
    reading.introduction,
-   s.dateBoundaryUncertain?'네가 태어난 날은 절기 경계라 태어난 시각 없이 어느 계절에 들었는지 정하기 어려워. 확인되는 일주부터 읽어주마.':`달력의 같은 날에도 각자 다른 이야기가 담겨 있지. 할매는 네 일주 ${s.pillars[2]} 옆에 ${f.season.season}의 자리를 놓고 읽는단다.`]],
+   s.dateBoundaryUncertain?'네가 태어난 날은 절기 경계라 태어난 시각 없이 어느 계절에 들었는지 정하기 어려워. 확인되는 일주부터 읽어주마.':`이제 그 글자가 사람들 앞에 서면 어떻게 쓰이는지 보자꾸나.`]],
   ['할매 눈에는 네 본모습이 보이는구나','첫인상',[
    `여럿이 모였는데 아무도 첫 말을 꺼내지 않는 장면을 생각해 봐. ${outerBasis}에서 할매가 읽는 건 ‘${outside[0]}’이란다.`,reading.temperament]],
   ['네 속에는 이런 녀석이 살고 있단다','아무도 모를 때',[
    `문을 닫고 돌아오면 바깥에서 부르던 네 이름도 잠깐 쉬겠지. 일지에 담긴 ${inner}에서 할매가 들여다보는 건 ‘${inside[0]}’이야.`,
-   `가까운 사람만 보는 네 모습에선 ‘${inside[1]}’ 같은 일이 생기는지도 떠올려 보렴. 그래도 괜찮다. 할매도 등을 돌려 앉아 혼자 궁리할 때가 있어.`]],
+   `밖에선 일 하나를 금방 정해도 집에 와서까지 바로 답하고 싶지는 않을 수 있지. ${inside[2]}`]],
   ['왜 자꾸 같은 일로 마음고생을 하느냐','할매의 쓴소리',[
    `싸움은 끝났는데 이불을 덮고 나서야 할 말이 생각나는 날이 있지. 할매라면 이번엔 ‘${inside[1]}’ 같은 일이 어디서 시작됐는지 되짚겠어.`,
-   '세 번 참았다는 말만으론 다음번이 달라지기 어렵단다. 처음 마음이 걸렸던 순간을 하나 고르고, 그때 상대에게 건넬 짧은 한마디를 생각해 봐.']],
+   '처음 마음이 걸린 순간에 뭐라고 말할 수 있었을까? 이불 차는 건 할매도 잘한다만, 이불이 답장을 보내 주진 않더라.']],
   ['할매가 너를 빚던 날','오행을 빚는 마루',[
    '할매가 널 반죽했다는 건 이야기 속 장면이야. 그래도 네 글자에 담긴 다섯 재료를 마루에 펼쳐 놓고 읽는 재미는 있지.',
    s.dateBoundaryUncertain?`절기 경계에서는 계절을 단정하기 어려우니 확인되는 일간의 ${leadingElement}부터 살펴. ${elements[leadingElement]}`:`겉글자를 세어 보니 가장 자주 보이는 재료 중 하나는 ${leadingElement}의 기운이구나. ${elements[leadingElement]}`,
@@ -111,11 +104,6 @@ const portraits=[
 
 export function chapterStory(f,index,now,chapter){
  const {s,inner,inside,outside,leadingElement,outerBasis}=context(f);
- if(index>=14){
-  const month=f.monthly[index-14];
-  return {title:chapter.displayTitle,intro:[`이달 장부에는 ${month.pillar}의 기운이 들어와. 네 ${s.pillars[2]} 일주에서 그 천간을 보면 ${month.tenGod}, ‘${roles[month.tenGod][0]}’을 살필 자리란다.`,monthScenes[index-14]],
-   sections:chapter.groups.map(({title,paragraphs,detailFrom})=>({title,paragraphs:paragraphs.slice(0,detailFrom)}))};
- }
  const [title,scene]=portraits[index];
  const illustration={0:'hanok',2:{목:'gap',화:'jeong',토:'mu',금:'gyeong',수:'im'}[leadingElement],6:'mu',8:'eul',12:'hanok',13:'host'}[index];
  const innerLine=`일지 ${s.dayBranch} 안쪽의 ${inner}에서 할매가 읽는 건 ‘${inside[0]}’이야.`;
@@ -159,7 +147,21 @@ export function topicExcerpt(f,index){
    if(resources.includes('정재')) return '네 천간에 보이는 정재는 한 번 크게 얻는 것보다 오래 이어서 남기는 돈에 눈이 가는 상징이야. 같은 물건이라도 들어갈 때 드는 돈과 유지하는 데 드는 돈을 따로 세어 봐.';
    if(resources.includes('편재')) return '네 천간에 보이는 편재에서는 거래나 제안이 움직이는 곳을 살핀단다. 흥미로운 제안을 들으면 이익부터 적고 싶지. 이번에는 답을 기다리는 동안 묶일 돈부터 적어 봐.';
    return `겉글자에서 바로 확인되는 재물의 단서가 적으니 돈이 없다거나 많다고 읽지 않겠어. ${outerBasis}에서 살핀 ‘${outside[0]}’이 지출을 결정할 때에도 나타나는지 실제 기록에서 찾아 보렴.`;
-  case 7: return `${outerBasis}에서 보는 ‘${outside[0]}’은 일하는 모습을 읽을 단서란다. 돈이 될까부터 묻기 전에, 네가 잘했던 일을 다른 사람도 알아볼 수 있을 만큼 작은 결과 하나로 꺼내 보렴.`;
+  case 7: {
+   const scenes={
+    비견:'혼자 맡으면 빠른 일이라도 마지막 판단은 누구와 해야 하는지 물어 봐.',
+    겁재:'같이 만든 결과라면 빠른 사람 속도에 맞추기 전에 서로 맡은 일을 한 줄씩 적어.',
+    식신:'사람들이 자주 부탁하는 솜씨가 있다면 단계 하나를 정리해 다른 사람도 따라 할 수 있게 해 봐.',
+    상관:'회의에서 새 방법을 내고 싶다면 불편했던 대목과 바꿀 순서를 실제 예 한 건으로 보여 줘.',
+    편재:'새 제안 두 건이 왔다면 어느 쪽이 짧게 시험해 볼 수 있는지부터 물어.',
+    정재:'직장을 옮길 때 첫 달 급여뿐 아니라 출퇴근과 반복 업무까지 한 주 일정에 적어 봐.',
+    편관:'급한 부탁에는 언제까지 할 수 있는지와 누가 마지막 결정을 할지부터 답해.',
+    정관:'새 직함을 권하거든 책임이 늘면 승인 권한도 따라오는지 물어 보렴.',
+    편인:'좋아 보이는 새 도구는 문서 하나에 먼저 써 봐. 두 시간 걸리던 일이 한 시간에 끝났는지 보자.',
+    정인:'오래 배운 일이 있다면 남에게 가르칠 수 있는 과정 하나를 꺼내 봐.',
+   };
+   return `${outerBasis}의 ‘${outside[0]}’을 일터에서 살펴보자. ${scenes[f.saju.dateBoundaryUncertain?inner:f.stemTenGods[1]]}`;
+  }
   case 8: return `일지 ${s.dayBranch} 안에 담긴 ${inner}의 상징을 보면 가까워질수록 ‘${inside[0]}’이 어떻게 드러나는지 살펴볼 만해. 좋아한다는 걸 보여 줄 때 ‘${inside[1]}’ 같은 일이 마음에 걸리지 않는지 살펴 보렴.`;
   case 10: return `오래 볼 사람 앞에서 ${inner}에 담긴 ‘${inside[0]}’이 드러나는지 떠올려 보렴. 다 들어주고 뒤늦게 속이 상한다면 그날 누구에게 힘을 보탤지보다 네가 어디까지 할 수 있는지 먼저 말해 봐.`;
   case 13: return annualReflection(s,f.annual);

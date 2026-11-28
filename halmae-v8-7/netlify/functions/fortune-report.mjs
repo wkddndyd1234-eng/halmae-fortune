@@ -1,4 +1,5 @@
-import {chapterStory} from './story-scenes.mjs';
+import {monthlyStory} from '../lib/monthly-stories.mjs';
+import {chapterStory,monthlyRoleTheme} from './story-scenes.mjs';
 import {chapterOpening} from './immersion.mjs';
 import {boundaryNatalGroups,monthlyGroups,natalGroups} from '../lib/premium-reading.mjs';
 import {annualReflection,fortuneCycles} from './fortune-cycles.mjs';
@@ -124,5 +125,5 @@ export function buildFortuneReport(order,{now=Date.now()}={}){
   ...(s.dateBoundaryUncertain?['표의 연주·월주는 정오 참고값이란다. 본문 원국 해석은 확인된 일주만 쓰고, 월운도 일지와 견줘 읽어.']:[]),
   ...(s.isLeapMonth?[`입력한 음력 윤달 ${s.birthDate}를 양력 ${s.solarDate}로 환산해 명식을 계산했단다.`]:[]),
   ...(s.birthTime?.startsWith('23:')?['이 장부는 한국 시간 자정에 일주를 바꾸는 관례를 써. 밤 11시에 날을 바꾸는 관례로 보면 일주와 시주가 달라질 수 있단다.']:[]),'세운은 입춘, 월운은 월별 절입 시각에 바뀌어요. 2027년 소한 전은 2026년 자월에 속해요.',decades.length?f.luck.caveat:f.luck.unavailableReason].filter(Boolean);
- return {meta:{name,birthDate:s.birthDate,solarDate:s.solarDate,calendarType:s.calendarType,isLeapMonth:s.isLeapMonth,gender:s.gender||null,birthTime:s.birthTime||'미상',pillars:s.pillars,elementCounts:s.elements,calculationWarnings:s.warnings,calculationNotes,weekday:weekdays[new Date(s.solarDate+'T00:00:00Z').getUTCDay()]+'요일',edition:'할매의 운명방 · 2027 개인별 전통 명리 해석',chapterCount:chapters.length,verified:false},chapters:chapters.map((c,i)=>({...c,story:chapterStory(f,i,now,c),opening:chapterOpening(i),basis:i<12&&s.dateBoundaryUncertain?'일주의 전통 상징':i<6?'원국의 전통 상징':i<12?'원국·십성의 상징':i===12?(decades.length?'대운 근사 계산':'긴 시간의 전통 상징'):i===13?'2027 세운':'절기 기반 2027 월운'}))};
+ return {meta:{name,birthDate:s.birthDate,solarDate:s.solarDate,calendarType:s.calendarType,isLeapMonth:s.isLeapMonth,gender:s.gender||null,birthTime:s.birthTime||'미상',pillars:s.pillars,elementCounts:s.elements,calculationWarnings:s.warnings,calculationNotes,weekday:weekdays[new Date(s.solarDate+'T00:00:00Z').getUTCDay()]+'요일',edition:'할매의 운명방 · 2027 개인별 전통 명리 해석',chapterCount:chapters.length,verified:false},chapters:chapters.map((c,i)=>({...c,story:i<14?chapterStory(f,i,now,c):monthlyStory(f,i-14,c,monthlyRoleTheme(f.monthly[i-14].tenGod)),opening:chapterOpening(i),basis:i<12&&s.dateBoundaryUncertain?'일주의 전통 상징':i<6?'원국의 전통 상징':i<12?'원국·십성의 상징':i===12?(decades.length?'대운 근사 계산':'긴 시간의 전통 상징'):i===13?'2027 세운':'절기 기반 2027 월운'}))};
 }

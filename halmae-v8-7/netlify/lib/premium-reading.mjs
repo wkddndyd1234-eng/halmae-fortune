@@ -263,7 +263,7 @@ export function monthlyGroups(f,month,index){
   `태어난 시각을 모르니 이달 일터의 화두 ‘${work}’는 일지 ${s.dayBranch} 속 ${boundaryRole.stem}의 ${boundaryRole.tenGod}에서 시작하자. 평소 맡은 일에서는 ${roleLenses[boundaryRole.tenGod][1]}부터 해 보렴. 그다음 이달 천간 ${month.pillar[0]}에서 읽은 ${month.tenGod}의 질문을 얹으면, 익숙한 방식과 이번에 시도할 방법을 따로 생각해 볼 수 있단다.`:'';
  return [
   group('총운',workMeeting?openingChoice:`${overallScene} ${openingChoice}`,
-   `이달의 ${month.pillar}에서 읽은 ${month.tenGod}은 ‘${role[0]}’을 살피는 자리야. ${season}`,
+   `이달의 ${month.pillar}에서 읽은 ${month.tenGod}의 단서로 ‘${role[0]}’을 살펴볼 수 있어. ${season}`,
    yearContext),
   group('재물운',financeScene,exampleDetail(moneyScene,recurring?1:2),
    `이번 달 재물 흐름에서는 ‘${money}’를 살펴보렴. ${natalWealth?`태어난 사주에서는 ${evidenceText(natalWealth)}가 단서야. `:''}${moneyFollowup}`),

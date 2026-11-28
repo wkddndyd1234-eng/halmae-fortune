@@ -41,3 +41,16 @@ test('custom text offers no claimed analysis and ambiguous seasonal cases do not
  const {chapters}=buildFortuneReport(input);
  assert.doesNotMatch(chapters.slice(0,13).flatMap(c=>c.story.intro).join('\n'),/월간 [甲乙丙丁戊己庚辛壬癸]/);
 });
+
+test('monthly copy distinguishes work and relationship evidence and preserves 12 separate remarks',()=>{
+ const boundary={name:'최서윤',birthDate:'2000-02-04',birthTime:'',gender:'female'};
+ const lunar={name:'한도현',birthDate:'1988-08-15',calendarType:'lunar',birthTime:'23:15',gender:'male'};
+ function monthly(input){
+  return buildFortuneReport(input).chapters.slice(14).map(c=>c.story);
+ }
+ const first=monthly(boundary), second=monthly(lunar);
+ assert.equal(new Set(first.map(c=>c.sections.at(-1).paragraphs.at(-1))).size,12);
+ assert.ok(first.every(c=>c.sections.length===6));
+ assert.doesNotMatch(first.flatMap(c=>c.sections[2].paragraphs).join(' '),/월지/);
+ assert.ok(first.filter((chapter,i)=>JSON.stringify(chapter.sections)!==JSON.stringify(second[i].sections)).length>=8);
+});
