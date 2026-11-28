@@ -87,3 +87,15 @@ test('birth changes a scene and asset while concern changes emphasis without cha
  assert.ok(a.chapters.slice(14).some((c,i)=>c.story.intro[0]!==b.chapters[i+14].story.intro[0]));
  assert.deepEqual(a.chapters.map(c=>c.story),buildFortuneReport({...sample,name:'가상 이름 바꿈'},{now}).chapters.map(c=>c.story));
 });
+
+test('free first impression changes with the chart and describes only the displayed element counts',async()=>{
+ const {freeOpening}=await import('../netlify/functions/story-scenes.mjs');
+ const a=fortuneCycles({birthDate:'1995-07-15',birthTime:'14:30',gender:'female'});
+ const b=fortuneCycles({birthDate:'1988-10-21',birthTime:'08:30',gender:'female'});
+ const first=freeOpening(a,'민서야','money',a.saju.elements);
+ const second=freeOpening(b,'민서야','money',b.saju.elements);
+ assert.notEqual(first.title,second.title);
+ assert.match(first.paragraphs[1],/돈 이야기/);
+ assert.match(first.elementCopy,/토 기운이 3개/);
+ assert.match(freeOpening(a,'민서야','love',{목:1,화:1,토:0,금:0,수:0}).elementCopy,/각각 1개/);
+});

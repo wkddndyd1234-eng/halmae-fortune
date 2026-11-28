@@ -24,6 +24,24 @@ const calendarType=form.elements.calendarType;
 const leapMonth=form.elements.isLeapMonth;
 const birthConfirmed=form.elements.birthConfirmed;
 const birthSummary=document.querySelector('#birth-summary');
+const checkRequired=document.querySelector('#check-required');
+const requiredFields=['birthConfirmed','consent','termsAccepted','withdrawalAcknowledged','immediateDelivery']
+ .map(name=>form.elements[name]);
+function syncRequired(){
+  const all=requiredFields.every(field=>!field.disabled&&field.checked);
+  checkRequired.disabled=birthConfirmed.disabled;
+  checkRequired.setAttribute('aria-pressed',String(all));
+  checkRequired.textContent=all?'필수 항목 확인 해제':'필수 항목 모두 확인';
+}
+checkRequired.addEventListener('click',()=>{
+  const checked=checkRequired.getAttribute('aria-pressed')!=='true';
+  for(const field of requiredFields){
+    if(field.disabled||field.checked===checked) continue;
+    field.checked=checked;
+    field.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+});
+for(const field of requiredFields) field.addEventListener('change',syncRequired);
 document.querySelector('#open-checkout-sample').addEventListener('click',()=>{
   const sample=document.querySelector('#checkout-sample');
   sample.open=true;
@@ -47,13 +65,19 @@ function updateBirthConfirmation(){
     confirmedBirth=undefined;
   }
   birthConfirmed.disabled=!birth;
+  syncRequired();
   if(!birth){
     birthSummary.textContent=message||'생년월일과 성별을 선택하면 확인할 정보를 표시해요.';
     return snapshot;
   }
   const calendar=birth.calendarType==='solar'?'양력':birth.isLeapMonth?'음력 윤달':'음력 평달';
   const converted=birth.calendarType==='lunar'? ' · 양력 환산 '+birth.solarDate:'';
-  birthSummary.textContent=`${birth.name||'손님'} · ${birth.gender==='male'?'남성':'여성'} · ${calendar} ${birth.birthDate}${converted} · ${birth.birthTime?birth.birthTime+' (한국 시간)':'출생 시각 미상'}`;
+  birthSummary.replaceChildren(...[
+    `${birth.name||'손님'} · ${birth.gender==='male'?'남성':'여성'}`,
+    `${calendar} ${birth.birthDate}`,
+    birth.birthTime||'출생 시각 미상',
+    ...(converted?['양력 환산 '+birth.solarDate]:[]),
+  ].map(text=>Object.assign(document.createElement('span'),{textContent:text})));
   return snapshot;
 }
 birthConfirmed.addEventListener('change',()=>{
@@ -61,6 +85,7 @@ birthConfirmed.addEventListener('change',()=>{
   const snapshot=updateBirthConfirmation();
   confirmedBirth=snapshot;
   birthConfirmed.checked=Boolean(snapshot);
+  syncRequired();
 });
 function updateCalendar(){
   const lunar=calendarType.value==='lunar';
@@ -168,6 +193,7 @@ fetch(endpoint+'payment',{cache:'no-store'})
       document.querySelector('#consent-copy').textContent='을 읽었고 보고서 발급을 위한 정보 처리에 동의합니다.';
       buy.textContent='29,900원 카드 결제하기';
     }
+    if(payapp){checkRequired.hidden=false;syncRequired();}
     if(live){
       document.querySelector('#recent-preview').hidden=false;
       document.querySelector('#recent-preview').textContent='주문 확인 및 보고서 다시 보기';

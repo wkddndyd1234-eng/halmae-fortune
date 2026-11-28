@@ -163,3 +163,40 @@ footer.footer a{color:#e2c18c}
 #free-episodes .episode-label { margin-bottom:.3em; color:#e9c98d; font-size:.86rem; letter-spacing:.05em; }
 #free-episodes img { display:block; width:min(100%,320px); height:auto; aspect-ratio:1; border-radius:.5rem; margin:1rem auto; }
 #free-episodes p:not(.episode-label) { max-width:65ch; line-height:1.75; }
+
+/* Match the portrait box to its image and give utility controls a real wrap width. */
+@media (max-width:480px) {
+ .reading-v9 .reading-compass .symbol-scene { aspect-ratio:auto; }
+ .reading-v9 .reading-compass .symbol-scene img { height:clamp(160px,60vw,220px); max-height:none; object-fit:cover; }
+ .reading-v9 .reading-heading { padding-block:.8rem; }
+ .reading-tools details { flex:1 1 9rem; }
+ .reading-tools summary { word-break:keep-all; }
+ .reading-tools .sig-button { max-width:100%; }
+ #free-episodes { gap:.7rem; }
+ #offer { padding-block:1rem; }
+ #offer .ledger-cover { margin-bottom:.5rem; padding:.75rem; }
+ #offer .ledger-leaf,#offer .ledger-terms,#offer .sample-page { padding:.75rem; margin-block:.6rem; }
+ #offer .offer-subjects { margin:.4rem 0; }
+}
+#element-meaning { text-align:start; line-height:1.65; margin-block:.65rem; }
+
+.compact-checkout { line-height:1.55; padding:clamp(12px,4vw,28px); }
+.compact-checkout .checkout-cover { padding:.55rem 0; margin:.65rem 0; }
+.compact-checkout .checkout-cover h1 { margin:.25rem 0; font-size:clamp(1.38rem,6vw,1.85rem); }
+.compact-checkout .checkout-cover .ledger-seal { display:none; }
+.compact-checkout .ledger-terms { padding:.55rem .7rem; margin:.5rem 0; }
+.compact-checkout p { margin:.3rem 0; }
+.compact-checkout .ledger-price { font-size:1.35rem; }
+.compact-checkout .notice { padding:.45rem .6rem; }
+.compact-checkout details,.compact-checkout #checkout-birth-fields { margin:.45rem 0; }
+.compact-checkout fieldset { border:0; padding:0; margin:.6rem 0; }
+.compact-checkout fieldset legend { padding:0; font-size:.9rem; color:#e9c78b; font-weight:700; }
+.compact-checkout label { margin:.4rem 0; }
+.compact-checkout .check { min-height:44px; padding:.45rem 0; gap:.5rem; font-size:.9rem; }
+.compact-checkout input:not([type=checkbox]),.compact-checkout select { min-height:44px; padding:.45rem .6rem; font-size:16px; }
+.compact-checkout #birth-summary { display:flex; gap:.25rem .65rem; flex-wrap:wrap; font-size:.9rem; }
+.compact-checkout #birth-summary span { max-width:100%; overflow-wrap:anywhere; }
+.compact-checkout #birth-summary span:nth-child(n+2) { white-space:nowrap; }
+.compact-checkout #check-required { min-height:44px; width:100%; padding:.4rem .6rem; }
+.compact-checkout .required-checks { margin-block:.6rem; }
+.compact-checkout .checkout-order a { display:inline-block; margin-top:.4rem; }

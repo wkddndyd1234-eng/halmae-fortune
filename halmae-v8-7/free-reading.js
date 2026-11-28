@@ -1,4 +1,4 @@
-import {concernChapter,freeEpisodes} from './story-scenes.mjs';
+import {concernChapter,freeEpisodes,freeOpening} from './story-scenes.mjs';
 import {lunarMonthLength} from './lunar-conversion.mjs';
 import {renderLedgerPreview} from './ledger-preview-view.js';
 import {renderReadingChart,renderElementSummary} from './reading-chart.js';
@@ -177,11 +177,14 @@ form.addEventListener('submit',event=>{
  const cycles=cyclesForSaju(saju);
  const reading=readPersonalReading(cycles,chart,relationshipNotes[byId('relation').value]);
  const {call}=readingName(input.name);
- byId('greeting').textContent=call+', 네 장부를 펴 볼까.';
+ const opening=freeOpening(cycles,call,concern.value,chart.elements);
+ byId('greeting').textContent=opening.paragraphs[0];
+ byId('reading-next-focus').textContent=opening.paragraphs[1];
+ byId('element-meaning').textContent=opening.elementCopy;
  byId('ledger-bridge-heading').textContent=call+', 다음 이야기도 준비했어.';
  if(paymentEnabled) checkoutLink.textContent='29,900원 카드 결제하기';
  byId('resultMeta').textContent=`${input.gender==='male'?'남성':'여성'} · ${input.birthDate} ${input.calendarType==='lunar'?(input.isLeapMonth?'음력 윤달':'음력 평달'):'양력'} · ${input.birthTime||'출생 시각 미상'}`;
- byId('resultHeading').textContent=reading.headline;
+ byId('resultHeading').textContent=opening.title;
  const episodes=freeEpisodes(cycles,reading,call,concern.value);
  const scenes=episodes.map(({title,scene,art,paragraphs},index)=>{
   const article=document.createElement('article');
@@ -223,7 +226,7 @@ form.addEventListener('submit',event=>{
  byId('calcNotice').hidden=!notices.length;
  renderElementSummary(byId('element-summary-values'),chart.elements);
  renderReadingChart(byId('pillars'),byId('fiveElements'),chart);
- readingText=[byId('greeting').textContent,byId('resultMeta').textContent,
+ readingText=[opening.title,...opening.paragraphs,byId('resultMeta').textContent,
   reading.headline,...episodes.flatMap(({title,paragraphs})=>[title,...paragraphs]),
   ...notices,'전통 사주 상징을 바탕으로 한 자기 성찰용 풀이입니다.'].join('\n\n');
  result.hidden=false;
