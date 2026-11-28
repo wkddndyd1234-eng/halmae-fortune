@@ -55,8 +55,9 @@ export default async req => {
                 await sendRecovery(mail,purchase,email,rateKey,at);
                 await store.setJSON(marker,{state:'sent',attempt,at});
                 break;
-              }catch{
+              }catch(error){
                 await store.setJSON(marker,{state:'retry-needed',attempt,at});
+                if(error.status===429) break;
               }
             }
           }

@@ -90,6 +90,12 @@ test('transactional contract retry uses the same delivery key and stops on perma
  assert.deepEqual(sent[0],sent[1]);
  assert.match(JSON.parse(sent[0][1]).text,/가상 약관/);
  assert.deepEqual(await sendContractCopy(mail,async()=>new Response(null,{status:400})),{state:'customer-support',attempt:1});
+ let quotaRequests=0;
+ assert.deepEqual(await sendContractCopy(mail,async()=>{
+  quotaRequests++;
+  return new Response(null,{status:429});
+ }),{state:'customer-support',attempt:1});
+ assert.equal(quotaRequests,1);
 });
 
 test('contract sender uses the authenticated sending domain and routes replies to the business Naver inbox',async()=>{

@@ -301,7 +301,7 @@ test('페이앱 서버 주문, 통지, 계약 메일 실패, 새 브라우저 �
  const {default:feedback}=await import('../netlify/functions/payapp-feedback.mjs');
  const {createHash}=await import('node:crypto');
  const records=new Map(),mails=[];
- let reference, requests=0, loseResponse=false;
+ let reference, requests=0, loseResponse=false, limitRecovery=false;
  t.mock.method(globalThis,'fetch',async(url,options)=>{
   const endpoint=new URL(url);
   if(endpoint.hostname==='blob.example.test'){
@@ -325,7 +325,7 @@ test('페이앱 서버 주문, 통지, 계약 메일 실패, 새 브라우저 �
   assert.equal(endpoint.hostname,'api.resend.com');
   const mail=JSON.parse(options.body);
   mails.push(mail);
-  return mail.subject.includes('계약서면')?new Response(null,{status:503}):Response.json({id:'mock-recovery'});
+  return mail.subject.includes('계약서면')?new Response(null,{status:503}):limitRecovery?new Response(null,{status:429}):Response.json({id:'mock-recovery'});
  });
  const details={...birth,channel:'payapp-live',paymentPhone:'01000000000',contractEmail:'contract@example.test'};
  const created=await order(request(details));
@@ -352,6 +352,7 @@ test('페이앱 서버 주문, 통지, 계약 메일 실패, 새 브라우저 �
  assert.deepEqual(mails[0].to,['contract@example.test']);
  assert.equal(mails[0].from,'할매의 운명방 <sender@example.test>');
  assert.equal(mails[0].reply_to,'valueseeker123@naver.com');
+ assert.doesNotMatch(mails[0].text,/1988-10-08|01000000000|buyer@example\.test|checkoutToken|recoveryEmailHash/);
  assert.ok([...records.values()].some(({data})=>data.state==='customer-support'&&data.receipt==='unverified'));
  const wrong='__Host-halmae-preview='+'2'.repeat(64);
  assert.equal((await accessOrder(wrong)).status,403);
@@ -362,7 +363,20 @@ test('페이앱 서버 주문, 통지, 계약 메일 실패, 새 브라우저 �
  assert.equal((await recovery(request({orderId,action:'request',email:birth.email}))).status,202);
  assert.equal(mails.at(-1).from,'할매의 운명방 <sender@example.test>');
  assert.equal(mails.at(-1).reply_to,'valueseeker123@naver.com');
+ assert.doesNotMatch(mails.at(-1).text,/1988-10-08|01000000000|contract@example\.test|checkoutToken|recoveryEmailHash/);
  const token=mails.at(-1).text.split('#').at(-1);
+ const recoveryClock=Date.now;
+ const nextWindow=(Math.floor(recoveryClock()/900000)+1)*900000+1;
+ const clock=t.mock.method(Date,'now',()=>nextWindow);
+ try{
+  limitRecovery=true;
+  const count=mails.length;
+  assert.equal((await recovery(request({orderId,action:'request',email:birth.email}))).status,202);
+  assert.equal(mails.length,count+1);
+  assert.equal((await recovery(request({orderId,action:'request',email:birth.email}))).status,202);
+  assert.equal(mails.length,count+1);
+  assert.equal((await accessOrder()).status,200);
+ }finally{clock.mock.restore();limitRecovery=false;}
  assert.equal((await recovery(request({action:'exchange',token}))).status,200);
  assert.equal(await (await notify({pay_state:'70',orig_mul_no:'121',orig_price:'39900',mul_no:'122',price:'1000'})).text(),'SUCCESS');
  assert.equal((await accessOrder()).status,200);

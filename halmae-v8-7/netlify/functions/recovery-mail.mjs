@@ -41,5 +41,5 @@ export async function sendRecovery(config,order,email,rateKey,now=Date.now()) {
     }),
     signal:AbortSignal.timeout(4000),redirect:'error',
   });
-  if (!response.ok) throw Error('Recovery email unavailable');
+  if (!response.ok) throw Object.assign(Error('Recovery email unavailable'),{status:response.status});
 }

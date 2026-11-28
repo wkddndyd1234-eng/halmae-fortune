@@ -24,7 +24,7 @@ export async function sendContractCopy({key,from,to,document},transport){
     body:JSON.stringify({from:'할매의 운명방 <'+from+'>',reply_to:merchantIdentity.email,to:[to],subject:'할매의 운명방 구매 계약서면',text}),
    });
    if(response.ok) return {state:'accepted',attempt};
-   if(response.status<500&&response.status!==429) return {state:'customer-support',attempt};
+   if(response.status<500) return {state:'customer-support',attempt};
   }catch { /* An identical idempotency key prevents duplicate delivery on retry. */ }
  }
  return {state:'customer-support',attempt:2};
