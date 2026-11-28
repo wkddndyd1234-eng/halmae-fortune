@@ -212,3 +212,10 @@ footer.footer a{color:#e2c18c}
 .compact-checkout #payapp-fields label { margin:.25rem 0 0; }
 .compact-checkout #payapp-fields p { margin:0 0 .25rem; }
 .compact-checkout form { margin-block:.55rem; }
+
+.compact-checkout .checkout-order { border:0; background:none; padding:0; margin:.45rem 0; }
+.compact-checkout .required-checks { margin-block:.4rem; }
+.compact-checkout #check-required { margin-block:.2rem; }
+.compact-checkout #recovery-options legend,.compact-checkout #payapp-fields legend { color:inherit; }
+.compact-checkout #recovery-options { margin-block:.25rem; }
+.compact-checkout p:empty { display:none; }

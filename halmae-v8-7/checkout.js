@@ -187,6 +187,7 @@ fetch(endpoint+'payment',{cache:'no-store'})
       form.elements.withdrawalAcknowledged.disabled=false;
       form.elements.withdrawalAcknowledged.required=true;
       document.querySelector('#terms-acceptance').hidden=false;
+      document.querySelector('#checkout-withdrawal-notice').hidden=false;
       form.elements.termsAccepted.disabled=false;
       form.elements.termsAccepted.required=true;
       for(const [id,url] of Object.entries(legal)) for(const link of document.querySelectorAll('a[href="/'+id+'.html"]')) link.href=url;

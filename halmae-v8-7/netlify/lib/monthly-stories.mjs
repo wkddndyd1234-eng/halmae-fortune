@@ -73,11 +73,16 @@ export function monthlyStory(f,index,chapter){
  const workTie=f.saju.dateBoundaryUncertain?null:month.relations.find(item=>item.position==='월');
  const [overall,finance,career,trade,,caution]=chapter.groups;
  const [moneyChoice,businessChoice]=choices[month.tenGod];
+ const route=storyFamily(month.tenGod);
  return {
   title:chapter.displayTitle,
-  intro:[`${name}. ${monthlyScenes[index][storyFamily(month.tenGod)]}`,scene],
+  intro:[`${name}. ${monthlyScenes[index][route]}`,scene],
   sections:[
-   {title:overall.title,paragraphs:[workTie?relationshipChoices[workTie.type]:`할매가 이달을 읽을 때 눈여겨보는 건 ‘${name}’이야. 돈이 드는 일과 마음만 쓰면 되는 일을 갈라 보면, 먼저 손댈 곳이 보인단다.`]},
+   {title:overall.title,paragraphs:[workTie?relationshipChoices[workTie.type]:[
+    '이달에는 같이 움직이는 사람이 생겼을 때 네 판단도 빨라질 수 있어. 누구의 속도로 걷고 있는지 보면 서둘러야 할 일이 먼저 구별된단다.',
+    '손에 익은 일에서 힘을 얻기 쉬운 흐름이야. 새로운 일로 빈틈을 메우기보다 오래 해 온 방식에 무엇을 더할지 보렴.',
+    '이달에는 같은 일을 보아도 다른 방법이 떠오르기 쉬워. 바꿀 이유가 분명해질 때 그 생각이 실제 쓸모로 이어진단다.',
+   ][route]]},
    {title:finance.title,paragraphs:[moneyChoice+' '+money]},
    {title:career.title,paragraphs:[workTie?work+' 바뀐 약속이 있다면 다음에 일을 넘길 사람에게 먼저 알려 줘.':work]},
    {title:trade.title,paragraphs:[business+' '+businessChoice]},

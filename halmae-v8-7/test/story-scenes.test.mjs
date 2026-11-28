@@ -119,3 +119,13 @@ test('birth-only readings cover ten subjects and select a verbatim paid excerpt'
  assert.ok(openingLines.size>=5);
  assert.ok(selected.size>=2);
 });
+
+test('the same narrative family can distinguish season and private temperament',()=>{
+ const readings=['1982-02-13','1994-08-19'].map(birthDate=>{
+  const f=fortuneCycles({birthDate,birthTime:'07:15',gender:'female'});
+  return freeEpisodes(f,readPersonalReading(f,f.saju,''),'얘야');
+ });
+ assert.equal(readings[0][1].title,readings[1][1].title);
+ assert.notEqual(readings[0][0].paragraphs[1],readings[1][0].paragraphs[1]);
+ assert.notEqual(readings[0][1].paragraphs.at(-1),readings[1][1].paragraphs.at(-1));
+});

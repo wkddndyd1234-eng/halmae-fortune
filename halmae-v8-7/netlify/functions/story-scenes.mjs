@@ -78,8 +78,32 @@ const elementMeaning={
  금:'금은 무엇을 남기고 덜어 낼지 가르는 쪽으로 읽어. 손에 든 일 중 지금 필요 없는 몫을 골라 내는 그림이야.',
  수:'수는 작은 낌새를 살피거나 다른 길을 찾는 쪽으로 읽어. 정해 둔 길이 막혔을 때 한 걸음 물러나 옆길을 보는 그림이란다.',
 };
+const characterScenes={
+ 비견:['여럿 앞에서는 남이 정해 주기를 기다리기보다 네 손으로 방향을 잡고 싶어 하는 마음이 보여.','마지막 선택을 네 몫으로 남기되, 거기까지 가는 일은 여러 손에 나눌 수 있단다.'],
+ 겁재:['혼자서는 덤덤하던 일도 옆 사람이 소매를 걷으면 너까지 신이 날 수 있지.','함께 달리는 재미는 네 힘이야. 남의 결승선까지 네 결승선인 줄 알고 뛰어가면 그때부터 숨이 차지.'],
+ 식신:['받은 재료를 그대로 돌려주기보다 손을 한 번 더 봐서 내놓고 싶은 마음이 있어.','남이 어려워하는 일을 쉽게 만들어 주는 솜씨가 돈이 되는 길도 있단다. 네가 공들인 시간이 매번 공짜일 필요는 없지.'],
+ 상관:['겉으론 조용해도 마음속에선 이 일을 왜 꼭 이 순서로 해야 할까 따져 볼 수 있어.','허점이 보이는 눈은 귀해. 그런데 고칠 점만 일찍 말하면 상대는 네가 자기 얼굴에 빨간 줄을 그은 줄 알더라.'],
+ 편재:['처음 만난 사람의 이야기에서도 누가 무엇을 필요로 하는지 귀가 빨리 열릴 수 있어.','새 길을 발견하는 것과 그 길로 반드시 가야 하는 건 다른 일이란다. 한눈에 반했다고 장터를 통째로 사 올 순 없잖니.'],
+ 정재:['마음이 놓이려면 얼마나 남았는지, 다음에 다시 해도 될지 먼저 가늠하는 쪽이야.','네가 만든 안정은 겁이 많아서가 아니란다. 지킬 것이 있을수록 값어치 있는 변화가 뭔지도 또렷하게 보일 수 있어.'],
+ 편관:['남들이 잠깐 멈춰 선 순간에도 뭐부터 해야 할지 판단이 빠를 수 있어.','그런 너도 부탁마다 힘을 꺼내 쓰면 정작 네 선택을 할 때 지친다. 급한 일과 네가 책임질 일은 다른 거야.'],
+ 정관:['함께하기로 한 일에서 기한과 약속이 흔들리면 모른 척 지나가기 어려울 수 있겠어.','사람들이 너를 믿는 데는 그런 면도 한몫하지. 다만 기준을 지키는 사람한테 기준을 죄다 떠맡길 수는 없잖니.'],
+ 편인:['말이 조금만 달라져도 그 뒤에 무슨 사정이 있는지 마음이 먼저 움직일 수 있어.','한 가지 이유로 끝낼 일을 여러 쪽에서 보는 재주란다. 하지만 조각 하나로 그림을 다 그려 두면 다른 사람은 그 그림에 들어올 자리가 없어.'],
+ 정인:['처음 듣는 말보다 전에 배웠던 것 중 지금 써먹을 게 있는지 먼저 떠올릴 수 있어.','배워 둔 것을 필요한 때 꺼내 주는 것도 재능이지. 같은 일을 두고 자꾸 허락받고 싶어질 때는 네가 이미 본 것부터 믿어 봐.'],
+};
+const seasonalLight={
+ 봄:'봄에 태어난 바탕은 새 일이 움트는 모습에 빗대지. 가능성을 알아보는 것과 그 일을 오래 키우는 건 따로 살펴볼 대목이야.',
+ 여름:'여름에 태어난 바탕에선 안에서 품은 것을 밖으로 꺼내는 장면을 살펴. 사람들 앞에서 쓰는 힘과 혼자 있을 때 돌아오는 힘이 같을 필요는 없지.',
+ 가을:'가을에 태어난 바탕은 무엇을 남기고 무엇을 덜어 낼지 가르는 모습에 빗댄단다. 한 가지를 깊이 골라 보면 그제야 보이는 것이 있어.',
+ 겨울:'겨울에 태어난 바탕에선 속으로 모아 둔 힘도 살펴본단다. 겉이 잠잠한 동안에 마음까지 아무 일도 안 하는 건 아니거든.',
+};
+const tieScenes={
+ 육합:'가까워지면 말이 없어도 호흡이 맞을 수 있겠구나. 편하다는 마음으로 상대 몫까지 알아서 정하면 그때부터 한 발씩 엇나갈 수 있어.',
+ 충:'가까운 사이일수록 한 사람은 당장, 한 사람은 조금 뒤를 바랄 수 있어. 속도가 다른 걸 애정이 식은 것으로 읽지는 마렴.',
+ 형:'한번 걸린 말이 자꾸 같은 자리로 돌아올 수 있어. 그 말 속에 듣고 싶던 대답이 무엇인지 알아차리면 싸움의 모양도 달라질 거야.',
+ 해:'아무 뜻 없이 지나간 말도 가까운 사람에게 들으면 마음에 남을 수 있어. 눈치가 빠른 날일수록 짐작을 사실처럼 굳혀 두진 말아야지.',
+};
 export function freeOpening(f,call,choice,elementCounts){
- const {outer}=context(f);
+ const {s,outer}=context(f);
  const [title,body]=openings[outer];
  const most=Math.max(...Object.values(elementCounts));
  const leaders=Object.keys(elementCounts).filter(key=>elementCounts[key]===most);
@@ -88,7 +112,11 @@ export function freeOpening(f,call,choice,elementCounts){
   :`네 그래프에서는 ${leaders.join('·')} 기운이 각각 ${most}개로 나란히 보여. 태어난 날의 기운을 한 가지 장면으로 먼저 읽어 보자. ${elementMeaning[f.saju.dayElement]}`;
  if(choice===undefined){
   const [symbol,gift,watch]=daySymbol(f.saju.dayStem);
-  return {title,paragraphs:[`${call}, 넌 ${symbol} 같은 기운을 품고 태어난 아이구나. 할매 눈엔 ${gift}부터 보여.`,`${body} ${watch}`],elementCopy};
+  const season=s.dateBoundaryUncertain?'태어난 시각에 따라 달라지는 계절의 이야기는 오늘은 비워 둘게.':seasonalLight[f.season.season];
+  return {title,paragraphs:[
+   `${call}, 넌 ${symbol} 같은 기운을 품고 태어난 아이구나. 할매 눈엔 ${gift}부터 보여. ${body}`,
+   `${season} ${watch}`,
+  ],elementCopy};
  }
  return {title,paragraphs:[`${call}, ${body}`,Object.hasOwn(nextFocus,choice)?nextFocus[choice]:'이 힘이 사람들 앞에서 어떻게 쓰이고 집에선 어떻게 달라지는지 다음 이야기에서 보자.'],elementCopy};
 }
@@ -98,6 +126,14 @@ const freeMoney=[
  '너는 손에 남는 돈이 보여야 마음이 놓일 수 있어. 아껴서 모은 돈도 쓸 자리가 있어야 제 구실을 하지. 오래 쓰는 도구 한 가지와 기분으로 장바구니에 얹은 물건 한 가지를 떠올려 보렴.',
  '새로운 물건이나 일에서 돈이 될 길을 먼저 보는 눈이 있어. 다만 기회가 신선하다고 값까지 싼 건 아니잖니. 값을 치르기 전에 그게 누구에게 정말 필요한지부터 보렴.',
 ];
+function moneyTemper(f,route){
+ const roles=f.stemTenGods;
+ const regular=roles.includes('정재'),opportunity=roles.includes('편재');
+ if(regular&&opportunity) return '정해 둔 몫을 오래 모으는 힘과 새로 들어온 기회를 알아보는 눈이 같이 보여. 월세 낼 돈과 한번 해 보고 싶은 일에 쓸 돈은 너한테도 느낌이 다르겠어. 두 힘이 같은 지갑을 두고 싸우지 않게 두 몫의 이름을 붙여 두렴.';
+ if(regular) return '크게 한 번 벌었다는 소식보다 다음 달에도 들어올 몫이 보일 때 마음 놓이는 쪽으로 읽혀. 꾸준히 쌓는 힘이 있어. 다만 매달 같은 길로 돈을 벌어도 그 일의 값은 예전과 달라질 수 있단다.';
+ if(opportunity) return '누군가 필요한 물건과 다른 누군가 가진 물건을 이어 주는 데 눈이 밝을 수 있겠어. 그 눈이 돈이 될 때도 있지만 사람과 돈이 움직이는 때는 같지 않아. 좋다는 말과 값을 치르겠다는 말을 같은 약속으로 듣지 마렴.';
+ return freeMoney[route];
+}
 const freeAffection=[
  '마음이 생기면 빙빙 돌기보다 먼저 손을 내밀 수 있어. 상대가 대답을 고르는 동안 한 발 기다리는 것도 다정함이야. 대문을 열어 준다고 손님 팔까지 잡아끌진 않잖니.',
  '좋아하는 사람 앞에서 말보다 챙기는 손이 먼저 갈 수 있어. 너는 배려라고 건넸는데 상대는 그냥 괜찮은 저녁이었는지도 모르지. 기쁜 얼굴을 보고 싶었다면 그 마음을 한마디 보태도 돼.',
@@ -116,9 +152,12 @@ export function freeEpisodes(f,reading,call,choice){
   const chartElements=s.dateBoundaryUncertain
    ?pillarElements(s.pillars[2]).reduce((counts,key)=>({...counts,[key]:(counts[key]??0)+1}),{})
    :s.elements;
+  const bond=s.dateBoundaryUncertain?null:f.relations.find(r=>r.a==='일'||r.b==='일');
+  const season=s.dateBoundaryUncertain?'시각에 따라 달라지는 부분은 남겨 두고 태어난 날부터 읽을게.':seasonalLight[f.season.season];
   return freeLifeScenes(f,route,{
-   call,elementCopy:freeOpening(f,call,undefined,chartElements).elementCopy,
-   money:freeMoney[route],love:freeAffection[storyFamily(inner)],annual:freeAnnual[storyFamily(f.annual.tenGod)],
+   call,season,outerScene:characterScenes[outer],innerScene:characterScenes[inner],
+   relationship:bond?tieScenes[bond.type]:null,elementCopy:freeOpening(f,call,undefined,chartElements).elementCopy,
+   money:s.dateBoundaryUncertain?freeMoney[route]:moneyTemper(f,route),love:freeAffection[storyFamily(inner)],annual:freeAnnual[storyFamily(f.annual.tenGod)],
   }).map(([title,art,paragraphs],index)=>({title,art,paragraphs,scene:index===0?'첫 만남':'이야기'}));
  }
  const priorities=[
@@ -204,11 +243,11 @@ export function chapterStory(f,index,now){
   s.dateBoundaryUncertain?'태어난 시간이 없어서 정확한 계절은 열어 두었어. 오늘은 생일에서 알 수 있는 이야기부터 할게.':`네가 태어난 철은 ${f.season.season}이야. 그때의 흐름을 함께 보면 ‘${outside[0]}’이 눈에 들어오는구나.`,
   `네가 힘을 내는 방식엔 ‘${outside[0]}’이 보여. 처음부터 다 잘하려고 기운을 다 쓰진 마.`,
   elements[leadingElement],
-  `밖에서 일을 맡을 때는 ‘${outside[0]}’이 드러날 수 있어. ${outside[2]}.`,
-  `마음이 놓이는 사람 앞에선 ‘${inside[0]}’이 더 잘 드러날 수 있어. ${inside[2]}.`,
+  characterScenes[outer][0],
+  `바깥에서 쓰던 마음을 집에 와서까지 꺼내 둘 필요는 없단다. ${characterScenes[inner][0]}`,
   tie?pattern[tie.type]:`‘${inside[0]}’은 누구 앞에서나 똑같이 드러날 필요는 없단다.`,
   topicExcerpt(f,6),topicExcerpt(f,7),topicExcerpt(f,8),
-  `같이 사는 사람 앞에서 ‘${inside[0]}’이 나타날 수 있어. 누가 무슨 집안일을 맡을지부터 이야기해 봐.`,
+  tie?tieScenes[tie.type]:`오래 함께 지낼 사람과는 평소에 마음을 보여 주는 법부터 맞춰 보는 게 좋아. ${characterScenes[inner][0]}`,
   topicExcerpt(f,10),
   s.dateBoundaryUncertain?'태어난 철은 확실히 알 수 없어. 바쁜 날에는 쉬는 시간부터 확보해 보렴.':`태어난 철을 보면 ‘${outside[0]}’에 힘을 쓰기 쉬워. 그런 일에 몰두하는 날에도 끼니와 쉼은 챙기렴.`,
   current?`요즘 길게 이어지는 흐름에서는 ‘${roles[current.tenGod][0]}’이 먼저 보여. 처음엔 버거웠는데 지금은 익숙해진 일을 떠올려 봐.`:'지금 정보로 몇 살부터 어떤 흐름인지 정하기는 어려워. 오래 하면서 손에 익은 일부터 돌아보렴.',
@@ -221,8 +260,14 @@ export function chapterStory(f,index,now){
  const chartBoundary=index===0&&s.dateBoundaryUncertain;
  const [sectionTitle,sectionBody]=deeperReadings[index];
  const secondView=deeperChoices[index]?.[role?storyFamily(role):2]??sectionBody;
+ const interpretation=[
+  null,characterScenes[outer][1],null,characterScenes[outer][1],
+  characterScenes[inner][1],tie?tieScenes[tie.type]:null,
+  null,null,null,null,characterScenes[inner][1],null,
+  current?characterScenes[current.tenGod][0]:null,null,
+ ][index];
  return {title,illustration,intro:[detail,chartBoundary?paidScenes[0][2]:scene],
-  sections:[{title:sectionTitle,paragraphs:[secondView]}]};
+  sections:[{title:sectionTitle,paragraphs:[interpretation??secondView]}]};
 
 }
 
@@ -240,7 +285,7 @@ export function concernChapter(choice){
 }
 
 export function topicExcerpt(f,index){
- const {s,outer,outside,inside}=context(f);
+ const {s,outer,inner,outside}=context(f);
  const resources=s.dateBoundaryUncertain?[]:f.stemTenGods.filter(role=>role==='정재'||role==='편재');
  switch(index){
   case 6:
@@ -263,8 +308,8 @@ export function topicExcerpt(f,index){
    };
    return scenes[outer];
   }
-  case 8: return `좋아하는 사람 앞에서는 ‘${inside[0]}’이 드러날 수 있어. 마음을 보여 주려다 ‘${inside[1]}’ 같은 순간이 생기면 먼저 한 발 쉬어도 된단다.`;
-  case 10: return `오래 볼 사람에게는 ‘${inside[0]}’이 힘이 될 수 있어. 부탁을 다 들어주고 속이 상한다면, 오늘 할 수 있는 몫만 말해 보렴.`;
+  case 8: return freeAffection[storyFamily(inner)]+' '+characterScenes[inner][1];
+  case 10: return `오래 볼 사람과는 기쁜 일보다 서운할 때의 말이 더 오래 남을 때가 있어. ${characterScenes[inner][0]}`;
   case 13: return annualScene(f);
   default: return null;
  }

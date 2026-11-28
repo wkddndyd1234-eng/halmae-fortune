@@ -35,23 +35,23 @@ const paths=[
 
 export const daySymbol=stem=>daySymbols[[...'갑을병정무기경신임계'][[...'甲乙丙丁戊己庚辛壬癸'].indexOf(stem)]];
 
-export function freeLifeScenes(f, family, {elementCopy, money, love, annual, call}){
+export function freeLifeScenes(f, family, {elementCopy, money, love, annual, call, season, outerScene, innerScene, relationship}){
  const [outward,talent,caution,work]=paths[family];
  const [,gift]=daySymbol(f.saju.dayStem);
  const current=f.luck.decades.find(({start,end})=>Date.parse(start)<=Date.now()&&Date.now()<Date.parse(end));
  return [
   ['태어난 날, 할매 눈에 처음 들어온 것','episode-1',[
    `${call}, 태어난 날을 먼저 읽어 볼게. 네 사주에는 이런 힘이 담겼구나. ${gift} 말이다.`,
-   '그 힘은 늘 큰 소리를 내며 드러나진 않아. 아무도 손들지 않은 자리나, 오랫동안 마음을 써 온 일에서 더 선명해지거든.',
-   '그럼 문밖에서 보이는 너와 가까운 사람만 아는 너를 나누어 볼까. 둘 다 네 모습이란다.',
+   season,
+   '자, 그 힘이 문밖에서 어떻게 쓰이고 편한 사람 앞에서는 어떻게 달라지는지 보자꾸나.',
   ]],
-  [outward[0],'episode-2',outward.slice(1)],
-  [talent[0],'episode-3',talent.slice(1)],
+  [outward[0],'episode-2',[outerScene[0],outward[1],innerScene[1]]],
+  [talent[0],'episode-3',[talent[1],outerScene[1],talent[2]]],
   ['다섯 기운이 한 방에 모이면','episode-4',[elementCopy,'자주 보이는 기운이 무조건 더 센 건 아니야. 많이 쓰는 그릇에도 쉬는 날이 있듯, 적게 보이는 기운도 필요한 때 제 몫을 한단다.']],
   [caution[0],'episode-5',caution.slice(1)],
   [work[0],'episode-6',work.slice(1)],
   ['돈이 손에 들어오는 날과 나가는 날','episode-7',[money,'돈 이야기를 돈복 한마디로 덮으면 아깝지. 내 생활을 지켜 주는 돈과 새로운 일을 시험해 볼 돈을 나누면 같은 액수라도 마음이 달라진단다.']],
-  ['마음을 건네는 법과 같이 사는 일','episode-8',[love,'오래 보는 사이라도 마음을 표현하는 법은 다를 수 있어. 결혼을 생각한다면 특별한 날의 마음만큼 평범한 날의 돈과 시간, 쉬는 방법도 함께 이야기해 보렴.']],
+  ['마음을 건네는 법과 같이 사는 일','episode-8',[love,relationship??'오래 보는 사이라도 마음을 표현하는 법은 다를 수 있어. 결혼을 생각한다면 특별한 날의 마음만큼 평범한 날의 돈과 시간, 쉬는 방법도 함께 이야기해 보렴.']],
   ['지금 걷는 길, 조금 뒤에 돌아볼 길','episode-9',[
    current?'사주에는 하루 기분과 별개로 오래 이어지는 흐름도 있어. 예전에는 큰일 같던 일이 요즘 손에 익었다면, 이제 그 힘을 어디에 쓰고 싶은지도 살펴볼 때란다.':'오래 이어지는 흐름은 지금 정보만으로 몇 살부터라고 못 박기 어려워. 할매도 안 보이는 지도에 길을 그려 넣진 않아.',
    family===0?'오래 갈 길이라면 바쁜 날에 움직이는 사람만큼 평소에 짐을 나눌 사람도 살펴.':family===1?'오래 가져갈 일은 제일 잘하는 일과 다를 수 있단다. 반복해도 마음 닳지 않는 일을 눈여겨보렴.':'옆길을 떠올리는 힘이 있으면 어느 길에 오래 머물지도 정해 봐. 네가 돌아와도 좋은 자리가 있다는 건 큰 힘이란다.',
