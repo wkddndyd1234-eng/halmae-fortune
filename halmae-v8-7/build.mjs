@@ -13,10 +13,10 @@ await mkdir(output);
 await Promise.all(publicFiles.map(file=>copyFile(new URL(file,import.meta.url),new URL(file,output))));
 
 // Serve the same calculation inputs and implementation used at checkout.
-await Promise.all(['saju.mjs','calendar-data.mjs','lunar-conversion.mjs','fortune-cycles.mjs','ledger-preview.mjs','reading-name.mjs','immersion.mjs','story-scenes.mjs'].map(file=>
+await Promise.all(['saju.mjs','calendar-data.mjs','lunar-conversion.mjs','fortune-cycles.mjs','ledger-preview.mjs','reading-name.mjs','immersion.mjs','story-scenes.mjs','story-editions.mjs'].map(file=>
   copyFile(new URL('./netlify/functions/'+file,import.meta.url),new URL(file,output))));
 
-const artNames = ['gap','eul','byeong','jeong','mu','gi','gyeong','sin','im','gye',...Array.from({length:10},(_,index)=>'episode-'+(index+1))];
+const artNames = ['gap','eul','byeong','jeong','mu','gi','gyeong','sin','im','gye','story-money','story-work','story-love',...Array.from({length:10},(_,index)=>'episode-'+(index+1))];
 await mkdir(new URL('art/',output));
 await Promise.all(artNames.map(name=>{
   const path='art/'+name+'.webp';

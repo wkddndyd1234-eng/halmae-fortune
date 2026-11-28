@@ -67,3 +67,23 @@ test('customer-facing stories and real excerpts hide technical terms while retai
   assert.equal(chapters[6].story.intro[0],topicExcerpt(f,6));
  }
 });
+
+test('birth changes a scene and asset while concern changes emphasis without changing the chart',()=>{
+ const sample={name:'가상 민서',birthDate:'1995-07-15',birthTime:'14:30',gender:'female'};
+ const other={...sample,birthDate:'1988-10-21'};
+ function read(input,topic){
+  const f=fortuneCycles(input);
+  return freeEpisodes(f,readPersonalReading(f,f.saju,''),'손님',topic);
+ }
+ const money=read(sample,'money'), work=read(sample,'work'), sameTopic=read(other,'money');
+ assert.match(money[0].paragraphs[0],/돈 이야기/);
+ assert.match(work[0].paragraphs[0],/일 이야기/);
+ assert.notEqual(money[1].title,work[1].title);
+ assert.notEqual(money[1].paragraphs[0],sameTopic[1].paragraphs[0]);
+ assert.notEqual(money[1].art,sameTopic[1].art);
+ const now=Date.UTC(2026,10,29);
+ const a=buildFortuneReport(sample,{now}),b=buildFortuneReport(other,{now});
+ assert.notEqual(a.chapters[6].story.intro[1],b.chapters[6].story.intro[1]);
+ assert.ok(a.chapters.slice(14).some((c,i)=>c.story.intro[0]!==b.chapters[i+14].story.intro[0]));
+ assert.deepEqual(a.chapters.map(c=>c.story),buildFortuneReport({...sample,name:'가상 이름 바꿈'},{now}).chapters.map(c=>c.story));
+});

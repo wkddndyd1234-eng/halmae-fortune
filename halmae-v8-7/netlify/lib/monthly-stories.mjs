@@ -1,3 +1,6 @@
+import {storyFamily} from '../functions/story-scenes.mjs';
+import {monthlyScenes} from '../functions/story-editions.mjs';
+
 // Living examples for each solar-term month. The calculated chart selects the
 // question to bring into the scene. These examples do not predict events.
 const editions=[
@@ -63,7 +66,7 @@ const watch=[
  '해가 바뀌어도 남은 약속은 이어져. 무엇이 남았는지 먼저 확인해.',
 ];
 
-export function monthlyStory(f,index,chapter,roleTheme){
+export function monthlyStory(f,index,chapter){
  const month=f.monthly[index];
  const [name,scene,money,work,business,love,remark]=editions[index];
  const closeTie=month.relations.find(item=>item.position==='일');
@@ -72,14 +75,14 @@ export function monthlyStory(f,index,chapter,roleTheme){
  const [moneyChoice,businessChoice]=choices[month.tenGod];
  return {
   title:chapter.displayTitle,
-  intro:[`이달에는 ‘${roleTheme}’이 도움이 될 때를 살펴보자.`,`${name}. ${scene}`],
+  intro:[`${name}. ${monthlyScenes[index][storyFamily(month.tenGod)]}`,scene],
   sections:[
-   {title:overall.title,paragraphs:[workTie?'바깥 일정이 달라지면 네가 이미 한 약속부터 다시 읽어 보렴.':'새로 하려는 일은 네가 가진 시간에 맞춰 작게 시작해 봐.']},
-   {title:finance.title,paragraphs:[money+' '+moneyChoice]},
-   {title:career.title,paragraphs:[workTie?work+' 같이 일하는 사람에게 바뀐 일정을 먼저 알려 줘.':work]},
+   {title:overall.title,paragraphs:[workTie?relationshipChoices[workTie.type]+' '+work:work+' '+businessChoice]},
+   {title:finance.title,paragraphs:[moneyChoice+' '+money]},
+   {title:career.title,paragraphs:[workTie?work+' 바뀐 약속이 있다면 다음에 일을 넘길 사람에게 먼저 알려 줘.':work]},
    {title:trade.title,paragraphs:[business+' '+businessChoice]},
    {title:affection.title,paragraphs:[closeTie?`${love} ${relationshipChoices[closeTie.type]}`:love]},
-   {title:caution.title,paragraphs:[watch[index],remark]},
+   {title:caution.title,paragraphs:[watch[index]+' '+(workTie?work:money),remark]},
   ],
  };
 }

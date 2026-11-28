@@ -10,6 +10,11 @@ import {readingName} from './reading-name.mjs';
 import {readingVariant,recordConversion,recordFunnel} from './purchase.js';
 recordFunnel('home_view');
 
+const arcIllustrations={
+ 'story-money':'선 안팎으로 나눈 동전',
+ 'story-work':'일을 넘기며 건네는 열쇠',
+ 'story-love':'두 찻잔과 갈라지는 마당길',
+};
 const episodeIllustrations=[
  '촛불 아래 펼쳐 둔 장부와 붓','기와집 문 너머 등불이 켜진 마당',
  '금빛 자물쇠가 달린 붉은 함','이불 옆에 묶인 붉은 매듭','오행을 상징하는 다섯 그릇',
@@ -178,7 +183,7 @@ form.addEventListener('submit',event=>{
  byId('resultMeta').textContent=`${input.gender==='male'?'남성':'여성'} · ${input.birthDate} ${input.calendarType==='lunar'?(input.isLeapMonth?'음력 윤달':'음력 평달'):'양력'} · ${input.birthTime||'출생 시각 미상'}`;
  byId('resultHeading').textContent=reading.headline;
  const episodes=freeEpisodes(cycles,reading,call,concern.value);
- const scenes=episodes.map(({title,scene,paragraphs},index)=>{
+ const scenes=episodes.map(({title,scene,art,paragraphs},index)=>{
   const article=document.createElement('article');
   article.className='episode-card';
   const label=document.createElement('p');
@@ -188,10 +193,10 @@ form.addEventListener('submit',event=>{
   heading.textContent=title;
   article.append(label,heading);
   const image=document.createElement('img');
-  image.src=`/art/episode-${index+1}.webp`;
+  image.src=`/art/${art}.webp`;
   image.width=392;
   image.height=392;
-  image.alt=episodeIllustrations[index];
+  image.alt=arcIllustrations[art]??episodeIllustrations[Number(art.slice(8))-1];
   image.loading='lazy';
   image.decoding='async';
   article.append(image);
