@@ -129,3 +129,17 @@ test('the same narrative family can distinguish season and private temperament',
  assert.notEqual(readings[0][0].paragraphs[1],readings[1][0].paragraphs[1]);
  assert.notEqual(readings[0][1].paragraphs.at(-1),readings[1][1].paragraphs.at(-1));
 });
+
+test('the full manuscript keeps the Sun opening specific to the calculated day stem',()=>{
+ for(const sample of samples){
+  const f=fortuneCycles(sample);
+  const reading=readPersonalReading(f,f.saju,'');
+  const episodes=freeEpisodes(f,reading,'얘야');
+  assert.ok(episodes.every(episode=>episode.paragraphs.length>=3));
+  assert.equal(episodes[0].title.includes('큰 태양'),f.saju.dayStem==='丙');
+ }
+ const f=Array.from({length:10},(_,i)=>fortuneCycles({birthDate:`1995-07-${10+i}`,birthTime:'14:30',gender:'female'})).find(f=>f.saju.dayStem==='丙');
+ const page=freeEpisodes(f,readPersonalReading(f,f.saju,''),'얘야')[0];
+ assert.equal(page.title,'허허, 넌 큰 태양을 품고 태어난 아이구나.');
+ assert.match(page.paragraphs[0],/스스로 빛을 내는 존재란다/);
+});
