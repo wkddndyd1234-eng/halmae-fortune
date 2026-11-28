@@ -43,7 +43,7 @@ export function freeEpisodes(f,reading,call,choice){
  const topic=Object.hasOwn(topics,choice)?topics[choice]:null;
  const stories=[
   ['할매가 처음 본 너','첫인상',[
-   `${call}, 신발은 거기 두고 이리 와. 할매가 네 생일을 보니 ‘${reading.headline}’이 떠오르는구나.`,
+   `${call}, 신발은 거기 두고 이리 와. 할매가 네 생일을 보니 이런 그림이 떠올랐어. ‘${reading.headline}’ 말이야.`,
    '그 말이 낯설어도 괜찮아. 다음 이야기에서 사람들 앞에 선 네 모습부터 만나 보자.']],
   ['사람들 앞에서','모임',[
    '단체 대화방에선 다들 저녁 메뉴가 아무거나 좋대. 가게 이름을 꺼내면 또 하나씩 싫은 게 나오지.',
@@ -63,11 +63,11 @@ export function freeEpisodes(f,reading,call,choice){
    s.dateBoundaryUncertain?'태어난 시간이 없어서 어느 계절의 힘이 더해졌는지는 열어 둘게.':'한 그릇에 자꾸 손이 가도 괜찮아. 다른 재료가 필요한 날도 있다는 걸 기억하렴.']],
   ['손에 맞는 일','솜씨',[
    '의자가 흔들리면 바로 망치를 드는 사람도, 먼저 어디가 헐거운지 보는 사람도 있어.',
-   topicExcerpt(f,7),
+   `네가 일을 할 때는 ‘${outside[0]}’을 쓰기 쉬워. 자꾸 네게 돌아오는 부탁이 있다면 그 안에 네가 편하게 하는 일이 있을 거야.`,
    '손에 맞는 일은 남들보다 빨리 끝내는 일만 뜻하지 않아. 하고 나서도 힘이 조금 남는 일이 있더라.']],
   ['돈이 머무는 곳','돈',[
    '장바구니는 가득 찼는데 지갑은 먼저 집에 가 버렸더라.',
-   topicExcerpt(f,6),
+   reading.money,
    '돈을 아끼는 일에도 네가 계속할 수 있는 방법이 있어야 오래 간단다.']],
   ['가까운 사람과 함께','인연',[
    '답장이 늦은 이유 하나로 상대 마음까지 써 버리면 편지가 너무 길지.',
@@ -83,7 +83,7 @@ export function freeEpisodes(f,reading,call,choice){
   ]],
   ['2027년 이야기','새해',[
    '병풍을 한 폭 열었더니 아침이 들어오더라. 할매가 네 새해 이야기도 한 장 먼저 열어 줄게.',
-   topicExcerpt(f,13),
+   `새해에는 ‘${roles[f.annual.tenGod][0]}’이 힘이 될 수 있어. 새해라고 지금까지 잘해 온 일을 다 바꿀 필요는 없단다.`,
    '다음 편에는 한 해의 흐름을 열두 달로 나눠 적어 뒀단다.']],
  ];
  return stories.map(([title,scene,paragraphs])=>({title,scene,paragraphs}));
