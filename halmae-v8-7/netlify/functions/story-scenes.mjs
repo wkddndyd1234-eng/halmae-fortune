@@ -82,7 +82,7 @@ const characterScenes={
  비견:['여럿 앞에서는 남이 정해 주기를 기다리기보다 네 손으로 방향을 잡고 싶어 하는 마음이 보여.','마지막 선택을 네 몫으로 남기되, 거기까지 가는 일은 여러 손에 나눌 수 있단다.'],
  겁재:['혼자서는 덤덤하던 일도 옆 사람이 소매를 걷으면 너까지 신이 날 수 있지.','함께 달리는 재미는 네 힘이야. 남의 결승선까지 네 결승선인 줄 알고 뛰어가면 그때부터 숨이 차지.'],
  식신:['받은 재료를 그대로 돌려주기보다 손을 한 번 더 봐서 내놓고 싶은 마음이 있어.','남이 어려워하는 일을 쉽게 만들어 주는 솜씨가 돈이 되는 길도 있단다. 네가 공들인 시간이 매번 공짜일 필요는 없지.'],
- 상관:['겉으론 조용해도 마음속에선 이 일을 왜 꼭 이 순서로 해야 할까 따져 볼 수 있어.','허점이 보이는 눈은 귀해. 그런데 고칠 점만 일찍 말하면 상대는 네가 자기 얼굴에 빨간 줄을 그은 줄 알더라.'],
+ 상관:['겉으론 조용해도 속으론 ‘왜 꼭 이 순서여야 하지?’ 하는 생각이 먼저 들 수 있어.','허점이 보이는 눈은 귀해. 그런데 고칠 점만 일찍 말하면 상대는 일의 허점을 말하는지 자기를 나무라는지 헷갈릴 수 있단다.'],
  편재:['처음 만난 사람의 이야기에서도 누가 무엇을 필요로 하는지 귀가 빨리 열릴 수 있어.','새 길을 발견하는 것과 그 길로 반드시 가야 하는 건 다른 일이란다. 한눈에 반했다고 장터를 통째로 사 올 순 없잖니.'],
  정재:['마음이 놓이려면 얼마나 남았는지, 다음에 다시 해도 될지 먼저 가늠하는 쪽이야.','네가 만든 안정은 겁이 많아서가 아니란다. 지킬 것이 있을수록 값어치 있는 변화가 뭔지도 또렷하게 보일 수 있어.'],
  편관:['남들이 잠깐 멈춰 선 순간에도 뭐부터 해야 할지 판단이 빠를 수 있어.','그런 너도 부탁마다 힘을 꺼내 쓰면 정작 네 선택을 할 때 지친다. 급한 일과 네가 책임질 일은 다른 거야.'],
@@ -215,6 +215,11 @@ const annualStories={
 };
 const annualScene=f=>annualStories[f.annual.tenGod];
 
+function annualRelationship(f){
+ const tie=f.annual.relations.find(r=>r.position==='일');
+ return tie?tieScenes[tie.type]:null;
+}
+
 const chapterTitles=['태어난 날에 담긴 이야기', '스스로를 움직이는 힘', '네가 자주 쓰는 다섯 가지 힘', '밖에서 흔히 맡는 역할', '집에 돌아와 드러나는 마음', '서로 맞물리거나 어긋나는 자리', '손을 떠나도 후회 없는 돈', '혼자 잘할 일, 함께 더 잘할 일', '좋아하는 마음을 건네는 법', '같이 살며 정하는 약속', '손을 내밀어도 괜찮은 관계', '일을 멈추고 쉬는 순서', '긴 시간에 걸친 변화', '2027년 한 해 운세'];
 
 const deeperChoices={
@@ -261,10 +266,11 @@ export function chapterStory(f,index,now){
  const [sectionTitle,sectionBody]=deeperReadings[index];
  const secondView=deeperChoices[index]?.[role?storyFamily(role):2]??sectionBody;
  const interpretation=[
-  null,characterScenes[outer][1],null,characterScenes[outer][1],
-  characterScenes[inner][1],tie?tieScenes[tie.type]:null,
-  null,null,null,null,characterScenes[inner][1],null,
-  current?characterScenes[current.tenGod][0]:null,null,
+  null,characterScenes[outer][1],null,null,
+  null,tie?tieScenes[tie.type]:null,
+  null,null,null,null,null,null,
+  current?characterScenes[current.tenGod][0]:null,annualRelationship(f),
+
  ][index];
  return {title,illustration,intro:[detail,chartBoundary?paidScenes[0][2]:scene],
   sections:[{title:sectionTitle,paragraphs:[interpretation??secondView]}]};
@@ -306,10 +312,18 @@ export function topicExcerpt(f,index){
     편인:'좋아 보이는 새 도구는 문서 하나에 먼저 써 봐. 두 시간 걸리던 일이 한 시간에 끝났는지 보자.',
     정인:'오래 배운 일이 있다면 남에게 가르칠 수 있는 과정 하나를 꺼내 봐.',
    };
-   return scenes[outer];
+   return characterScenes[outer][0]+' '+scenes[outer];
   }
-  case 8: return freeAffection[storyFamily(inner)]+' '+characterScenes[inner][1];
-  case 10: return `오래 볼 사람과는 기쁜 일보다 서운할 때의 말이 더 오래 남을 때가 있어. ${characterScenes[inner][0]}`;
+  case 8: return [
+   '마음이 커지면 말로 재기보다 곁으로 먼저 다가가는 쪽이야. 갑자기 일이 생겨도 손부터 내미는 다정함이 있지. 네가 어떻게 도울지만 정해 두면, 상대에게는 고를 자리가 없을 수도 있단다.',
+   '좋아한다는 말이 쑥스러워도 마음은 손끝에서 먼저 보일 수 있어. 지친 날에 쉬운 길을 만들어 주거나, 전에 좋다고 했던 것을 기억하는 식이야. 안정감을 주는 재주지만 네가 받고 싶은 마음까지 말없이 접어 두면 서운해질 수 있지.',
+   '네가 마음을 쓰는 사람의 말은 같은 한 줄이라도 여러 모양으로 들릴 수 있어. 표정이 바뀐 이유를 세심하게 읽는 건 귀한데, 그 사람이 말하지 않은 마음까지 네가 정해 놓으면 둘이 만나는 자리가 좁아질 수 있단다.',
+  ][storyFamily(inner)];
+  case 10: return [
+   '오래 볼 사람을 아끼는 마음은 어려운 날 먼저 나타날 수 있어. 매번 급할 때만 네가 필요하다면, 고마움과 의무가 언제부터 뒤섞였는지 돌아보렴.',
+   '연락이 잦지 않아도 한결같이 만나는 관계에서 마음이 편해질 수 있겠어. 익숙한 사이일수록 네가 손을 보태는 게 반가운지, 늘 그렇겠거니 여기는지 차이가 난단다.',
+   '가까운 사람과 나눈 사소한 이야기도 잘 남는 쪽이야. 덕분에 안부가 생생하지만, 마음에 걸린 말이 오래 남았다면 꺼낼 때의 네 마음부터 짚어 보렴.',
+  ][storyFamily(inner)];
   case 13: return annualScene(f);
   default: return null;
  }

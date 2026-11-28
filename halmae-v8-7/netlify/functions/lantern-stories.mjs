@@ -47,7 +47,7 @@ export function freeLifeScenes(f, family, {elementCopy, money, love, annual, cal
   ]],
   [outward[0],'episode-2',[outerScene[0],outward[1],innerScene[1]]],
   [talent[0],'episode-3',[talent[1],outerScene[1],talent[2]]],
-  ['다섯 기운이 한 방에 모이면','episode-4',[elementCopy,'자주 보이는 기운이 무조건 더 센 건 아니야. 많이 쓰는 그릇에도 쉬는 날이 있듯, 적게 보이는 기운도 필요한 때 제 몫을 한단다.']],
+  ['다섯 기운이 한 방에 모이면','episode-4',[elementCopy,'자주 보이는 기운이 무조건 더 센 건 아니야. 자주 보이는 기운은 먼저 읽을 단서야. 같은 기운도 어디에 놓였는지와 태어난 철에 따라 쓰임이 달라진단다.']],
   [caution[0],'episode-5',caution.slice(1)],
   [work[0],'episode-6',work.slice(1)],
   ['돈이 손에 들어오는 날과 나가는 날','episode-7',[money,'돈 이야기를 돈복 한마디로 덮으면 아깝지. 내 생활을 지켜 주는 돈과 새로운 일을 시험해 볼 돈을 나누면 같은 액수라도 마음이 달라진단다.']],
