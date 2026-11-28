@@ -42,8 +42,8 @@ test('양력 테스트 주문과 관리자 보고서 발급만 허용', async t 
   const created = await createOrder(post({...birth,amount:1,status:'paid'}));
   assert.equal(created.status,200);
   const {orderId,...summary} = await created.json();
-  assert.deepEqual(summary,{amount:39900,status:'pending',paymentEnabled:false});
-  assert.equal(records.get(orderId).amount,39900);
+  assert.deepEqual(summary,{amount:29900,status:'pending',paymentEnabled:false});
+  assert.equal(records.get(orderId).amount,29900);
   assert.equal((await issueDemo(post({orderId,code:demoCode}))).status,503);
 
   process.env.DEMO_ACCESS_CODE = demoCode;

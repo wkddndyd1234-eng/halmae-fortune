@@ -1,5 +1,5 @@
 import {createHash,timingSafeEqual} from 'node:crypto';
-import {PRICE,ORDER_NAME} from '../functions/payment-config.mjs';
+import {validOrderAmount,ORDER_NAME} from '../functions/payment-config.mjs';
 
 const endpoint='https://api.payapp.kr/oapi/v2';
 const numericId=/^[1-9]\d{0,19}$/;
@@ -29,13 +29,13 @@ async function call(config,fields,transport){
 }
 
 export async function requestPayapp(config,order,phone,transport){
- if(order.amount!==PRICE || !/^010\d{8}$/.test(phone)) throw Error('Invalid PayApp order');
+ if(!validOrderAmount(order.amount) || !/^010\d{8}$/.test(phone)) throw Error('Invalid PayApp order');
  const callback=new URL('/.netlify/functions/payapp-feedback',config.origin);
  const returnUrl=new URL('/payment-result.html',config.origin);
  returnUrl.searchParams.set('payapp','1');
  returnUrl.searchParams.set('orderId',order.orderId);
  const result=await call(config,{
-  cmd:'payrequest',goodname:ORDER_NAME,price:String(PRICE),recvphone:phone,
+  cmd:'payrequest',goodname:ORDER_NAME,price:String(order.amount),recvphone:phone,
   smsuse:'n',feedbackurl:callback.href,returnurl:returnUrl.href,
   var1:order.orderId,var2:order.reference,checkretry:'y',openpaytype:'card',
  },transport);
@@ -47,7 +47,7 @@ export async function requestPayapp(config,order,phone,transport){
 }
 
 export async function cancelPayapp(config,order,reason,transport,now=Date.now()){
- if(order.amount!==PRICE || !numericId.test(order.transactionId??'')||order.status!=='approved'||
+ if(!validOrderAmount(order.amount) || !numericId.test(order.transactionId??'')||order.status!=='approved'||
     typeof reason!=='string'||!reason.trim()||reason.length>100) throw Error('Invalid PayApp cancellation');
  await call(config,{cmd:'paycancel',...signedFields(config,now),mul_no:order.transactionId,cancelmemo:reason,partcancel:'0'},transport);
  // Refund completion is confirmed through the provider notification.
@@ -62,14 +62,14 @@ export function reconcilePayapp(config,order,fields,now=Date.now()){
  if(!/^\d{14}$/.test(time??'')||!matches(get('userid'),config.userid)||
     !matches(get('linkkey'),config.linkkey)||!matches(get('linkval'),config.linkval)||
     !matches(hash?.toLowerCase(),digest(config.userid,time,config.requestkey))||
-    order.amount!==PRICE||get('var1')!==order.orderId||!matches(get('var2'),order.reference)) return null;
+    !validOrderAmount(order.amount)||get('var1')!==order.orderId||!matches(get('var2'),order.reference)) return null;
  const state=get('pay_state');
  const partial=['70','71'].includes(state);
  const amount=get('price');
  const transactionId=get('mul_no');
  if(!numericId.test(transactionId??'')||!numericId.test(amount??'')||
     order.transactionId!==(partial?get('orig_mul_no'):transactionId)||
-    (partial?(get('orig_price')!==String(PRICE)||Number(amount)>=PRICE):amount!==String(PRICE))) return null;
+    (partial?(get('orig_price')!==String(order.amount)||Number(amount)>=order.amount):amount!==String(order.amount))) return null;
  if(partial && ['approved','partial'].includes(order.status)){
   if(transactionId===order.transactionId) return null;
   const previous=order.partialCancellations??(order.partialCancellation?[order.partialCancellation]:[]);
@@ -77,8 +77,8 @@ export function reconcilePayapp(config,order,fields,now=Date.now()){
   const duplicate=previous.find(item=>item.transactionId===transactionId);
   if(duplicate) return duplicate.amount===value?order:null;
   const total=previous.reduce((sum,item)=>sum+item.amount,value);
-  if(total>PRICE) return null;
-  return {...order,status:total===PRICE?'canceled':'partial',cancellationObservedAt:now,
+  if(total>order.amount) return null;
+  return {...order,status:total===order.amount?'canceled':'partial',cancellationObservedAt:now,
    partialCancellations:[...previous,{transactionId,amount:value}]};
  }
  if(terminal.has(order.status)){

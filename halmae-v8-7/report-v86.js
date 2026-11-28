@@ -34,6 +34,7 @@ function renderChapter(chapter,index,total){
  section.append(
   element('p','eyebrow',[chapter.kicker,chapter.basis].filter(Boolean).join(' · ')),
   element('h2','chapter-title',(chapter.displayTitle??chapter.title)),
+  ...(chapter.opening?[element('p','chapter-opening',chapter.opening)]:[]),
   element('p','chapter-lead',chapter.displayLead??chapter.lead),
  );
  section.querySelector('h2').tabIndex=-1;

@@ -55,7 +55,7 @@ test('서버 승인과 현재 상태가 확인된 주문만 보고서를 발급�
     if (target.pathname.endsWith('/confirm')) {
       approvals++;
       idempotency.push(opts.headers['Idempotency-Key']);
-      assert.deepEqual(JSON.parse(opts.body),{orderId:o.orderId,paymentKey,amount:39900});
+      assert.deepEqual(JSON.parse(opts.body),{orderId:o.orderId,paymentKey,amount:29900});
       if (!nextApproval) return new Response(null,{status:400});
       tossPayment = nextApproval;
       return Response.json(tossPayment);
@@ -78,13 +78,13 @@ test('서버 승인과 현재 상태가 확인된 주문만 보고서를 발급�
   const created = await order(request(birth));
   assert.equal(created.status,200);
   const o = await created.json();
-  assert.equal(o.amount,39900);
+  assert.equal(o.amount,29900);
   assert.equal(o.successUrl,preview+'/payment-result.html');
   assert.equal(orders.get(o.orderId).name,'손님');
   assert.equal(orders.get(o.orderId).gender,'male');
   assert.equal((await order(request({...birth,gender:''}))).status,400);
   assert.equal((await demo(request({orderId:o.orderId,code:process.env.DEMO_ACCESS_CODE}))).status,409);
-  const payload = {orderId:o.orderId,paymentKey,amount:39900};
+  const payload = {orderId:o.orderId,paymentKey,amount:29900};
 
   assert.equal((await payment(request(payload))).status,403);
   assert.equal((await payment(request({...payload,orderId:'other'},o.checkoutToken))).status,403);
@@ -95,7 +95,7 @@ test('서버 승인과 현재 상태가 확인된 주문만 보고서를 발급�
   assert.equal(orders.get(o.orderId).status,'pending');
 
   nextApproval = {orderId:o.orderId,paymentKey,currency:'KRW',method:'카드',status:'DONE',
-    totalAmount:39900,balanceAmount:39900,approvedAt};
+    totalAmount:29900,balanceAmount:29900,approvedAt};
   const approved = await Promise.all([
     payment(request(payload,o.checkoutToken)),payment(request(payload,o.checkoutToken)),
   ]);
@@ -129,7 +129,7 @@ test('서버 승인과 현재 상태가 확인된 주문만 보고서를 발급�
   assert.equal(reading.chapters.length,26);
   assert.equal('token' in reading,false);
   assert.equal((await report(request(null,access.token,'https://example.test'))).status,403);
-  for (const mismatch of [{status:'CANCELED'},{status:'PARTIAL_CANCELED',balanceAmount:29900},{balanceAmount:29900},{currency:'USD'},
+  for (const mismatch of [{status:'CANCELED'},{status:'PARTIAL_CANCELED',balanceAmount:29900},{balanceAmount:28900},{currency:'USD'},
      {totalAmount:1},{method:'가상계좌'},{orderId:'other'},{paymentKey:'other'}]) {
     tossPayment = {...nextApproval,...mismatch};
     assert.equal((await report(request(null,access.token))).status,403);

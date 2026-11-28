@@ -83,7 +83,7 @@ test('메일 복구는 주문 주소의 수신자만 사용하며 새 브라우�
   assert.equal(records.size,3);
 
   const paid={orderId,paymentKey:'key-local',status:'DONE',currency:'KRW',method:'카드',
-    totalAmount:39900,balanceAmount:39900,approvedAt:new Date(Date.now()-364*DAY).toISOString()};
+    totalAmount:29900,balanceAmount:29900,approvedAt:new Date(Date.now()-364*DAY).toISOString()};
   provider.set(orderId,paid);
   provider.set(notOptedIn.orderId,{...paid,orderId:notOptedIn.orderId,paymentKey:'other-order-key'});
   assert.equal((await access(request({orderId:notOptedIn.orderId},null,preview,nonOptInCookie))).status,200);

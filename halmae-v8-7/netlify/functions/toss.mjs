@@ -21,10 +21,10 @@ async function toss(config, path, options = {}) {
 
 export const supportedPaymentMethod=(config,method)=>method==='카드' || (config?.mode==='live' && method==='간편결제');
 
-export function approvedPayment(payment, orderId, paymentKey,config) {
+export function approvedPayment(payment, orderId, paymentKey,config,amount=PRICE) {
   return typeof paymentKey === 'string' && validKey.test(paymentKey) && payment?.orderId === orderId && payment.paymentKey === paymentKey &&
     payment.status === 'DONE' && payment.currency === 'KRW' &&
-    payment.totalAmount === PRICE && payment.balanceAmount === PRICE &&
+    payment.totalAmount === amount && payment.balanceAmount === amount &&
     supportedPaymentMethod(config,payment.method) && Number.isFinite(Date.parse(payment.approvedAt));
 }
 
@@ -41,11 +41,11 @@ export function cancelPayment(config,paymentKey,reason,requestId) {
   });
 }
 
-export async function confirmPayment(config, orderId, paymentKey) {
+export async function confirmPayment(config, orderId, paymentKey,amount=PRICE) {
   if (typeof paymentKey !== 'string' || !validKey.test(paymentKey)) return null;
   // A retry first checks Toss for an already approved payment for this order.
   const current = await findPayment(config, orderId);
-  if (approvedPayment(current, orderId, paymentKey,config)) return current;
+  if (approvedPayment(current, orderId, paymentKey,config,amount)) return current;
   if (current && (current.paymentKey !== paymentKey ||
       !['READY','IN_PROGRESS'].includes(current.status))) return null;
 
@@ -53,7 +53,7 @@ export async function confirmPayment(config, orderId, paymentKey) {
   const confirmed = await toss(config, '/confirm', {
     method: 'POST',
     headers: {'Content-Type':'application/json', 'Idempotency-Key':idempotencyKey},
-    body: JSON.stringify({orderId,paymentKey,amount:PRICE}),
+    body: JSON.stringify({orderId,paymentKey,amount}),
   });
   return confirmed ?? findPayment(config, orderId);
 }

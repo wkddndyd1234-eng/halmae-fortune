@@ -134,3 +134,23 @@ footer.footer a{color:#e2c18c}
  .story { padding-top:2.25rem; }
  .story .chapter,.story .scene { margin-bottom:3.5rem; }
 }
+
+#interview-line {
+  margin-block:0 1rem;
+  padding:.8rem 1rem;
+  border-inline-start:2px solid #b28a52;
+  background:rgba(177,125,54,.09);
+}
+#interview-controls { margin-block:.6rem; }
+#concern-note {
+  display:block;
+  width:100%;
+  margin-top:.35rem;
+  border:1px solid #9a744b;
+  border-radius:.4rem;
+  padding:.65rem;
+  background:#211712;
+  color:#f6dfbc;
+  font:inherit;
+}
+#concern-answer { margin-block:1rem; }

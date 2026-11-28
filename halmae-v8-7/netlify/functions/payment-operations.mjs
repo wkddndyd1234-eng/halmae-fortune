@@ -50,13 +50,13 @@ export async function executeOperation(config,{action,orderId,reason}){
   let payment=await findPayment(config,orderId);
   if(!matchesLivePayment(config,order,payment)) return json({error:'Payment verification pending'},409);
   if(action==='refund' && !isCancelled(payment)){
-   if(!approvedPayment(payment,orderId,payment.paymentKey,config)) return json({error:'Payment not refundable'},409);
+   if(!approvedPayment(payment,orderId,payment.paymentKey,config,order.amount)) return json({error:'Payment not refundable'},409);
    const key=createHash('sha256').update('full-refund:'+orderId).digest('hex');
    payment=await cancelPayment(config,payment.paymentKey,reason.trim(),key)??await findPayment(config,orderId);
   }
   if(!await saveLiveSnapshot(config,store,order,payment)) return json({error:'Payment verification pending'},503);
   if(action==='refund' && payment.status!=='CANCELED') return json({error:'Full refund not confirmed'},409);
-  if(await liveRevoked(store,order)===null && approvedPayment(payment,orderId,payment.paymentKey,config)){
+  if(await liveRevoked(store,order)===null && approvedPayment(payment,orderId,payment.paymentKey,config,order.amount)){
    await recordApproval(store,order,payment,Date.now(),config);
   }
   return json({orderId,status:payment.status,approvedAt:payment.approvedAt,amount:payment.totalAmount,

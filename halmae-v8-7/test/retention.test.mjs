@@ -10,7 +10,7 @@ test('보존 작업은 만료된 프리뷰 기록만 지우고 복구 가능한 
   const now=Date.now();
   const old=now-31*DAY;
   const approved=id(4);
-  const pending={channel:'toss-test',status:'pending',amount:39900,createdAt:old};
+  const pending={channel:'toss-test',status:'pending',amount:29900,createdAt:old};
   const records=new Map([
     [id(1),{channel:'admin-demo',status:'demo',createdAt:old}],
     [id(2),{channel:'toss-test',status:'test-paid',purchaseExpiresAt:now}],
@@ -33,7 +33,7 @@ test('보존 작업은 만료된 프리뷰 기록만 지우고 복구 가능한 
     if(orderId===id(7)) return new Response(null,{status:503});
     if(orderId!==approved) return new Response(null,{status:404});
     return Response.json({orderId,paymentKey:'local-paid',status:'DONE',currency:'KRW',method:'카드',
-      totalAmount:39900,balanceAmount:39900,approvedAt:new Date(old).toISOString()});
+      totalAmount:29900,balanceAmount:29900,approvedAt:new Date(old).toISOString()});
   });
   assert.deepEqual(await purgePreviewRecords(store,{secretKey:'test-local'},now),{deleted:4,failed:1});
   assert.deepEqual([...records.keys()],[id(3),approved,id(6),'recovery/used/recent',id(7)]);

@@ -1,7 +1,7 @@
 import {createHash} from 'node:crypto';
 import {getStore} from '@netlify/blobs';
 import {financeStore,orders} from '../functions/shared.mjs';
-import {paymentConfig,PRICE} from '../functions/payment-config.mjs';
+import {paymentConfig,validOrderAmount} from '../functions/payment-config.mjs';
 import {scan,summarize} from './admin-ledger.mjs';
 
 export const stages=['home_view','reading_start','reading_complete','purchase_click','checkout_view'];
@@ -61,7 +61,7 @@ export async function campaignReport(store,verified,stageRecords,spendRecords){
  }
  const eligible=[...summarize(verified).newest.values()].filter(item=>
   ['DONE','PARTIAL_CANCELED','CANCELED'].includes(item.status) &&
-  Number.isFinite(Date.parse(item.approvedAt)) && item.amount===PRICE &&
+  Number.isFinite(Date.parse(item.approvedAt)) && validOrderAmount(item.amount) &&
   Number.isSafeInteger(item.balanceAmount) && item.balanceAmount>=0 && item.balanceAmount<=item.amount);
  for(let i=0;i<eligible.length;i+=12){
   await Promise.all(eligible.slice(i,i+12).map(async item=>{

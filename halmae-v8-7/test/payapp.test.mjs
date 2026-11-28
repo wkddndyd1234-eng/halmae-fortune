@@ -6,12 +6,12 @@ import {sendContractCopy} from '../netlify/lib/contract-delivery.mjs';
 
 const config={origin:'https://example.test',userid:'fixture',linkkey:'link-fixture',linkval:'value-fixture',requestkey:'request-fixture'};
 const now=Date.parse('2026-11-27T05:00:00Z');
-const order={orderId:'HM-01234567-abcd-abcd-abcd-0123456789ab',reference:'fixture-reference',transactionId:'23',amount:39900,status:'pending',createdAt:now-1000};
+const order={orderId:'HM-01234567-abcd-abcd-abcd-0123456789ab',reference:'fixture-reference',transactionId:'23',amount:29900,status:'pending',createdAt:now-1000};
 const hash=(date)=>createHash('sha256').update(config.userid+date+config.requestkey).digest('hex');
 function notification(changes={}){
  const responsedate='20261127140000';
  return new URLSearchParams({userid:config.userid,linkkey:config.linkkey,linkval:config.linkval,responsedate,
-  hash:hash(responsedate),price:'39900',var1:order.orderId,var2:order.reference,mul_no:'23',pay_state:'4',pay_type:'1',
+  hash:hash(responsedate),price:'29900',var1:order.orderId,var2:order.reference,mul_no:'23',pay_state:'4',pay_type:'1',
   pay_date:'2026-11-27 14:00:00',...changes});
 }
 
@@ -24,7 +24,7 @@ test('PayApp requests fixed product price, explicit return and feedback paths, a
    assert.equal(body.get('hash'),hash('20261127140000'));
    return new Response('state=1');
   }
-  assert.equal(body.get('price'),'39900');
+  assert.equal(body.get('price'),'29900');
   assert.equal(body.get('smsuse'),'n');
   assert.match(body.get('returnurl'),/payapp=1/);
   assert.equal(body.get('var1'),order.orderId);
@@ -45,11 +45,11 @@ test('PayApp validation checks the original transaction and suppresses duplicate
  assert.equal(approved.purchaseExpiresAt,now+365*86400000);
  assert.equal(reconcilePayapp(config,approved,notification(),now),approved);
  assert.equal(payappEntitled(approved,approved.purchaseExpiresAt),false);
- const partial=reconcilePayapp(config,approved,notification({pay_state:'70',orig_mul_no:'23',orig_price:'39900',mul_no:'24',price:'1000'}),now);
+ const partial=reconcilePayapp(config,approved,notification({pay_state:'70',orig_mul_no:'23',orig_price:'29900',mul_no:'24',price:'1000'}),now);
  const canceled=reconcilePayapp(config,partial,notification({pay_state:'9'}),now);
  assert.equal(payappEntitled(partial,now),true);
  assert.equal(payappEntitled(partial,partial.purchaseExpiresAt),false);
- assert.equal(payappEntitled(reconcilePayapp(config,order,notification({pay_state:'70',orig_mul_no:'23',orig_price:'39900',mul_no:'24',price:'1000'}),now),now),false);
+ assert.equal(payappEntitled(reconcilePayapp(config,order,notification({pay_state:'70',orig_mul_no:'23',orig_price:'29900',mul_no:'24',price:'1000'}),now),now),false);
  assert.equal(payappEntitled(canceled,now),false);
  for(const terminal of [partial,canceled]) assert.equal(reconcilePayapp(config,terminal,notification(),now),terminal);
 });
@@ -110,4 +110,19 @@ test('contract sender uses the authenticated sending domain and routes replies t
   return new Response(null,{status:200});
  });
  assert.deepEqual(result,{state:'accepted',attempt:1});
+});
+
+test('legacy PayApp orders remain bound to 39,900 won through approval and cumulative cancellation',()=>{
+ const legacy={...order,amount:39900};
+ assert.equal(reconcilePayapp(config,legacy,notification(),now),null);
+ const approved=reconcilePayapp(config,legacy,notification({price:'39900'}),now);
+ assert.ok(payappEntitled(approved,now));
+ const partial=(row,id,price)=>reconcilePayapp(config,row,notification({
+  pay_state:'70',orig_mul_no:'23',orig_price:'39900',mul_no:id,price,
+ }),now);
+ const first=partial(approved,'24','29900');
+ assert.ok(payappEntitled(first,now));
+ const final=partial(first,'25','10000');
+ assert.equal(final.status,'canceled');
+ assert.equal(payappEntitled(final,now),false);
 });

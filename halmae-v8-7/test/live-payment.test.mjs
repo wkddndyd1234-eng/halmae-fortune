@@ -97,7 +97,7 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
   if(endpoint.pathname.endsWith('/confirm')){
    approvals.push(options.headers['Idempotency-Key']);
    const {orderId,paymentKey,amount}=JSON.parse(options.body);
-   assert.equal(amount,39900);
+   assert.equal(amount,29900);
    provider={mId:'merchant-fixture',orderId,paymentKey,totalAmount:amount,balanceAmount:amount,currency:'KRW',method:'카드',
     approvedAt:new Date().toISOString(),status:'DONE',lastTransactionKey:'approval-transaction'};
    if(failApproval){failApproval=false;throw Error('local simulated lost response');}
@@ -106,7 +106,7 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
    refunds.push(options.headers['Idempotency-Key']);
    assert.equal(JSON.parse(options.body).cancelReason,'고객 요청');
    provider={...provider,status:'CANCELED',balanceAmount:0,lastTransactionKey:'cancel-transaction',
-    cancels:[{transactionKey:'cancel-transaction',cancelAmount:39900,cancelStatus:'DONE'}]};
+    cancels:[{transactionKey:'cancel-transaction',cancelAmount:29900,cancelStatus:'DONE'}]};
   }
   return provider?Response.json(provider):new Response(null,{status:404});
  });
@@ -133,7 +133,7 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  assert.equal((await order(request({...birth,channel:'admin-demo'}))).status,403);
  assert.equal((await order(request({...birth,email:undefined,recoveryConsent:false},{cookie}))).status,200);
  assert.equal((await order(request({...birth,email:'different@example.test'},{cookie}))).status,409);
- const call={orderId:first.orderId,paymentKey:'live-fixture-payment',amount:39900};
+ const call={orderId:first.orderId,paymentKey:'live-fixture-payment',amount:29900};
  assert.equal((await payment(request({...call,amount:1},{token:first.checkoutToken}))).status,400);
  const cross=sign({orderId:first.orderId,scope:'toss-live-checkout',exp:Date.now()+30_000});
  assert.equal((await payment(request(call,{token:cross}))).status,403);
@@ -151,7 +151,7 @@ test('운영 주문 재시도, 승인 응답 유실, 정산 기록, 결제 취�
  assert.equal(contract.policyAcceptance.withdrawalAcknowledged,true);
  assert.equal(contract.policyAcceptance.digest,birth.policyDigest);
  assert.ok(Number.isFinite(Date.parse(contract.policyAcceptance.acceptedAt)));
- assert.equal(contract.amount,39900);
+ assert.equal(contract.amount,29900);
  assert.equal(contract.orderId,first.orderId);
  assert.equal(contract.currency,'KRW');
  assert.equal(contract.approvedAt,provider.approvedAt);
@@ -273,7 +273,7 @@ test('운영 모의 부분 취소는 별도 거래에서 잔액과 무관하게 
   assert.equal(target.hostname,'api.tosspayments.com');
   if(target.pathname.endsWith('/confirm')){
    provider={...JSON.parse(options.body),mId:'merchant-fixture',currency:'KRW',method:'카드',status:'DONE',
-    approvedAt:new Date().toISOString(),totalAmount:39900,balanceAmount:39900};
+    approvedAt:new Date().toISOString(),totalAmount:29900,balanceAmount:29900};
   }
   return provider?Response.json(provider):new Response(null,{status:404});
  });
@@ -281,7 +281,7 @@ test('운영 모의 부분 취소는 별도 거래에서 잔액과 무관하게 
  assert.equal(ordered.status,200);
  const cookie=ordered.headers.get('set-cookie').split(';')[0];
  const {orderId,checkoutToken}=await ordered.json();
- const result=await payment(request({orderId,paymentKey:'mock-partial',amount:39900},{token:checkoutToken}));
+ const result=await payment(request({orderId,paymentKey:'mock-partial',amount:29900},{token:checkoutToken}));
  assert.equal(result.status,200);
  const {token}=await result.json();
  assert.equal((await report(request(null,{token}))).status,200);
@@ -319,7 +319,7 @@ test('페이앱 서버 주문, 통지, 계약 메일 실패, 새 브라우저 �
    requests++;
    reference=options.body.get('var2');
    if(loseResponse) throw Error('fixture lost provider response');
-   assert.equal(options.body.get('price'),'39900');
+   assert.equal(options.body.get('price'),'29900');
    return new Response('state=1&mul_no=121&payurl=https%3A%2F%2Fpayapp.kr%2Ffixture');
   }
   assert.equal(endpoint.hostname,'api.resend.com');
@@ -342,7 +342,7 @@ test('페이앱 서버 주문, 통지, 계약 메일 실패, 새 브라우저 �
  const notify=changes=>feedback(new Request(origin+'/.netlify/functions/payapp-feedback',{method:'POST',body:new URLSearchParams({
   userid:'fixture-user',linkkey:'fixture-link',linkval:'fixture-value',responsedate,
   hash:createHash('sha256').update('fixture-user'+responsedate+'fixture-request').digest('hex'),
-  price:'39900',var1:orderId,var2:reference,mul_no:'121',pay_state:'4',pay_type:'1',pay_date:local.replace('T',' '),...changes,
+  price:'29900',var1:orderId,var2:reference,mul_no:'121',pay_state:'4',pay_type:'1',pay_date:local.replace('T',' '),...changes,
  })}));
  assert.equal((await notify({hash:'invalid'})).status,409);
  assert.equal((await notify({price:'1'})).status,409);
@@ -359,7 +359,7 @@ test('페이앱 서버 주문, 통지, 계약 메일 실패, 새 브라우저 �
  const approval=await (await accessOrder()).json();
  assert.equal((await (await report(request(null,{token:approval.token}))).json()).chapters.length,26);
  const doc=await access(request({orderId,action:'contract'},{cookie}));
- assert.equal((await doc.json()).amount,39900);
+ assert.equal((await doc.json()).amount,29900);
  assert.equal((await recovery(request({orderId,action:'request',email:birth.email}))).status,202);
  assert.equal(mails.at(-1).from,'할매의 운명방 <sender@example.test>');
  assert.equal(mails.at(-1).reply_to,'valueseeker123@naver.com');
@@ -378,14 +378,14 @@ test('페이앱 서버 주문, 통지, 계약 메일 실패, 새 브라우저 �
   assert.equal((await accessOrder()).status,200);
  }finally{clock.mock.restore();limitRecovery=false;}
  assert.equal((await recovery(request({action:'exchange',token}))).status,200);
- assert.equal(await (await notify({pay_state:'70',orig_mul_no:'121',orig_price:'39900',mul_no:'122',price:'1000'})).text(),'SUCCESS');
+ assert.equal(await (await notify({pay_state:'70',orig_mul_no:'121',orig_price:'29900',mul_no:'122',price:'1000'})).text(),'SUCCESS');
  assert.equal((await accessOrder()).status,200);
  assert.equal((await report(request(null,{token:approval.token}))).status,200);
- const secondPartial={pay_state:'71',orig_mul_no:'121',orig_price:'39900',mul_no:'123',price:'1000'};
+ const secondPartial={pay_state:'71',orig_mul_no:'121',orig_price:'29900',mul_no:'123',price:'1000'};
  assert.equal(await (await notify(secondPartial)).text(),'SUCCESS');
  assert.equal(await (await notify(secondPartial)).text(),'SUCCESS');
  assert.equal((await accessOrder()).status,200);
- const finalPartial={...secondPartial,mul_no:'124',price:'37900'};
+ const finalPartial={...secondPartial,mul_no:'124',price:'27900'};
  assert.equal(await (await notify(finalPartial)).text(),'SUCCESS');
  assert.equal((await accessOrder()).status,403);
  assert.equal((await report(request(null,{token:approval.token}))).status,403);

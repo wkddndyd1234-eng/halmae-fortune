@@ -1,15 +1,14 @@
 import {createHash,timingSafeEqual} from 'node:crypto';
 import {supportedPaymentMethod} from './toss.mjs';
 import {financeStore} from './shared.mjs';
-import {PRICE} from './payment-config.mjs';
 
 const statusValues=new Set(['READY','IN_PROGRESS','WAITING_FOR_DEPOSIT','DONE','CANCELED','PARTIAL_CANCELED','ABORTED','EXPIRED']);
 export const isCancelled=payment=>['CANCELED','PARTIAL_CANCELED'].includes(payment?.status);
 export function matchesLivePayment(config,order,payment){
- return payment?.orderId===order.orderId && payment.mId===config.merchantId && payment.currency==='KRW' && payment.totalAmount===PRICE &&
+ return payment?.orderId===order.orderId && payment.mId===config.merchantId && payment.currency==='KRW' && payment.totalAmount===order.amount &&
   supportedPaymentMethod(config,payment.method) && typeof payment.paymentKey==='string' && payment.paymentKey.length<=200 &&
   (!order.paymentKey || order.paymentKey===payment.paymentKey) && statusValues.has(payment.status) &&
-  Number.isInteger(payment.balanceAmount) && payment.balanceAmount>=0 && payment.balanceAmount<=PRICE;
+  Number.isInteger(payment.balanceAmount) && payment.balanceAmount>=0 && payment.balanceAmount<=order.amount;
 }
 
 export async function saveLiveSnapshot(config,store,order,payment){

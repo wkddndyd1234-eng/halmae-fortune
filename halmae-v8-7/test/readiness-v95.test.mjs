@@ -40,8 +40,8 @@ test('웹훅 파서는 최대 크기 밖의 JSON을 읽지 않는다',async()=>{
 
 test('전체 정산 대조는 승인일 범위 안에서 누락과 중복을 검출한다',()=>{
  const second='HM-99999999-abcd-4123-9123-0123456789ab';
- const internal=[{orderId,approvedAt:'2026-11-23T15:00:00Z',balanceAmount:39900,transactionKey:'a'},
-  {orderId:second,approvedAt:'2026-11-24T15:00:00Z',balanceAmount:39900,transactionKey:'b'}];
+ const internal=[{orderId,approvedAt:'2026-11-23T15:00:00Z',balanceAmount:29900,transactionKey:'a'},
+  {orderId:second,approvedAt:'2026-11-24T15:00:00Z',balanceAmount:29900,transactionKey:'b'}];
  const scope={from:'2026-11-24',to:'2026-11-24'};
  assert.deepEqual(compareSettlements(internal,[],scope),[{orderId,issue:'정산 자료에 주문 누락'}]);
  assert.match(compareSettlements(internal,[internal[0],internal[0]],scope)[0].issue,/중복/);
@@ -50,7 +50,7 @@ test('전체 정산 대조는 승인일 범위 안에서 누락과 중복을 검
 test('기존 금융 이관은 출생정보를 복사하지 않고 보존기간·보류를 적용한다',async()=>{
  const original=view(),archive=view();
  const key='finance/'+orderId+'/'+'a'.repeat(64);
- original.set(key,{orderId,approvedAt:'2019-01-01T00:00:00+09:00',amount:39900,birthDate:'1988-10-08'});
+ original.set(key,{orderId,approvedAt:'2019-01-01T00:00:00+09:00',amount:29900,birthDate:'1988-10-08'});
  const source=store(original),target=store(archive);
  assert.deepEqual(await migrateFinance(source,target),{copied:1,alreadyPresent:0,mismatch:0});
  assert.deepEqual(await migrateFinance(source,target),{copied:0,alreadyPresent:1,mismatch:0});

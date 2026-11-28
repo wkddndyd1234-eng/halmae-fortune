@@ -1,3 +1,4 @@
+import {concernReading} from './immersion.mjs';
 import {lunarMonthLength} from './lunar-conversion.mjs';
 import {ledgerPreview} from './ledger-preview.mjs';
 import {renderLedgerPreview} from './ledger-preview-view.js';
@@ -98,15 +99,57 @@ function recordStart(){
  recordConversion('free_reading_start');
  recordFunnel('reading_start');
 }
+const steps=[...form.querySelectorAll('[data-interview-step]')];
+const concern=byId('concern');
+let stepIndex=0;
+let shareHeading='';
+function showInterviewStep(index,focus=false){
+ stepIndex=index;
+ steps.forEach((step,i)=>{step.hidden=i!==index;});
+ byId('interview-back').hidden=index===0;
+ byId('interview-next').hidden=index===2;
+ byId('interview-submit').hidden=index!==2;
+ const call=readingName(name.value.trim()).call;
+ byId('interview-line').textContent=[
+  '어서 와. 할매가 뭐라고 불러 주면 좋겠니?',
+  `${call}, 태어난 날을 알려 다오. 시간은 기억나는 데까지만이면 충분해.`,
+  '네 글자는 잘 받았어. 요즘 마음에 걸리는 이야기가 있으면 하나 골라 보렴.',
+ ][index];
+ if(index===2){
+  const date=[year.value,month.value,day.value].join('.');
+  byId('interview-review').textContent=
+   `입력 확인 · ${name.value.trim()} · ${byId('gender').selectedOptions[0].textContent} · ${date} (${calendarType.selectedOptions[0].textContent}${isLeapMonth.value==='true'?' 윤달':''}) · ${hour.value===''?'시간 미상':hour.value+'시 '+minute.value+'분'}`;
+ }
+ if(focus) steps[index].querySelector('input, select')?.focus({preventScroll:true});
+}
+function advanceInterview(){
+ const fields=[...steps[stepIndex].querySelectorAll('input,select')];
+ if(fields.every(field=>field.reportValidity())) showInterviewStep(stepIndex+1,true);
+}
+byId('interview-next').addEventListener('click',advanceInterview);
+byId('interview-back').addEventListener('click',()=>showInterviewStep(stepIndex-1,true));
+concern.addEventListener('change',()=>{
+ byId('concern-note-wrap').hidden=concern.value!=='custom';
+ if(concern.value!=='custom') byId('concern-note').value='';
+});
+showInterviewStep(0);
+byId('share-fortune').addEventListener('click',async()=>{
+ try{
+  await navigator.clipboard.writeText(`할매의 운명방 · ${shareHeading}\n나도 내 이야기를 읽어 봤어요.\n${location.origin}/`);
+  byId('share-fortune-status').textContent='이름과 생년월일 없이 복사했어요.';
+ }catch{byId('share-fortune-status').textContent='이 브라우저에서는 복사를 허용하지 않아요.';}
+});
 form.addEventListener('input',recordStart);
 form.addEventListener('submit',event=>{
  recordStart();
  event.preventDefault();
+ if(stepIndex<2){advanceInterview();return;}
  invalidateReading();
  saveBirthDraft(null);
  const input=fromFreeForm({name:name.value,gender:byId('gender').value,calendarType:calendarType.value,isLeapMonth:isLeapMonth.value==='true',year:year.value,month:month.value,day:day.value,hour:hour.value,minute:minute.value});
  error.textContent='';
  if (!input) {
+  showInterviewStep(1,true);
   error.textContent='성별과 생년월일을 확인해 주세요. 미래 날짜는 입력할 수 없어요.';
   return;
  }
@@ -137,6 +180,17 @@ form.addEventListener('submit',event=>{
  artwork.alt=reading.symbol+'의 상징, '+reading.headline;
  artwork.src='/art/'+reading.imageId+'.webp';
  const preview=ledgerPreview(saju);
+ shareHeading=reading.headline;
+ byId('share-fortune-status').textContent='';
+ const focused=concernReading(concern.value,reading,preview.excerpt);
+ byId('concern-answer').hidden=byId('topic-sample').hidden=!focused;
+ if(focused){
+  const question=concern.value==='custom'?byId('concern-note').value.trim():'';
+  byId('concern-title').textContent=focused.title;
+  byId('concern-advice').textContent=(question?`“${question}”부터 천천히 생각해 보자. `:'')+focused.advice;
+  byId('topic-preview-title').textContent=`관심 주제 · 제${focused.chapter+1}장 발췌`;
+  byId('topic-preview-copy').textContent=focused.teaser;
+ }
  byId('season-context').textContent=preview.story;
  byId('ledgerQuestion').textContent=reading.bridge;
  byId('luck-preview').textContent=preview.luck;
@@ -163,7 +217,7 @@ form.addEventListener('submit',event=>{
 
 byId('editBirth').addEventListener('click',()=>{
  invalidateReading();
- year.focus({preventScroll:true});
+ showInterviewStep(0,true);
  form.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
 });
 fetch('/.netlify/functions/payment',{cache:'no-store'})

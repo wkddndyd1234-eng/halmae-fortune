@@ -23,7 +23,7 @@ test('같은 버전 원문 변경을 거절하고 계약 사본은 구매 당시
  assert.ok(await savePolicy(store,policy));
  const altered=policyArchive(JSON.stringify({...raw,terms:{...raw.terms,text:'changed'}}),'v1',urls);
  assert.equal(await savePolicy(store,altered),false);
- const order={orderId:id,approvedAt:'2026-11-25T12:00:00Z',purchaseExpiresAt:1827144000000,amount:39900,
+ const order={orderId:id,approvedAt:'2026-11-25T12:00:00Z',purchaseExpiresAt:1827144000000,amount:29900,
   birthDate:'private',paymentKey:'private',contractTerms:{policyVersion:'v1',policyDigest:policy.digest}};
  assert.ok(await saveContract(store,order));
  assert.ok(await saveContract(store,order));

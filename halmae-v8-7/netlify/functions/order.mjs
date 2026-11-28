@@ -75,7 +75,7 @@ export default async req => {
     if(!inserted.modified){
       reused=true;
       order=await store.get(orderId,{type:'json'});
-      if(!order || order.inputHash!==inputHash || order.policyAcceptance?.version!==config.policyVersion){
+      if(!order || order.inputHash!==fingerprint('checkout-input',JSON.stringify({...purchaseFields,amount:order.amount}),config) || order.policyAcceptance?.version!==config.policyVersion){
         return json({error:'기존 주문 정보를 확인하거나 새 주문을 시작해 주세요.'},409);
       }
     }
@@ -87,7 +87,7 @@ export default async req => {
     response.headers.set('Set-Cookie',browserHeader(credential,'Lax'));
     return response;
   }
-  const result={orderId,amount:PRICE,status:order.status,paymentEnabled:Boolean(config)};
+  const result={orderId,amount:order.amount,status:order.status,paymentEnabled:Boolean(config)};
   if(config){
     result.clientKey=config.clientKey;
     result.orderName=ORDER_NAME;

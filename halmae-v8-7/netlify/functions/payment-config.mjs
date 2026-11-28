@@ -1,6 +1,7 @@
 import {isIP} from 'node:net';
 import {policyArchive} from '../lib/contract-archive.mjs';
-export const PRICE = 39900;
+export const PRICE = 29900;
+export const validOrderAmount=amount=>amount===PRICE||amount===39900;
 export const ORDER_NAME = '할매의 깊은 장부';
 export const DAY = 24 * 60 * 60 * 1000;
 

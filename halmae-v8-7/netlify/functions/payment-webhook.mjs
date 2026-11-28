@@ -42,7 +42,7 @@ export default async (req,context)=>{
    return json({error:'Payment verification pending'},503);
   }
   await saveLiveSnapshot(config,store,order,payment);
-  if(order.status!==paidStatus(config) && approvedPayment(payment,orderId,paymentKey,config) && !await liveRevoked(store,order)){
+  if(order.status!==paidStatus(config) && approvedPayment(payment,orderId,paymentKey,config,order.amount) && !await liveRevoked(store,order)){
    await recordApproval(store,order,payment,Date.now(),config);
   }
   if(publicMode) await ops.delete('webhook/issue/'+orderId);

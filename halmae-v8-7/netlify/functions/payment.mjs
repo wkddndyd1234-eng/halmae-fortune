@@ -1,5 +1,5 @@
 import {financeStore,orders,json,parse,verifyProvider,error} from './shared.mjs';
-import {DAY,PRICE,checkoutScope,isPreview,paymentConfig} from './payment-config.mjs';
+import {DAY,checkoutScope,isPreview,paymentConfig} from './payment-config.mjs';
 import {mailConfig} from './recovery-mail.mjs';
 import {browserKey,eligibleOrder,fingerprint,orderPattern,recordApproval,reportLink,verifiedPurchase} from './entitlement.mjs';
 import {liveRevoked,saveLiveSnapshot} from './live-ledger.mjs';
@@ -27,7 +27,7 @@ export default async req => {
     const order = await store.get(orderId,{type:'json'});
     if (!signedCheckout && (order?.browserHash !== fingerprint('browser',key,config) ||
         !Number.isFinite(order.createdAt) || order.createdAt+DAY<=Date.now())) return denied();
-    if (amount !== PRICE) return json({error:'주문 금액을 확인해 주세요.'},400);
+    if (amount !== order?.amount) return json({error:'주문 금액을 확인해 주세요.'},400);
     if (!eligibleOrder(order,orderId,config) || order.channel==='payapp-live') {
       return json({error:'테스트 주문 상태를 확인해 주세요.'},409);
     }
@@ -49,8 +49,8 @@ export default async req => {
         return json({error:'이 주문은 이미 다른 결제 승인 요청에 연결됐어요.'},409);
       }
     }
-    const payment = await confirmPayment(config, orderId, paymentKey);
-    if (!approvedPayment(payment, orderId, paymentKey,config)) {
+    const payment = await confirmPayment(config, orderId, paymentKey,order.amount);
+    if (!approvedPayment(payment, orderId, paymentKey,config,order.amount)) {
       return json({error:'완료된 테스트 카드 결제를 확인하지 못했습니다.'},409);
     }
     // Concurrent approvals of this order record the same provider timestamp and expiry.

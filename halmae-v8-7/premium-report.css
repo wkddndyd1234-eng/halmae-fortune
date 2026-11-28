@@ -72,3 +72,10 @@
  #chapters .chapter-text{font-size:1.04rem;line-height:1.82}
  #chapters .chapter{margin-block:.8rem}
 }
+
+.chapter-opening {
+  border-inline-start:2px solid #a77e46;
+  padding-inline-start:.8rem;
+  color:#eacb98;
+  line-height:1.7;
+}

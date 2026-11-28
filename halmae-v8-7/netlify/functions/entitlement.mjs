@@ -1,6 +1,6 @@
 import {createHmac,randomBytes} from 'node:crypto';
 import {financeStore,secret,sign} from './shared.mjs';
-import {DAY,PRICE,paymentConfig} from './payment-config.mjs';
+import {DAY,paymentConfig,validOrderAmount} from './payment-config.mjs';
 import {liveRevoked,saveLiveSnapshot} from './live-ledger.mjs';
 import {approvedPayment,findPayment} from './toss.mjs';
 import {payappEntitled} from '../lib/payapp.mjs';
@@ -34,7 +34,7 @@ export function browserHeader(value,sameSite='Strict') {
 }
 
 export function eligibleOrder(order,id,config) {
-  return order?.orderId === id && (order.channel === (config?.mode==='live'?'toss-live':'toss-test') || order.channel==='payapp-live' && config?.mode==='live') && order.amount === PRICE &&
+  return order?.orderId === id && (order.channel === (config?.mode==='live'?'toss-live':'toss-test') || order.channel==='payapp-live' && config?.mode==='live') && validOrderAmount(order.amount) &&
     ['pending',paidStatus(config)].includes(order.status);
 }
 
@@ -87,7 +87,7 @@ export async function verifiedPurchase(config,store,order) {
   if(config.mode==='live'){
     if(!await saveLiveSnapshot(config,store,order,payment) || await liveRevoked(store,order)) return null;
   }
-  if (!approvedPayment(payment,order.orderId,order.paymentKey ?? payment?.paymentKey,config)) return null;
+  if (!approvedPayment(payment,order.orderId,order.paymentKey ?? payment?.paymentKey,config,order.amount)) return null;
   return recordApproval(store,order,payment,Date.now(),config);
 }
 

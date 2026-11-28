@@ -66,13 +66,13 @@ test('보고서 재생성은 한 번 더 시도하고 원문을 상태 레코드
 
 test('정산 집계는 중복 거래를 제외하고 한국 날짜와 거래 키로 대조한다',()=>{
  const orderId='HM-12345678-abcd-4123-9123-0123456789ab';
- const paid={orderId,amount:39900,balanceAmount:39900,approvedAt:'2026-11-23T15:00:00Z',transactionKey:'paid'};
+ const paid={orderId,amount:29900,balanceAmount:29900,approvedAt:'2026-11-23T15:00:00Z',transactionKey:'paid'};
  const cancel={cancelStatus:'DONE',transactionKey:'refund',canceledAt:'2026-11-25T14:59:59Z',cancelAmount:1000};
- const partial={...paid,balanceAmount:38900,transactionKey:'refund',cancellations:[cancel,cancel]};
+ const partial={...paid,balanceAmount:28900,transactionKey:'refund',cancellations:[cancel,cancel]};
  const {daily,monthly,newest}=summarize([paid,paid,partial].map(value=>({value})));
- assert.equal(daily['2026-11-24'].gross,39900);
+ assert.equal(daily['2026-11-24'].gross,29900);
  assert.equal(daily['2026-11-25'].refund,1000);
- assert.deepEqual(monthly['2026-11'],{gross:39900,refund:1000});
+ assert.deepEqual(monthly['2026-11'],{gross:29900,refund:1000});
  assert.equal(compareSettlements([...newest.values()],[{...partial,balanceAmount:0}]).length,1);
 });
 
@@ -91,7 +91,7 @@ test('열람이 끝난 주문은 금융 스냅샷을 남긴 뒤 고객 데이터
  const {sweepLive}=await import('../netlify/functions/live-retention.mjs');
  const orderId='HM-12345678-abcd-4123-9123-0123456789ab';
  const now=Date.parse('2026-11-24T00:00:00Z');
- const order={orderId,channel:'toss-live',status:'live-paid',purchaseExpiresAt:now,amount:39900,
+ const order={orderId,channel:'toss-live',status:'live-paid',purchaseExpiresAt:now,amount:29900,
   birthDate:'1988-10-08',paymentKey:'mock-retention-key'};
  const ops=new Map();
  const archive=new Map();
@@ -105,7 +105,7 @@ test('열람이 끝난 주문은 금융 스냅샷을 남긴 뒤 고객 데이터
  t.mock.method(globalThis,'fetch',async(url,options)=>{
   const endpoint=new URL(url);
   if(endpoint.hostname==='api.tosspayments.com'){
-   return Response.json({orderId,mId:'merchant',method:'카드',currency:'KRW',totalAmount:39900,balanceAmount:39900,
+   return Response.json({orderId,mId:'merchant',method:'카드',currency:'KRW',totalAmount:29900,balanceAmount:29900,
     status:'DONE',paymentKey:order.paymentKey,approvedAt:'2025-11-24T00:00:00Z'});
   }
   assert.equal(endpoint.hostname,'blob.example.test');
