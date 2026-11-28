@@ -215,7 +215,7 @@ summary{cursor:pointer}
 <fieldset class="field reading-fields"><legend>요즘 어떤 이야기가 제일 궁금하니?</legend>
 <label for="concern">궁금한 주제 (선택)</label><select id="concern">
 <option value="">건너뛰기</option><option value="money">재물과 돈</option><option value="work">직장과 사업</option><option value="love">사랑과 인연</option><option value="people">가족과 인간관계</option><option value="future">앞으로의 미래</option><option value="custom">직접 입력</option>
-</select><div id="concern-note-wrap" hidden><label for="concern-note">스스로 돌아보고 싶은 질문</label><textarea id="concern-note" autocomplete="off" maxlength="140" rows="2"></textarea><p class="small">이 메모는 이 화면에서만 확인해요. 주문·장부·공유에 넣지 않아요.</p></div>
+</select><div id="concern-note-wrap" hidden><label for="concern-note">스스로 돌아보고 싶은 질문</label><textarea id="concern-note" autocomplete="off" maxlength="140" rows="2"></textarea><p class="small">직접 쓴 문장은 분석하지 않아요. 입력 화면에서만 보이고 주문·장부·공유에 남기지 않아요.</p></div>
 </fieldset><p id="interview-review" class="small"></p></div>
 <div class="sig-actions" id="interview-controls"><button id="interview-back" class="sig-button sig-outline" type="button" hidden>이전 · 수정</button><button id="interview-next" class="sig-button" type="button">다음 이야기</button></div>
 <div class="error" id="error" role="alert"></div>
@@ -230,18 +230,14 @@ summary{cursor:pointer}
   <img id="day-symbol-art" width="320" height="320" alt="" decoding="async">
  </figure>
  <div class="reading-heading">
-  <p class="reading-act">첫째 · 할매와의 첫 만남</p>
+  <p class="reading-act">할매와의 첫 만남</p>
   <h2 id="resultHeading" tabindex="-1"></h2>
-  <p id="greeting"></p><p id="compassDetail"></p>
+  <p id="greeting"></p>
   <p class="result-meta" id="resultMeta"></p>
  </div>
 </header>
 <section class="element-summary" aria-labelledby="element-summary-heading"><h3 id="element-summary-heading">네 안에 담긴 다섯 가지 기운</h3><ul id="element-summary-values"></ul><p class="small">막대 높이는 확인된 전체 글자 중 각 오행의 비율이에요. 숫자는 글자 수이며 기운의 강약이나 운을 매긴 점수가 아니에요.</p></section>
-<div class="free-insights reading-story">
-<article><h3>둘째 · 네 안에 숨은 빛</h3><p id="personality"></p></article>
-<article><h3>셋째 · 네가 힘을 쓰는 방식</h3><p id="elements-story"></p><p id="season-context"></p><p id="balanceQuestion"></p></article><article><h3>일과 돈 앞에서</h3><p id="career"></p><p id="money-reading"></p></article><article><h3>가까운 사람 앞에서</h3><p id="love"></p></article>
-
-</div>
+<div class="free-insights reading-story" id="free-episodes"></div>
 <p class="small">전통 사주 상징으로 나를 돌아보는 풀이예요. 중요한 판단에는 실제 상황과 기록을 함께 살펴봐 주세요.</p>
 <p class="small" id="calcNotice" hidden></p>
 <details class="reading-chart"><summary id="chart-heading">내 원국과 오행 근거 보기</summary>
@@ -259,7 +255,6 @@ summary{cursor:pointer}
 <li>2027년 열두 달, 어떤 흐름을 활용하고 어디서 한 번 더 생각할까?</li>
 </ol><details><summary>긴 흐름을 읽는 기준</summary><p id="luck-preview"></p></details>
 <button class="conversion-cta" id="conversionNext" type="button">내 2027년 운명 장부 열어보기</button></div>
-<article class="conversion-bridge" id="concern-answer" hidden><h3 id="concern-title"></h3><p id="concern-advice"></p></article>
 <div class="reading-tools"><button class="sig-button sig-outline" id="share-fortune" type="button">기질 카드 공유 문구 복사</button><p class="small" id="share-fortune-status" role="status"></p>
  <button class="sig-button sig-outline" id="editBirth" type="button">출생 입력 수정</button>
  <details><summary>풀이 저장·복사</summary>

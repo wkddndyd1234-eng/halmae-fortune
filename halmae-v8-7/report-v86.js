@@ -34,10 +34,35 @@ function renderChapter(chapter,index,total){
  section.append(
   element('p','eyebrow',[chapter.kicker,chapter.basis].filter(Boolean).join(' · ')),
   element('h2','chapter-title',(chapter.displayTitle??chapter.title)),
-  ...(chapter.opening?[element('p','chapter-opening',chapter.opening)]:[]),
-  element('p','chapter-lead',chapter.displayLead??chapter.lead),
+  ...(!chapter.story&&chapter.opening?[element('p','chapter-opening',chapter.opening)]:[]),
+  ...(!chapter.story?[element('p','chapter-lead',chapter.displayLead??chapter.lead)]:[]),
  );
  section.querySelector('h2').tabIndex=-1;
+ if(chapter.story){
+  const story=chapter.story;
+  if(story.title!==(chapter.displayTitle??chapter.title)) section.append(element('h3','chapter-story-title',story.title));
+  if(story.illustration){
+   const image=element('img','chapter-story-art');
+   image.src='/art/'+story.illustration+'.webp';
+   image.alt='';
+   image.loading='lazy';
+   image.width=480;
+   image.height=200;
+   section.append(image);
+  }
+  for(const text of story.intro) section.append(element('p','chapter-text',text));
+  for(const {title,paragraphs} of story.sections){
+   const block=element('div','chapter-group');
+   block.append(element('h3','chapter-subtitle',title));
+   for(const text of paragraphs) block.append(element('p','chapter-text',text));
+   section.append(block);
+  }
+ }
+ const evidence=chapter.story?element('details','chapter-reading-notes'):section;
+ if(chapter.story){
+  evidence.append(element('summary','','명식 근거와 더 읽을 풀이'));
+  section.append(evidence);
+ }
  const groups=chapter.groups??[{paragraphs:chapter.paragraphs}];
  for(const group of groups){
   const block=element(group.detail?'details':'div','chapter-group');
@@ -52,14 +77,14 @@ function renderChapter(chapter,index,total){
    for(const text of group.paragraphs.slice(detailFrom)) notes.append(element('p','chapter-text',text));
    block.append(notes);
   }
-  section.append(block);
+  evidence.append(block);
  }
  if(chapter.bullets?.length){
   const list=element('ul','chapter-points');
   for(const bullet of chapter.bullets) list.append(element('li','',bullet));
-  section.append(list);
+  evidence.append(list);
  }
- if(chapter.quote) section.append(element('blockquote','chapter-quote',chapter.quote));
+ if(chapter.quote&&!chapter.story) section.append(element('blockquote','chapter-quote',chapter.quote));
  const navigation=element('nav','chapter-navigation');
  navigation.setAttribute('aria-label',(index+1)+'장 이동');
  for(const [target,label] of [

@@ -1,4 +1,4 @@
-import {concernReading} from './immersion.mjs';
+import {concernChapter,freeEpisodes,topicExcerpt} from './story-scenes.mjs';
 import {lunarMonthLength} from './lunar-conversion.mjs';
 import {ledgerPreview} from './ledger-preview.mjs';
 import {renderLedgerPreview} from './ledger-preview-view.js';
@@ -163,7 +163,8 @@ form.addEventListener('submit',event=>{
   elements:Object.fromEntries(Object.keys(saju.elements).map(element=>
    [element,pillarElements(saju.pillars[2]).filter(value=>value===element).length])),
  }:saju;
- const reading=readPersonalReading(cyclesForSaju(saju),chart,relationshipNotes[byId('relation').value]);
+ const cycles=cyclesForSaju(saju);
+ const reading=readPersonalReading(cycles,chart,relationshipNotes[byId('relation').value]);
  const {call,possessive}=readingName(input.name);
  byId('greeting').textContent=call+', 네 장부를 펴 볼까.';
  byId('ledger-bridge-heading').textContent=call+', 이제부터가 중요한 이야기란다.';
@@ -171,27 +172,45 @@ form.addEventListener('submit',event=>{
  byId('conversionNext').textContent=purchaseCopy;
  if(paymentEnabled) checkoutLink.textContent=purchaseCopy;
  byId('resultMeta').textContent=`${input.gender==='male'?'남성':'여성'} · ${input.birthDate} ${input.calendarType==='lunar'?(input.isLeapMonth?'음력 윤달':'음력 평달'):'양력'} · ${input.birthTime||'출생 시각 미상'}`;
- for (const [id,value] of Object.entries({
-  resultHeading:reading.headline,compassDetail:reading.introduction,
-  personality:reading.temperament,balanceQuestion:reading.balance,career:reading.work,love:reading.relationships,
-  'elements-story':reading.elementsStory,'money-reading':reading.money,
- })) byId(id).textContent=value;
+ byId('resultHeading').textContent=reading.headline;
+ const episodes=freeEpisodes(cycles,reading,call,concern.value);
+ const scenes=episodes.map(({title,scene,paragraphs},index)=>{
+  const article=document.createElement('article');
+  article.className='episode-card';
+  const label=document.createElement('p');
+  label.className='episode-label';
+  label.textContent=`제${index+1}화 · ${scene}`;
+  const heading=document.createElement('h3');
+  heading.textContent=title;
+  article.append(label,heading);
+  if([0,4,6,7,9].includes(index)){
+   const image=document.createElement('img');
+   image.src='/art/'+({0:'hanok',4:reading.imageId,6:'mu',7:'eul',9:'host'}[index])+'.webp';
+   image.width=320;
+   image.height=180;
+   image.alt='';
+   image.loading='lazy';
+   article.append(image);
+  }
+  for(const text of paragraphs){
+   const paragraph=document.createElement('p');
+   paragraph.textContent=text;
+   article.append(paragraph);
+  }
+  return article;
+ });
+ byId('free-episodes').replaceChildren(...scenes);
  const artwork=byId('day-symbol-art');
  artwork.alt=reading.symbol+'의 상징, '+reading.headline;
  artwork.src='/art/'+reading.imageId+'.webp';
  const preview=ledgerPreview(saju);
  shareHeading=reading.headline;
  byId('share-fortune-status').textContent='';
- const focused=concernReading(concern.value,reading,preview.excerpt);
- byId('concern-answer').hidden=byId('topic-sample').hidden=!focused;
- if(focused){
-  const question=concern.value==='custom'?byId('concern-note').value.trim():'';
-  byId('concern-title').textContent=focused.title;
-  byId('concern-advice').textContent=(question?`“${question}”부터 천천히 생각해 보자. `:'')+focused.advice;
-  byId('topic-preview-title').textContent=`관심 주제 · 제${focused.chapter+1}장 발췌`;
-  byId('topic-preview-copy').textContent=focused.teaser;
- }
- byId('season-context').textContent=preview.story;
+ const topicIndex=concernChapter(concern.value);
+ byId('topic-sample').hidden=topicIndex===13;
+ byId('topic-preview-title').textContent=`관심 주제 · 제${topicIndex+1}장 실제 발췌`;
+ byId('topic-preview-copy').textContent=topicExcerpt(cycles,topicIndex)??'';
+ byId('concern-note').value='';
  byId('ledgerQuestion').textContent=reading.bridge;
  byId('luck-preview').textContent=preview.luck;
  renderLedgerPreview(byId('reportSample'),saju);
@@ -204,7 +223,7 @@ form.addEventListener('submit',event=>{
  renderElementSummary(byId('element-summary-values'),chart.elements);
  renderReadingChart(byId('pillars'),byId('fiveElements'),chart);
  readingText=[byId('greeting').textContent,byId('resultMeta').textContent,
-  chart.pillars.map(pillar=>pillar??'미상').join(' · '),reading.headline,reading.introduction,reading.temperament,preview.story,reading.elementsStory,reading.work,reading.money,reading.balance,reading.relationships,
+  chart.pillars.map(pillar=>pillar??'미상').join(' · '),reading.headline,...episodes.flatMap(({title,paragraphs})=>[title,...paragraphs]),
   ...notices,'전통 사주 상징을 바탕으로 한 자기 성찰용 풀이입니다.'].join('\n\n');
  result.hidden=false;
  offer.hidden=false;

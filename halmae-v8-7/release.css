@@ -154,3 +154,12 @@ footer.footer a{color:#e2c18c}
   font:inherit;
 }
 #concern-answer { margin-block:1rem; }
+
+#free-episodes { display:grid; gap:clamp(1rem,3vw,2.25rem); }
+#free-episodes .episode-card { overflow:hidden; background:linear-gradient(146deg,#211a14,#151110 82%); border-color:#7a5e40; }
+#free-episodes .episode-card:nth-child(3n+2) { background:linear-gradient(146deg,#261817,#151110 82%); }
+#free-episodes .episode-card:nth-child(3n) { background:linear-gradient(146deg,#222118,#151110 82%); }
+#free-episodes .episode-card h3 { text-wrap:balance; word-break:keep-all; }
+#free-episodes .episode-label { margin-bottom:.3em; color:#e9c98d; font-size:.86rem; letter-spacing:.05em; }
+#free-episodes img { display:block; width:100%; height:clamp(150px,35vw,280px); object-fit:cover; border-radius:.5rem; margin:1rem 0; }
+#free-episodes .episode-card:nth-child(5) img { object-fit:contain; background:#16110d; }

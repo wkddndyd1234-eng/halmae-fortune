@@ -79,3 +79,6 @@
   color:#eacb98;
   line-height:1.7;
 }
+
+.chapter-story-title { color:#795025; line-height:1.45; text-wrap:balance; word-break:keep-all; }
+.chapter-story-art { display:block; width:100%; max-height:220px; object-fit:cover; border-radius:.5rem; margin:.8rem 0 1.15rem; }
