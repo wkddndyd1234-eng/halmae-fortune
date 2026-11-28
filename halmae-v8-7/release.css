@@ -172,7 +172,10 @@ footer.footer a{color:#e2c18c}
  .reading-tools details { flex:1 1 9rem; }
  .reading-tools summary { word-break:keep-all; }
  .reading-tools .sig-button { max-width:100%; }
- #free-episodes { gap:.7rem; }
+ #free-episodes { gap:.55rem; margin-block:.75rem; }
+ #free-episodes .episode-card { padding:.65rem .8rem; }
+ #free-episodes .episode-card img { width:85%; margin:.55rem auto; }
+ .reading-v9 .ledger-bridge { margin-block:.65rem .4rem; }
  #offer { padding-block:1rem; }
  #offer .ledger-cover { margin-bottom:.5rem; padding:.75rem; }
  #offer .ledger-leaf,#offer .ledger-terms,#offer .sample-page { padding:.75rem; margin-block:.6rem; }
@@ -183,7 +186,7 @@ footer.footer a{color:#e2c18c}
 .compact-checkout { line-height:1.55; padding:clamp(12px,4vw,28px); }
 .compact-checkout .checkout-cover { padding:.55rem 0; margin:.65rem 0; }
 .compact-checkout .checkout-cover h1 { margin:.25rem 0; font-size:clamp(1.38rem,6vw,1.85rem); }
-.compact-checkout .checkout-cover .ledger-seal { display:none; }
+.compact-checkout .checkout-cover .ledger-seal { width:24px; height:24px; font-size:.85rem; }
 .compact-checkout .ledger-terms { padding:.55rem .7rem; margin:.5rem 0; }
 .compact-checkout p { margin:.3rem 0; }
 .compact-checkout .ledger-price { font-size:1.35rem; }
