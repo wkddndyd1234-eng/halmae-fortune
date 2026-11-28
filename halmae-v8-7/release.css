@@ -203,3 +203,12 @@ footer.footer a{color:#e2c18c}
 .compact-checkout #check-required { min-height:44px; width:100%; padding:.4rem .6rem; }
 .compact-checkout .required-checks { margin-block:.6rem; }
 .compact-checkout .checkout-order a { display:inline-block; margin-top:.4rem; }
+
+.compact-checkout .checkout-cover { display:flex; align-items:center; gap:.55rem; margin:.3rem 0; padding:.35rem 0; background:none; border:0; }
+.compact-checkout .checkout-cover .ledger-seal { flex:none; margin:0; }
+.compact-checkout .ledger-terms { border:0; background:none; padding:0; }
+.compact-checkout .ledger-terms p { margin:.15rem 0; }
+.compact-checkout .check { padding:.3rem 0; margin:.06rem 0; }
+.compact-checkout #payapp-fields label { margin:.25rem 0 0; }
+.compact-checkout #payapp-fields p { margin:0 0 .25rem; }
+.compact-checkout form { margin-block:.55rem; }

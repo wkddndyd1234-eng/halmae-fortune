@@ -1,3 +1,5 @@
+import {pillarElements} from './saju.mjs';
+import {daySymbol,deeperReadings,freeLifeScenes} from './lantern-stories.mjs';
 import {freeArcs,paidScenes} from './story-editions.mjs';
 
 const roles={
@@ -84,12 +86,41 @@ export function freeOpening(f,call,choice,elementCounts){
  const elementCopy=leaders.length===1
   ?`네 그래프에서는 ${leaders[0]} 기운이 ${most}개로 가장 자주 보여. ${elementMeaning[leaders[0]]}`
   :`네 그래프에서는 ${leaders.join('·')} 기운이 각각 ${most}개로 나란히 보여. 태어난 날의 기운을 한 가지 장면으로 먼저 읽어 보자. ${elementMeaning[f.saju.dayElement]}`;
+ if(choice===undefined){
+  const [symbol,gift,watch]=daySymbol(f.saju.dayStem);
+  return {title,paragraphs:[`${call}, 넌 ${symbol} 같은 기운을 품고 태어난 아이구나. 할매 눈엔 ${gift}부터 보여.`,`${body} ${watch}`],elementCopy};
+ }
  return {title,paragraphs:[`${call}, ${body}`,Object.hasOwn(nextFocus,choice)?nextFocus[choice]:'이 힘이 사람들 앞에서 어떻게 쓰이고 집에선 어떻게 달라지는지 다음 이야기에서 보자.'],elementCopy};
 }
+
+const freeMoney=[
+ '급한 일이 보이면 지갑도 손보다 먼저 나갈 때가 있어. 여럿 먹은 밥값부터 내면 마음은 편한데 같은 사람이 늘 먼저 내고 있으면 얘기가 다르지. 어쩌다 낸 돈과 조용히 떠맡은 돈을 가려 보렴.',
+ '너는 손에 남는 돈이 보여야 마음이 놓일 수 있어. 아껴서 모은 돈도 쓸 자리가 있어야 제 구실을 하지. 오래 쓰는 도구 한 가지와 기분으로 장바구니에 얹은 물건 한 가지를 떠올려 보렴.',
+ '새로운 물건이나 일에서 돈이 될 길을 먼저 보는 눈이 있어. 다만 기회가 신선하다고 값까지 싼 건 아니잖니. 값을 치르기 전에 그게 누구에게 정말 필요한지부터 보렴.',
+];
+const freeAffection=[
+ '마음이 생기면 빙빙 돌기보다 먼저 손을 내밀 수 있어. 상대가 대답을 고르는 동안 한 발 기다리는 것도 다정함이야. 대문을 열어 준다고 손님 팔까지 잡아끌진 않잖니.',
+ '좋아하는 사람 앞에서 말보다 챙기는 손이 먼저 갈 수 있어. 너는 배려라고 건넸는데 상대는 그냥 괜찮은 저녁이었는지도 모르지. 기쁜 얼굴을 보고 싶었다면 그 마음을 한마디 보태도 돼.',
+ '좋아하는 마음이 들면 작은 말 하나도 오래 생각할 수 있어. 그 덕에 상대가 편한 순간을 잘 알아채기도 하지. 다만 둘이 같이 쓸 이야기를 혼자 끝까지 써 두지는 마렴.',
+];
+const freeAnnual=[
+ '새해에는 네가 먼저 나서서 풀기 좋은 일과, 누군가 한 발 따라오기를 기다려야 풀리는 일이 다를 수 있어. 같은 힘이라도 언제 쓰느냐에 따라 느낌이 달라지거든.',
+ '내년에는 오래 해 온 일 중 손에 익은 재주를 어디에 쓸지 눈여겨봐. 잘한다는 이유로 계속 안고 있던 일과 앞으로도 마음을 주고 싶은 일은 서로 다를 수 있단다.',
+ '새해에는 지금까지 못 보던 문이 눈에 들어올 수 있어. 그렇다고 문마다 다 들어가 봐야 하는 건 아니지. 열두 달 장부에서 어떤 선택을 시험해 볼지 차근차근 들려줄게.',
+];
 
 export function freeEpisodes(f,reading,call,choice){
  const {s,outer,inner}=context(f);
  const route=s.dateBoundaryUncertain?2:storyFamily(outer);
+ if(choice===undefined){
+  const chartElements=s.dateBoundaryUncertain
+   ?pillarElements(s.pillars[2]).reduce((counts,key)=>({...counts,[key]:(counts[key]??0)+1}),{})
+   :s.elements;
+  return freeLifeScenes(f,route,{
+   call,elementCopy:freeOpening(f,call,undefined,chartElements).elementCopy,
+   money:freeMoney[route],love:freeAffection[storyFamily(inner)],annual:freeAnnual[storyFamily(f.annual.tenGod)],
+  }).map(([title,art,paragraphs],index)=>({title,art,paragraphs,scene:index===0?'첫 만남':'이야기'}));
+ }
  const priorities=[
   {money:4,work:3,love:6,people:2,future:8},
   {money:5,work:4,love:7,people:6,future:8},
@@ -147,6 +178,16 @@ const annualScene=f=>annualStories[f.annual.tenGod];
 
 const chapterTitles=['태어난 날에 담긴 이야기', '스스로를 움직이는 힘', '네가 자주 쓰는 다섯 가지 힘', '밖에서 흔히 맡는 역할', '집에 돌아와 드러나는 마음', '서로 맞물리거나 어긋나는 자리', '손을 떠나도 후회 없는 돈', '혼자 잘할 일, 함께 더 잘할 일', '좋아하는 마음을 건네는 법', '같이 살며 정하는 약속', '손을 내밀어도 괜찮은 관계', '일을 멈추고 쉬는 순서', '긴 시간에 걸친 변화', '2027년 한 해 운세'];
 
+const deeperChoices={
+ 0:['할매가 태어난 날부터 읽는 건 급할 때 어떤 손을 먼저 내는지 보기 위해서야. 급한 자리에서도 한 번에 끝낼 일과 다음 사람에게 넘길 일이 달라.','네가 오래 손을 대 온 일 하나를 떠올려 봐. 잘해서 남은 건지, 손을 대면 이상하게 마음이 편해져서 남은 건지에 따라 다음 선택도 달라져.','네가 남들보다 빨리 알아채는 것 하나를 떠올려 봐. 늘 하던 일에서 걸림돌을 보는 눈과, 아무도 안 하던 일을 찾아내는 눈은 쓰임이 다르단다.'],
+ 3:['급할 때 제일 먼저 찾는 사람이라는 말은 반갑기도 하지. 그 칭찬이 응급 전화번호처럼 굳기 전에 네가 결정할 수 있는 범위를 물어 보렴.','네가 차근차근 마무리하면 다음 사람은 안심하고 일을 받아. 무엇이 끝났을 때 안심하는지는 나만 알지 말고 일 시작할 때 한마디 해 둬.','새 방법을 내기 전에 지금 방법 중 살릴 부분 하나를 말해 보렴. 그래야 동료도 자기 손으로 붙들고 있던 걸 다 놓으라는 말로 듣지 않아.'],
+ 6:['같이 쓰는 돈에서 네가 먼저 치를 몫이 생기면 언제 돌려받을지 얘기해 둬. 오래 볼 사이일수록 다음에 또 밥을 같이 먹을 마음이 남아야 하잖니.','꾸준히 모으는 돈과 일을 더 잘하는 데 쓸 돈을 각각 살펴. 둘 다 네 삶을 돕지만 얼마가 남아야 마음 놓이는지는 기준이 다르거든.','새 기회에 돈을 쓸 때는 제일 잘된 경우보다 다시 돌아올 방법을 먼저 봐. 적게 시험할 수 있으면 한 번의 선택으로 다른 길을 닫지 않아도 돼.'],
+ 7:['일이 급할수록 시킨 사람과 끝을 판단하는 사람이 다른지 물어봐. 한 사람 부탁을 끝내고 다른 사람에게 일을 처음부터 설명하는 건 네 솜씨의 문제가 아니지.','직장에서는 일을 넘겨받은 사람이 혼자 해낼 수 있는지, 사업에서는 다음 주문에도 같은 품질을 낼 수 있는지 보렴. 잘 만든 순서가 있으면 네가 쉬는 날에도 재주가 남아.','바꿀 방법이 보일 때는 이미 돈을 낸 손님과 새로 오는 손님 중 누가 편해지는지 살펴. 둘의 사정이 다르면 같은 아이디어도 내놓는 순서가 달라져.'],
+ 8:['호감이 마음에 들어오면 빨리 표현하고 싶어질 수 있어. 먼저 손을 내밀되 상대에게도 날짜를 고르게 해 봐. 다가가는 힘과 기다리는 마음이 같이 가면 좋아.','좋아하는 사람에게 해 주고 싶은 일이 생겨도 먼저 그 사람이 바라는 걸 물어보렴. 너는 정성 들인 밥을 떠올렸는데, 상대는 산책하며 말할 시간이 필요할 수도 있지.','상대가 짧게 답할 때 머릿속으로 대답을 길게 만들어 놓지 마렴. 궁금한 게 그 사람 마음인지, 다음 약속인지부터 나눠 보면 물을 말이 훨씬 짧아져.'],
+ 9:['같이 산다면 급할 때 누구 말대로 하느냐보다 집에 돌아온 뒤 누가 어떤 일을 맡을지부터 정해 봐. 급할 때 잘 맞아도 평소에 쉬는 법은 다를 수 있지.','늘 알아서 해 주던 일도 돌아가며 해 보면 고마움의 모양이 달라져. 같이 산다는 건 누가 더 잘하나 겨루는 일이 아니라 한 사람이 쉬어도 생활이 이어지는 일이야.','새로 살아 볼 방법이 많으면 두 사람에게 공평한 기준 하나를 남겨. 돈 쓰는 법이 다를 때는 같이 쓸 몫과 각자 맡겨 둘 몫부터 이야기하는 거야.'],
+ 13:['새해에 같이 걷고 싶은 사람과 네가 먼저 나서야 할 일을 따로 적어 보렴. 둘이 겹치는 자리라면 누가 먼저 시작하고 누가 끝을 살필지도 얘기해 둬.','오래 잘하던 일 가운데 새해에도 손이 가는 일을 골라 봐. 계속하고 싶어서인지, 사람들 기대를 저버리기 싫어서인지 알아 두면 다음 약속이 가벼워져.','달력에 새로운 일을 넣을 때 이미 해 둔 약속도 나란히 펼쳐. 새 일이 더 좋아 보여도 지금 곁에 둔 사람에게 네 시간을 어떻게 건넬지는 따로 생각해 봐.'],
+};
+
 export function chapterStory(f,index,now){
  const {s,inner,outer,inside,outside,leadingElement}=context(f);
  const title=chapterTitles[index];
@@ -178,7 +219,20 @@ export function chapterStory(f,index,now){
  const scene=role?paidScenes[index][storyFamily(role)]
   :'때를 모르는 부분은 비워 두자. 네가 이미 겪은 일에서 계속하고 싶은 것과 내려놓고 싶은 것을 가려 내도 좋단다.';
  const chartBoundary=index===0&&s.dateBoundaryUncertain;
- return {title,illustration,intro:[detail,chartBoundary?paidScenes[0][2]:scene],sections:[]};
+ const [sectionTitle,sectionBody]=deeperReadings[index];
+ const secondView=deeperChoices[index]?.[role?storyFamily(role):2]??sectionBody;
+ return {title,illustration,intro:[detail,chartBoundary?paidScenes[0][2]:scene],
+  sections:[{title:sectionTitle,paragraphs:[secondView]}]};
+
+}
+
+export function chartPreviewChapter(f){
+ const {s,inner,outer}=context(f);
+ if(s.dateBoundaryUncertain) return 13;
+ if(f.stemTenGods.includes('정재')||f.stemTenGods.includes('편재')) return 6;
+ if(['편관','상관','정관'].includes(outer)) return 7;
+ if(['정인','식신','편인'].includes(inner)) return 8;
+ return 13;
 }
 
 export function concernChapter(choice){

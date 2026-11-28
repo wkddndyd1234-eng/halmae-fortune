@@ -71,18 +71,18 @@ export function monthlyStory(f,index,chapter){
  const [name,scene,money,work,business,love,remark]=editions[index];
  const closeTie=month.relations.find(item=>item.position==='일');
  const workTie=f.saju.dateBoundaryUncertain?null:month.relations.find(item=>item.position==='월');
- const [overall,finance,career,trade,affection,caution]=chapter.groups;
+ const [overall,finance,career,trade,,caution]=chapter.groups;
  const [moneyChoice,businessChoice]=choices[month.tenGod];
  return {
   title:chapter.displayTitle,
   intro:[`${name}. ${monthlyScenes[index][storyFamily(month.tenGod)]}`,scene],
   sections:[
-   {title:overall.title,paragraphs:[workTie?relationshipChoices[workTie.type]+' '+work:work+' '+businessChoice]},
+   {title:overall.title,paragraphs:[workTie?relationshipChoices[workTie.type]:`할매가 이달을 읽을 때 눈여겨보는 건 ‘${name}’이야. 돈이 드는 일과 마음만 쓰면 되는 일을 갈라 보면, 먼저 손댈 곳이 보인단다.`]},
    {title:finance.title,paragraphs:[moneyChoice+' '+money]},
    {title:career.title,paragraphs:[workTie?work+' 바뀐 약속이 있다면 다음에 일을 넘길 사람에게 먼저 알려 줘.':work]},
    {title:trade.title,paragraphs:[business+' '+businessChoice]},
-   {title:affection.title,paragraphs:[closeTie?`${love} ${relationshipChoices[closeTie.type]}`:love]},
-   {title:caution.title,paragraphs:[watch[index]+' '+(workTie?work:money),remark]},
+   {title:'사랑과 사람 사이',paragraphs:[love,closeTie?relationshipChoices[closeTie.type]:null].filter(Boolean)},
+   {title:caution.title,paragraphs:[watch[index],remark]},
   ],
  };
 }

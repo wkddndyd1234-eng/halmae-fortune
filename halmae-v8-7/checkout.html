@@ -15,12 +15,12 @@
   <a href="/">← 할매의 운명방</a>
   <header class="ledger-cover checkout-cover">
     <span class="ledger-seal" aria-hidden="true">封</span>
-    <h1>내 사주 전체 풀이</h1>
+    <h1>나의 운명장부</h1>
   </header>
   <div class="ledger-terms">
-    <p class="ledger-price">29,900원 <small>단건 결제</small></p>
+    <p class="ledger-price" id="checkout-total">29,900원 <small>단건 결제</small></p>
     <p>26편 · 2027년 12개월 운세 · 365일 열람</p>
-    <p class="small">승인 후 바로 제공 · 자동결제 없음</p>
+    <p class="small">결제 승인 즉시 제공 · 자동·추가 결제 없음</p>
     <p class="notice" id="availability" role="status">현재 주문을 받을 수 없어요.</p>
 
   </div>
@@ -41,7 +41,7 @@
   </section>
   </details>
   <form id="form" method="post" tabindex="-1">
-    <p id="prefill" class="small" role="status" hidden>무료 풀이에서 가져온 출생 정보예요.</p>
+    <span id="prefill" hidden></span>
     <p id="birth-summary" aria-live="polite">생년월일과 성별을 입력해 주세요.</p>
     <details id="checkout-birth-fields" open><summary>출생 정보 입력·수정</summary>
     <label>이름<input name="name" maxlength="20" autocomplete="name" placeholder="이름을 입력해 주세요." pattern=".*\S.*" required></label>
@@ -53,11 +53,11 @@
     </details>
     <label class="check"><input type="checkbox" name="birthConfirmed" required disabled aria-describedby="birth-summary"> <span>이 출생 정보로 장부를 발급받을게요.</span></label>
     <fieldset id="payapp-fields" hidden disabled>
-      <legend>페이앱 결제 정보</legend>
+      <legend>결제 연락처</legend>
       <label>결제용 휴대전화<input name="paymentPhone" type="tel" autocomplete="tel-national" inputmode="tel" pattern="010-?[0-9]{4}-?[0-9]{4}" required></label>
-      <p class="small">카드 결제창을 열 때 페이앱에 전달해요.</p>
+      <p class="small">페이앱 카드 결제에 필요해요.</p>
       <label>계약서면 받을 이메일<input name="contractEmail" type="email" inputmode="email" autocomplete="email" maxlength="254" required></label>
-      <p class="small">구매 계약서면을 보내드려요.</p>
+      <p class="small">구매 계약서를 보내드려요.</p>
     </fieldset>
     <fieldset id="recovery-options" hidden>
       <legend>기기 변경 시 다시 보기 · 선택</legend>
@@ -80,7 +80,6 @@
     <button id="check-required" class="secondary-button" type="button" aria-pressed="false" hidden>필수 항목 모두 확인</button>
     </div>
     <div class="checkout-order">
-      <p class="small" id="checkout-total">결제 금액 29,900원 · 단건 결제</p>
       <button class="buy-button" type="submit" id="buy" aria-describedby="checkout-total" hidden disabled>29,900원 카드 결제하기</button>
       <a href="/">결제하지 않고 돌아가기</a>
     </div>

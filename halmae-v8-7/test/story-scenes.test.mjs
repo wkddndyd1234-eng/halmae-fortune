@@ -99,3 +99,23 @@ test('free first impression changes with the chart and describes only the displa
  assert.match(first.elementCopy,/토 기운이 3개/);
  assert.match(freeOpening(a,'민서야','love',{목:1,화:1,토:0,금:0,수:0}).elementCopy,/각각 1개/);
 });
+
+test('birth-only readings cover ten subjects and select a verbatim paid excerpt',async()=>{
+ const {chartPreviewChapter,freeOpening}=await import('../netlify/functions/story-scenes.mjs');
+ const selected=new Set();
+ const openingLines=new Set();
+ for(const input of [...samples,{birthDate:'2000-02-04',birthTime:'',gender:'female'}]){
+  const f=fortuneCycles(input);
+  const episodes=freeEpisodes(f,readPersonalReading(f,f.saju,''),'얘야');
+  assert.equal(episodes.length,10);
+  assert.equal(new Set(episodes.map(e=>e.art)).size,10);
+  assert.ok(episodes.every(e=>e.paragraphs.length>=2));
+  assert.doesNotMatch(episodes.flatMap(e=>e.paragraphs).join(' '),/고른 주제|undefined/);
+  openingLines.add(freeOpening(f,'얘야',undefined,f.saju.elements).paragraphs[0]);
+  const chapter=chartPreviewChapter(f);
+  selected.add(chapter);
+  assert.equal(buildFortuneReport(input).chapters[chapter].story.intro[0],topicExcerpt(f,chapter));
+ }
+ assert.ok(openingLines.size>=5);
+ assert.ok(selected.size>=2);
+});

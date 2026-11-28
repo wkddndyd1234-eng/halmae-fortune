@@ -209,14 +209,7 @@ summary{cursor:pointer}
 <p class="small" id="calendarHelp">양력·음력을 선택해 주세요. 음력은 윤달 여부까지 확인해 주세요.</p>
 <div class="birth"><select aria-label="태어난 연도" id="year" required><option value="">연도</option></select><select aria-label="태어난 월" id="month" required><option value="">월</option></select><select aria-label="태어난 일" id="day" required><option value="">일</option></select></div></fieldset>
 <div class="field"><label for="time">태어난 시간</label><p class="small field-help" id="time-help">한국 시간 기준이에요.</p><select id="time" aria-describedby="time-help"><option value="">모르겠어요</option></select><select aria-label="태어난 분" id="minute" hidden disabled><option value="0">00분</option></select></div>
-</div><div data-interview-step><details class="free-optional"><summary>연애 상태 입력 (선택)</summary>
-<div class="field"><label for="relation">현재 연애 상태</label><select id="relation"><option value="">선택 안 함</option><option>솔로</option><option>연애 중</option><option>기혼</option><option>이혼</option><option>사별</option></select></div>
-</details>
-<fieldset class="field reading-fields"><legend>요즘 어떤 이야기가 제일 궁금하니?</legend>
-<label for="concern">궁금한 주제 (선택)</label><select id="concern">
-<option value="">건너뛰기</option><option value="money">재물과 돈</option><option value="work">직장과 사업</option><option value="love">사랑과 인연</option><option value="people">가족과 인간관계</option><option value="future">앞으로의 미래</option><option value="custom">직접 입력</option>
-</select><div id="concern-note-wrap" hidden><label for="concern-note">스스로 돌아보고 싶은 질문</label><textarea id="concern-note" autocomplete="off" maxlength="140" rows="2"></textarea><p class="small">직접 쓴 문장은 분석하지 않아요. 입력 화면에서만 보이고 주문·장부·공유에 남기지 않아요.</p></div>
-</fieldset><p id="interview-review" class="small"></p></div>
+</div>
 <div class="sig-actions" id="interview-controls"><button id="interview-back" class="sig-button sig-outline" type="button" hidden>이전 · 수정</button><button id="interview-next" class="sig-button" type="button">다음 이야기</button></div>
 <div class="error" id="error" role="alert"></div>
 <button class="btn" id="interview-submit" type="submit">내 사주 무료로 살펴보기</button>
@@ -247,8 +240,9 @@ summary{cursor:pointer}
 <div class="chart-elements" id="fiveElements"></div>
 <p class="small">겉에 보이는 글자에 담긴 다섯 가지 기운이란다. 개수만으로 길흉을 읽지는 않아.</p>
 </details>
-<div class="conversion-bridge ledger-bridge"><h3 id="ledger-bridge-heading">다음 이야기</h3>
-<button class="conversion-cta" id="conversionNext" type="button">전체 풀이 미리 보기</button></div>
+<div class="conversion-bridge ledger-bridge"><h3 id="ledger-bridge-heading">얘야, 그런데 말이다.</h3>
+<p>지금까지는 네가 어떤 아이로 태어났는지 이야기했단다. 이제는 그 힘을 어디에 쓰면 좋을지, 어디서 한 박자 쉬어도 좋을지 들려줄 차례야.</p><p>다가오는 2027년을 조금 더 지혜롭게 살아갈 수 있도록, 할매가 네 사주로 특별한 장부 한 권을 준비했단다.</p>
+<button class="conversion-cta" id="conversionNext" type="button">나의 운명장부 미리 보기</button></div>
 <div class="reading-tools"><button class="sig-button sig-outline" id="share-fortune" type="button">기질 카드 공유 문구 복사</button><p class="small" id="share-fortune-status" role="status"></p>
  <button class="sig-button sig-outline" id="editBirth" type="button">출생 입력 수정</button>
  <details><summary>풀이 저장·복사</summary>
@@ -258,13 +252,13 @@ summary{cursor:pointer}
 </div>
 </div>
 </section><section class="section wrap offer" id="offer" hidden>
-<header class="ledger-cover"><h2 class="title" id="offerHeading" tabindex="-1">내 사주 전체 풀이</h2></header>
+<header class="ledger-cover"><h2 class="title" id="offerHeading" tabindex="-1">나의 운명장부</h2></header>
 <div class="ledger-leaf">
  <ul class="ledger-product-counts"><li><strong>26편</strong> 내 사주 이야기</li><li><strong>12개월</strong> 2027년 운세</li><li><strong>365일</strong> 다시 보기</li></ul>
  <section class="sample-page" id="reportSample" aria-labelledby="sample-title">
   <h3 id="sample-title">할매가 아직 못다 한 이야기</h3><p data-preview-label></p><blockquote></blockquote>
  </section>
- <p class="small offer-subjects">재물·직업·사업·연애·결혼부터 2027년 월별 흐름까지 읽어요.</p>
+ <p class="small offer-subjects">재물·직업·사업, 사랑과 결혼, 그리고 앞으로의 삶에서 기회를 살필 때와 한발 물러설 때를 담았어요.</p>
  <div class="ledger-order-actions ledger-terms">
   <p class="ledger-price">29,900원 <small>한 번 결제</small></p><p>결제 승인 후 바로 읽을 수 있어요.</p><p class="small">자동결제와 추가 결제가 없어요.</p>
   <p class="small" id="offerAvailability" role="status">결제 가능 여부는 주문 화면에서 확인할 수 있어요.</p>

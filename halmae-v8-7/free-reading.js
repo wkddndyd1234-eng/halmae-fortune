@@ -1,4 +1,4 @@
-import {concernChapter,freeEpisodes,freeOpening} from './story-scenes.mjs';
+import {freeEpisodes,freeOpening} from './story-scenes.mjs';
 import {lunarMonthLength} from './lunar-conversion.mjs';
 import {renderLedgerPreview} from './ledger-preview-view.js';
 import {renderReadingChart,renderElementSummary} from './reading-chart.js';
@@ -54,13 +54,7 @@ window.addEventListener('pageshow',event=>{
  }
 });
 
-const relationshipNotes = {
- '솔로':'편안하게 느낀 관계의 장면을 떠올려도 좋아.',
- '연애 중':'서로 기대하는 일을 구체적인 말로 나눠 보렴.',
- '기혼':'익숙한 사이에서 당연하게 여긴 마음도 한 번 물어 보렴.',
- '이혼':'지금의 너에게 중요한 관계의 기준부터 골라 보렴.',
- '사별':'그리움을 서둘러 정리할 필요는 없단다.',
-};
+
 const fill = (select,values,format)=>{
  for (const value of values) select.add(new Option(format(value),value));
 };
@@ -111,26 +105,19 @@ function recordStart(){
  recordFunnel('reading_start');
 }
 const steps=[...form.querySelectorAll('[data-interview-step]')];
-const concern=byId('concern');
 let stepIndex=0;
 let shareHeading='';
 function showInterviewStep(index,focus=false){
  stepIndex=index;
  steps.forEach((step,i)=>{step.hidden=i!==index;});
  byId('interview-back').hidden=index===0;
- byId('interview-next').hidden=index===2;
- byId('interview-submit').hidden=index!==2;
+ byId('interview-next').hidden=index===1;
+ byId('interview-submit').hidden=index!==1;
  const call=readingName(name.value.trim()).call;
  byId('interview-line').textContent=[
   '어서 와. 할매가 뭐라고 불러 주면 좋겠니?',
   `${call}, 태어난 날을 알려 다오. 시간은 기억나는 데까지만이면 충분해.`,
-  '네 글자는 잘 받았어. 요즘 마음에 걸리는 이야기가 있으면 하나 골라 보렴.',
  ][index];
- if(index===2){
-  const date=[year.value,month.value,day.value].join('.');
-  byId('interview-review').textContent=
-   `입력 확인 · ${name.value.trim()} · ${byId('gender').selectedOptions[0].textContent} · ${date} (${calendarType.selectedOptions[0].textContent}${isLeapMonth.value==='true'?' 윤달':''}) · ${hour.value===''?'시간 미상':hour.value+'시 '+minute.value+'분'}`;
- }
  if(focus) steps[index].querySelector('input, select')?.focus({preventScroll:true});
 }
 function advanceInterview(){
@@ -139,10 +126,6 @@ function advanceInterview(){
 }
 byId('interview-next').addEventListener('click',advanceInterview);
 byId('interview-back').addEventListener('click',()=>showInterviewStep(stepIndex-1,true));
-concern.addEventListener('change',()=>{
- byId('concern-note-wrap').hidden=concern.value!=='custom';
- if(concern.value!=='custom') byId('concern-note').value='';
-});
 showInterviewStep(0);
 byId('share-fortune').addEventListener('click',async()=>{
  try{
@@ -154,7 +137,7 @@ form.addEventListener('input',recordStart);
 form.addEventListener('submit',event=>{
  recordStart();
  event.preventDefault();
- if(stepIndex<2){advanceInterview();return;}
+ if(stepIndex<1){advanceInterview();return;}
  invalidateReading();
  saveBirthDraft(null);
  const input=fromFreeForm({name:name.value,gender:byId('gender').value,calendarType:calendarType.value,isLeapMonth:isLeapMonth.value==='true',year:year.value,month:month.value,day:day.value,hour:hour.value,minute:minute.value});
@@ -175,17 +158,16 @@ form.addEventListener('submit',event=>{
    [element,pillarElements(saju.pillars[2]).filter(value=>value===element).length])),
  }:saju;
  const cycles=cyclesForSaju(saju);
- const reading=readPersonalReading(cycles,chart,relationshipNotes[byId('relation').value]);
+ const reading=readPersonalReading(cycles,chart);
  const {call}=readingName(input.name);
- const opening=freeOpening(cycles,call,concern.value,chart.elements);
+ const opening=freeOpening(cycles,call,undefined,chart.elements);
  byId('greeting').textContent=opening.paragraphs[0];
  byId('reading-next-focus').textContent=opening.paragraphs[1];
  byId('element-meaning').textContent=opening.elementCopy;
- byId('ledger-bridge-heading').textContent=call+', 다음 이야기도 준비했어.';
- if(paymentEnabled) checkoutLink.textContent='29,900원 카드 결제하기';
+ if(paymentEnabled) checkoutLink.textContent='나의 운명장부 열어보기';
  byId('resultMeta').textContent=`${input.gender==='male'?'남성':'여성'} · ${input.birthDate} ${input.calendarType==='lunar'?(input.isLeapMonth?'음력 윤달':'음력 평달'):'양력'} · ${input.birthTime||'출생 시각 미상'}`;
  byId('resultHeading').textContent=opening.title;
- const episodes=freeEpisodes(cycles,reading,call,concern.value);
+ const episodes=freeEpisodes(cycles,reading,call);
  const scenes=episodes.map(({title,scene,art,paragraphs},index)=>{
   const article=document.createElement('article');
   article.className='episode-card';
@@ -216,8 +198,7 @@ form.addEventListener('submit',event=>{
  artwork.src='/art/'+reading.imageId+'.webp';
  shareHeading=reading.headline;
  byId('share-fortune-status').textContent='';
- byId('concern-note').value='';
- renderLedgerPreview(byId('reportSample'),saju,concernChapter(concern.value));
+ renderLedgerPreview(byId('reportSample'),saju);
  const notices = [];
  if (!input.birthTime) notices.push('태어난 시간을 모르니 시주는 비워 두었어요.');
  if (saju.warnings.some(w=>w.startsWith('절기'))) notices.push('절기 가까이 태어나 연주나 월주가 출생 시각에 따라 달라질 수 있어요.');
@@ -251,7 +232,7 @@ fetch('/.netlify/functions/payment',{cache:'no-store'})
  .then(({enabled,paymentMode,provider,legal,merchant})=>{
   paymentEnabled=enabled===true;
   checkoutLink.disabled=!paymentEnabled || !draft;
-  checkoutLink.textContent=paymentEnabled?'29,900원 카드 결제하기':'현재 주문할 수 없어요';
+  checkoutLink.textContent=paymentEnabled?'나의 운명장부 열어보기':'현재 주문할 수 없어요';
   if(enabled===true){
    byId('offerAvailability').textContent=paymentMode==='live'?(provider==='payapp'?'페이앱 카드 결제':'토스페이먼츠 카드 결제'):'토스 테스트 결제 · 실제 청구 없음';
    if(paymentMode==='live'){
